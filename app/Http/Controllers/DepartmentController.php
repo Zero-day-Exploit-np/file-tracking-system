@@ -7,11 +7,32 @@ use App\Models\Department;
 
 class DepartmentController extends Controller
 {
-    //
-    public function index()
+    public function index(Request $request)
     {
-        $departments = Department::latest()->get();
+        $query = Department::query();
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('code', 'like', '%' . $request->search . '%');
+        }
+
+        $departments = $query
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return view('departments.index', compact('departments'));
     }
+    public function create()
+    {
+        return view('departments.create');
+    }
+
+    public function store(Request $request) {}
+
+    public function show(Department $department) {}
+
+    public function edit(Department $department) {}
+
+    public function update(Request $request, Department $department) {}
 }
