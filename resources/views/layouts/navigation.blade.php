@@ -36,6 +36,13 @@
                         Designations
                     </x-nav-link>
                     @endif
+
+
+                    @if(auth()->user()->role === 'admin')
+                    <x-nav-link :href="route('admin.dashboard')">
+                        Admin Dashboard
+                    </x-nav-link>
+                    @endif
                 </div>
 
                 <!-- Desktop User Menu -->

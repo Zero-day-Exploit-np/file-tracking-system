@@ -15,11 +15,13 @@ class RoleMiddleware
      */
     public function handle($request, Closure $next, ...$roles)
     {
-        if (! auth()->check()) {
+        if (!auth()->check()) {
             abort(403);
         }
 
-        if (! in_array(auth()->user()->role, $roles)) {
+        $user = auth()->user();
+
+        if (!in_array($user->role, $roles)) {
             abort(403);
         }
 
