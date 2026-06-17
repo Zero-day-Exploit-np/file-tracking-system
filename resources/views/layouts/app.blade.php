@@ -27,7 +27,9 @@
             </div>
         </header>
         @endisset
-
+        @if(auth()->user()->role == 'admin')
+        <a href="{{ route('admin.dashboard') }}">Admin Dashboard</a>
+        @endif
         <main>
             @yield('content')
         </main>

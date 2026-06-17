@@ -2,20 +2,30 @@
 
 @section('content')
 
-<div class="p-6">
+<div class="container">
 
-    <h1 class="text-2xl font-bold mb-4">Admin Dashboard</h1>
+    <h2>Admin Dashboard</h2>
 
-    <div style="display:flex; gap:20px;">
+    <div style="display:flex; gap:20px; margin-top:20px;">
 
-        <div style="padding:20px; background:#f3f3f3;">
-            <h3>Total Users</h3>
-            <h2>{{ $totalUsers }}</h2>
+        <div style="padding:20px; background:#eee;">
+            <h3>Users</h3>
+            <p>{{ $users }}</p>
         </div>
 
-        <div style="padding:20px; background:#f3f3f3;">
-            <h3>Total Designations</h3>
-            <h2>{{ $totalDesignations }}</h2>
+        <div style="padding:20px; background:#eee;">
+            <h3>Departments</h3>
+            <p>{{ $departments }}</p>
+        </div>
+
+        <div style="padding:20px; background:#eee;">
+            <h3>Designations</h3>
+            <p>{{ $designations }}</p>
+        </div>
+
+        <div style="padding:20px; background:#eee;">
+            <h3>Files</h3>
+            <p>{{ $files }}</p>
         </div>
 
     </div>

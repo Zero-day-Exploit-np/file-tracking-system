@@ -9,14 +9,15 @@ use App\Models\FileTransfer;
 
 class FileRecord extends Model
 {
+
     protected $fillable = [
-        'file_number',
-        'file_name',
         'department_id',
         'created_by',
-        'current_user_id',
+        'file_name',
+        'file_number',
         'remarks',
     ];
+
 
     public function department()
     {

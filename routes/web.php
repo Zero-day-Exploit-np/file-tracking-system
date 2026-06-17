@@ -50,12 +50,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | SUPER ADMIN ONLY
 |--------------------------------------------------------------------------
 */
+// SUPER ADMIN ONLY
 Route::middleware(['auth', 'super_admin'])->group(function () {
-
     Route::resource('departments', DepartmentController::class);
-    Route::resource('designations', DesignationController::class);
 });
 
+// SUPER ADMIN + ADMIN
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::resource('designations', DesignationController::class);
+});
 /*
 |--------------------------------------------------------------------------
 | ADMIN MODULE
@@ -81,6 +84,9 @@ Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
     Route::resource('users', UserController::class);
 });
 
+Route::prefix('admin')->middleware('role:admin')->group(function () {
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+});
 /*
 |--------------------------------------------------------------------------
 | LOGOUT

@@ -7,22 +7,17 @@ use App\Models\User;
 use App\Models\Department;
 use App\Models\Designation;
 use Illuminate\Http\Request;
+use App\Models\FileRecord;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
-
-        // Admin belongs to ONE department
-        $departmentId = $user->department_id;
-
-        $totalUsers = User::where('department_id', $departmentId)
-            ->where('role', 'user')
-            ->count();
-
-        $totalDesignations = Designation::where('department_id', $departmentId)->count();
-
-        return view('admin.dashboard', compact('totalUsers', 'totalDesignations'));
+        return view('admin.dashboard', [
+            'users' => User::count(),
+            'departments' => Department::count(),
+            'designations' => Designation::count(),
+            'files' => 0 // TEMP FIX
+        ]);
     }
 }
