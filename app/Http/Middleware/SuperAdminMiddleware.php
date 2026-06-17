@@ -6,20 +6,16 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class RoleMiddleware
+class SuperAdminMiddleware
 {
     /**
      * Handle an incoming request.
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle($request, Closure $next, ...$roles)
+    public function handle($request, Closure $next)
     {
-        if (! auth()->check()) {
-            abort(403);
-        }
-
-        if (! in_array(auth()->user()->role, $roles)) {
+        if (auth()->user()->role !== 'super_admin') {
             abort(403);
         }
 

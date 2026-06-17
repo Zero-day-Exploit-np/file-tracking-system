@@ -3,16 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Designation extends Model
 {
     protected $fillable = [
-        'name'
+        'department_id',
+        'name',
+        'is_active',
     ];
 
-    public function users(): HasMany
+    public function users()
     {
         return $this->hasMany(User::class);
     }
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+    
 }

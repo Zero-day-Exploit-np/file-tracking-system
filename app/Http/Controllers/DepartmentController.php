@@ -16,23 +16,33 @@ class DepartmentController extends Controller
                 ->orWhere('code', 'like', '%' . $request->search . '%');
         }
 
-        $departments = $query
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $departments = $query->latest()->paginate(10)->withQueryString();
 
         return view('departments.index', compact('departments'));
     }
+
     public function create()
     {
         return view('departments.create');
     }
 
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+        // later
+    }
 
-    public function show(Department $department) {}
+    public function show(Department $department)
+    {
+        return view('departments.show', compact('department'));
+    }
 
-    public function edit(Department $department) {}
+    public function edit(Department $department)
+    {
+        return view('departments.edit', compact('department'));
+    }
 
-    public function update(Request $request, Department $department) {}
+    public function update(Request $request, Department $department)
+    {
+        // later
+    }
 }
