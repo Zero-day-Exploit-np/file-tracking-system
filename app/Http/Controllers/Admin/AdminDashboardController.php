@@ -16,9 +16,17 @@ class AdminDashboardController extends Controller
     public function index()
 
     {
+        if (
+            $user->role === 'super_admin' &&
+            $request->filled('department_id')
+        ) {
+            $query->where(
+                'department_id',
+                $request->department_id
+            );
+        }
 
 
-    
         return view('admin.dashboard', [
             'users' => User::count(),
             'departments' => Department::count(),
@@ -34,7 +42,7 @@ class AdminDashboardController extends Controller
             'pendingTransfers' =>
             TransferRequest::where('status', 'pending')->count(),
 
-                
+
 
             'recentUsers' => User::with(['designation', 'department'])
                 ->latest()

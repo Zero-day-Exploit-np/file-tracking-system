@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FileRecord;
 use Illuminate\Http\Request;
 use App\Models\FileMovement;
+use App\Models\Department;
 
 
 class AdminFileController extends Controller
@@ -14,20 +15,30 @@ class AdminFileController extends Controller
     {
         $query = FileRecord::query();
 
-        $user = auth()->user();
-
-        if ($user->role !== 'super_admin') {
-            $query->where('department_id', $user->department_id);
-        }
-
+        // Search
         if ($request->filled('search')) {
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
-                $q->where('file_number', 'like', "%$search%")
-                    ->orWhere('file_name', 'like', "%$search%")
-                    ->orWhere('remarks', 'like', "%$search%");
+                $q->where('file_number', 'like', "%{$search}%")
+                    ->orWhere('file_name', 'like', "%{$search}%")
+                    ->orWhere('remarks', 'like', "%{$search}%");
             });
+        }
+
+        // Status Filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Date From
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        // Date To
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
         }
 
         $files = $query->latest()->get();
