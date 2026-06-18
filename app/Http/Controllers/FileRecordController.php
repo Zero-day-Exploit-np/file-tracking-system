@@ -12,7 +12,18 @@ class FileRecordController extends Controller
 {
     public function index()
     {
-        $files = FileRecord::latest()->get();
+        $user = auth()->user();
+
+        if ($user->role === 'super_admin') {
+
+            $files = FileRecord::latest()->get();
+        } else {
+
+            $files = FileRecord::where(
+                'department_id',
+                $user->department_id
+            )->latest()->get();
+        }
 
         return view('files.index', compact('files'));
     }
@@ -30,18 +41,22 @@ class FileRecordController extends Controller
             'remarks' => 'nullable|string',
         ]);
 
+        $departmentId = auth()->user()->role === 'super_admin'
+            ? $request->department_id
+            : auth()->user()->department_id;
+
         FileRecord::create([
-            'created_by' => Auth::id(),
-            'department_id' => $request->department_id,
+            'created_by' => auth()->id(),
+            'department_id' => $departmentId,
             'file_name' => $request->file_name,
             'file_number' => 'FILE-' . strtoupper(Str::random(10)),
             'remarks' => $request->remarks,
         ]);
-        
-        return redirect()->route('files.index')
+
+        return redirect()
+            ->route('files.index')
             ->with('success', 'File created successfully');
     }
-
 
     public function show($id)
     {
@@ -54,6 +69,15 @@ class FileRecordController extends Controller
             'transfers.fromDepartment',
             'transfers.toDepartment'
         ])->findOrFail($id);
+
+        $user = auth()->user();
+
+        if (
+            $user->role !== 'super_admin' &&
+            $file->department_id != $user->department_id
+        ) {
+            abort(403);
+        }
 
         return view('files.show', compact('file'));
     }

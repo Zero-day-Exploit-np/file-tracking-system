@@ -10,6 +10,21 @@ class FileTimelineController extends Controller
 {
     public function show($id)
     {
+
+        $file = FileRecord::with([
+            'currentUser',
+            'department',
+        ])->findOrFail($id);
+
+
+        if (
+            auth()->user()->role !== 'super_admin' &&
+            $file->department_id != auth()->user()->department_id
+        ) {
+            abort(403);
+        }
+
+
         $file = FileRecord::with([
             'currentUser',
             'department',
@@ -37,6 +52,13 @@ class FileTimelineController extends Controller
             'movements.fromDept',
             'movements.toDept'
         ])->findOrFail($id);
+
+        if (
+            auth()->user()->role !== 'super_admin' &&
+            $file->department_id != auth()->user()->department_id
+        ) {
+            abort(403);
+        }
 
         return view('admin.files.show', compact('file'));
     }

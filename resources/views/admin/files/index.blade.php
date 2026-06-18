@@ -17,6 +17,7 @@
             <th>File Name</th>
             <th>File Number</th>
             <th>Remarks</th>
+            <th>Timeline</th>
         </tr>
 
         @foreach($files as $file)

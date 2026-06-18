@@ -139,8 +139,15 @@
     </table>
 </div>
 
-<!-- ================= AJAX SCRIPT ================= -->
 <script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.style.display = 'none';
+        });
+
+        document.getElementById(tabId).style.display = 'block';
+    }
+
     function approveRequest(id) {
         fetch(`/admin/transfer-requests/${id}/approve`, {
                 method: 'POST',
@@ -153,13 +160,11 @@
             })
             .then(res => res.json())
             .then(data => {
-                console.log(data); // DEBUG
                 if (data.success) {
                     alert(data.message);
-                    location.reload(); // safest way
+                    location.reload();
                 }
-            })
-            .catch(err => console.log(err));
+            });
     }
 
     function rejectRequest(id) {
@@ -174,15 +179,12 @@
             })
             .then(res => res.json())
             .then(data => {
-                console.log(data);
                 if (data.success) {
                     alert(data.message);
                     location.reload();
                 }
-            })
-            .catch(err => console.log(err));
+            });
     }
 </script>
-
 
 @endsection

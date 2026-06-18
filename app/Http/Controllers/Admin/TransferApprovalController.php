@@ -7,44 +7,15 @@ use App\Models\TransferRequest;
 use Illuminate\Http\Request;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
+use App\Models\FileTransfer;
+use Illuminate\Support\Facades\Auth;
+
 
 class TransferApprovalController extends Controller
 {
-
-    // public function index()
-    // {
-    //     $deptId = auth()->user()->department_id;
-
-    //     $pending = TransferRequest::with('file')
-    //         ->where('to_department', $deptId)
-    //         ->where('status', 'pending')
-    //         ->latest()
-    //         ->get();
-
-    //     $approved = TransferRequest::with('file')
-    //         ->where('to_department', $deptId)
-    //         ->where('status', 'approved')
-    //         ->latest()
-    //         ->get();
-
-    //     $rejected = TransferRequest::with('file')
-    //         ->where('to_department', $deptId)
-    //         ->where('status', 'rejected')
-    //         ->latest()
-    //         ->get();
-
-    //     return view('admin.transfer_requests.index', compact(
-    //         'pending',
-    //         'approved',
-    //         'rejected'
-    //     ));
-    // }
-
-
     public function index()
     {
-        $deptId = auth()->user()->department_id;
-
+        $deptId = Auth::user()->department_id;
         $relations = ['file', 'sender', 'receiver', 'fromDept', 'toDept'];
 
         $pending = TransferRequest::with($relations)
@@ -75,34 +46,42 @@ class TransferApprovalController extends Controller
     public function approve($id)
     {
         $request = TransferRequest::findOrFail($id);
+
         $file = FileRecord::findOrFail($request->file_id);
 
         $fromUser = $file->current_user_id;
         $fromDept = $file->department_id;
 
-        // update file
-        $file->update([
-            'current_user_id' => $request->to_user_id,
-            'department_id' => $request->to_department,
+        FileTransfer::create([
+            'file_id' => $file->id,
+            'sender_id' => $request->requested_by,
+            'receiver_id' => $request->target_user,
+            'remarks' => 'Approved by Admin'
         ]);
 
-        // update request
-        $request->update(['status' => 'approved']);
+        $file->update([
+            'current_user_id' => $request->target_user,
+            'department_id' => $request->to_department,
+            'status' => 'active'
+        ]);
 
-        // ✅ ADD TIMELINE ENTRY (THIS IS KEY)
+        $request->update([
+            'status' => 'approved'
+        ]);
+
         FileMovement::create([
             'file_id' => $file->id,
             'from_user' => $fromUser,
-            'to_user' => $request->to_user_id,
+            'to_user' => $request->target_user,
             'from_department' => $fromDept,
             'to_department' => $request->to_department,
             'action' => 'approved',
-            'remarks' => 'File transferred on approval'
+            'remarks' => 'File transferred after admin approval'
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Approved successfully'
+            'message' => 'Transfer Approved'
         ]);
     }
 
@@ -121,6 +100,9 @@ class TransferApprovalController extends Controller
             'to_department' => $request->to_department,
             'action' => 'rejected',
             'remarks' => 'Transfer rejected'
+        ]);
+        $file->update([
+            'status' => 'active'
         ]);
 
         return response()->json([

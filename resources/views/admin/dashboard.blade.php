@@ -3,7 +3,10 @@
 @section('content')
 
 <div class="container">
-
+    <div>
+        <h4>Pending Transfers</h4>
+        <h2>{{ $pendingTransfers }}</h2>
+    </div>
     {{-- =======================
         HEADER / ADMIN PROFILE
     ======================== --}}

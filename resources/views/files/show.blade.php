@@ -19,6 +19,19 @@
         <strong>File Number:</strong>
         {{ $file->file_number }}
     </p>
+    <p>
+        <strong>Status:</strong>
+
+        @if($file->status == 'active')
+        Active
+        @elseif($file->status == 'pending_transfer')
+        Pending Approval
+        @elseif($file->status == 'archived')
+        Archived
+        @else
+        Draft
+        @endif
+    </p>
 
     <p>
         <strong>Department:</strong>

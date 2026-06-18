@@ -9,7 +9,7 @@ use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\FileRecord;
 use App\Models\FileTransfer;
-
+use App\Models\TransferRequest;
 
 class AdminDashboardController extends Controller
 {
@@ -31,7 +31,8 @@ class AdminDashboardController extends Controller
                 ->take(5)
                 ->get(),
 
-
+            'pendingTransfers' =>
+            TransferRequest::where('status', 'pending')->count(),
 
                 
 

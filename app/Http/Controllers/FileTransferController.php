@@ -16,7 +16,11 @@ class FileTransferController extends Controller
     public function create($fileId)
     {
         $file = FileRecord::findOrFail($fileId);
-        $users = User::where('department_id', $file->department_id)->get();
+
+        $users = User::where('id', '!=', auth()->id())
+            ->whereNotNull('department_id')
+            ->with(['department', 'designation'])
+            ->get();
 
         return view('files.transfer', compact('file', 'users'));
     }
@@ -33,22 +37,39 @@ class FileTransferController extends Controller
         $targetUser = User::findOrFail($request->to_user_id);
 
         // CROSS DEPARTMENT
-        if ($targetUser->department_id != auth()->user()->department_id) {
+        $currentUser = auth()->user();
+
+        if (
+            $currentUser->role !== 'super_admin' &&
+            $targetUser->department_id != $currentUser->department_id
+        ) {
+            if (!$targetUser->department_id) {
+                return back()->with(
+                    'error',
+                    'Target user has no department assigned.'
+                );
+            }
 
             TransferRequest::create([
                 'file_id' => $file->id,
-                'requested_by' => auth()->id(),
-                'from_department' => auth()->user()->department_id,
+                'requested_by' => $currentUser->id,
+                'from_department' => $currentUser->department_id,
                 'to_department' => $targetUser->department_id,
                 'target_user' => $targetUser->id,
                 'status' => 'pending'
             ]);
+            $file->update([
+                'status' => 'pending_transfer'
+            ]);
 
-            return back()->with('success', 'Transfer request sent for Admin approval');
+            return back()->with(
+                'success',
+                'Transfer request sent for approval'
+            );
         }
 
         // SAME DEPARTMENT TRANSFER
-         FileTransfer::create([
+        FileTransfer::create([
             'file_id' => $file->id,          // ✅ FIXED
             'sender_id' => auth()->id(),     // ✅ FIXED
             'receiver_id' => $targetUser->id, // ✅ FIXED

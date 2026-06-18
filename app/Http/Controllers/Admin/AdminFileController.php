@@ -14,6 +14,12 @@ class AdminFileController extends Controller
     {
         $query = FileRecord::query();
 
+        $user = auth()->user();
+
+        if ($user->role !== 'super_admin') {
+            $query->where('department_id', $user->department_id);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
 
@@ -31,6 +37,15 @@ class AdminFileController extends Controller
     public function timeline($id)
     {
         $file = FileRecord::findOrFail($id);
+
+        $user = auth()->user();
+
+        if (
+            $user->role !== 'super_admin' &&
+            $file->department_id != $user->department_id
+        ) {
+            abort(403);
+        }
 
         $movements = FileMovement::where('file_id', $id)
             ->latest()
