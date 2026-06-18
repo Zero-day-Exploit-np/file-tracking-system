@@ -48,7 +48,7 @@ class AdminUserController extends Controller
             'role' => 'user'
         ]);
 
-        return redirect()->route('/admin/users')
+        return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully');
     }
 

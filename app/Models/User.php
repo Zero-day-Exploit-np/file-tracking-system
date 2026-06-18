@@ -28,9 +28,9 @@ class User extends Authenticatable
         'role',
         'department_id',
         'designation_id',
-        'employee_code',
-        'phone',
-        'is_active',
+        'contact_number',
+        'photo',
+        'can_create_file',
     ];
 
     /**

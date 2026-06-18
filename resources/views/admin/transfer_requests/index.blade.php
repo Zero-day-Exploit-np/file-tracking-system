@@ -22,7 +22,7 @@
 
         <td>
 
-            <form action="{{ route('transfer.approve',$request->id) }}"
+            <form action="{{ route('admin.transfer.approve',$request->id) }}"
                 method="POST">
 
                 @csrf
@@ -33,7 +33,7 @@
 
             </form>
 
-            <form action="{{ route('transfer.reject',$request->id) }}"
+            <form action="{{ route('admin.transfer.reject',$request->id) }}"
                 method="POST">
 
                 @csrf
