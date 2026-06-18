@@ -72,54 +72,6 @@ class TransferApprovalController extends Controller
         ));
     }
 
-    // public function approve($id)
-    // {
-    //     $request = TransferRequest::findOrFail($id);
-
-    //     $file = FileRecord::findOrFail($request->file_id);
-
-    //     $fromUser = $file->current_user_id;
-    //     $fromDept = $file->department_id;
-
-
-    //     $file->update([
-    //         'current_user_id' => $request->target_user,
-    //         'department_id' => $request->to_department,
-    //         'current_holder' => $request->target_user // if used
-    //     ]);
-
-    //     $request->update(['status' => 'approved']);
-
-    //     FileMovement::create([
-    //         'file_id' => $request->file_id,
-    //         'from_user' => $fromUser,
-    //         'to_user' => $request->target_user,
-    //         'from_department' => $fromDept,
-    //         'to_department' => $request->to_department,
-    //         'action' => 'rejected',
-    //         'remarks' => 'Request rejected'
-    //     ]);
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Approved successfully'
-    //     ]);
-    // }
-
-    // public function reject($id)
-    // {
-    //     $request = TransferRequest::findOrFail($id);
-
-    //     $request->update(['status' => 'rejected']);
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Request rejected',
-    //         'id' => $request->id
-    //     ]);
-    // }
-
-
     public function approve($id)
     {
         $request = TransferRequest::findOrFail($id);

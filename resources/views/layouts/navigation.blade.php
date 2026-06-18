@@ -66,7 +66,6 @@
         <x-nav-link :href="route('files.index')">
             My Files
         </x-nav-link>
-
         @endif
 
         {{-- Profile & Logout (all roles) --}}

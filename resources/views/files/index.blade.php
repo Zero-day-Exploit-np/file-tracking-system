@@ -6,6 +6,10 @@
 
     <h2>Department Files</h2>
 
+    <x-nav-link :href="route('files.create')">
+        Create File
+    </x-nav-link>
+
     <table border="1" cellpadding="10">
 
         <tr>
