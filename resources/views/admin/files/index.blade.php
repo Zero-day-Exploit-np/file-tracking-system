@@ -5,6 +5,10 @@
 <div class="container">
 
     <h2>Department Files</h2>
+    <form method="GET">
+        <input type="text" name="search" placeholder="Search file number or name">
+        <button>Search</button>
+    </form>
 
     <table border="1" cellpadding="10">
 
@@ -14,16 +18,21 @@
             <th>File Number</th>
             <th>Remarks</th>
         </tr>
-
+        
         @foreach($files as $file)
-
         <tr>
             <td>{{ $file->id }}</td>
             <td>{{ $file->file_name }}</td>
             <td>{{ $file->file_number }}</td>
             <td>{{ $file->remarks }}</td>
-        </tr>
 
+            <!-- Timeline link -->
+            <td>
+                <a href="{{ route('admin.files.timeline', $file->id) }}">
+                    View Timeline
+                </a>
+            </td>
+        </tr>
         @endforeach
 
     </table>

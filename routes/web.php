@@ -16,7 +16,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminFileController;
 use App\Http\Controllers\Admin\AdminDesignationController;
-
+use App\Http\Controllers\Admin\FileTimelineController;
 /*
 |--------------------------------------------------------------------------
 | PUBLIC
@@ -54,40 +54,37 @@ Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
 
 Route::middleware(['auth', 'role:super_admin'])->group(function () {
     Route::resource('departments', DepartmentController::class);
-       Route::resource('users', UserController::class);
+    Route::resource('users', UserController::class);
 });
 
-Route::middleware(['auth', 'role:admin'])
-    ->prefix('admin')
+Route::prefix('admin')
     ->name('admin.')
+    ->middleware(['auth', 'role:admin'])
     ->group(function () {
 
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
 
         Route::resource('users', AdminUserController::class);
-
         Route::resource('designations', AdminDesignationController::class);
 
         Route::get('/files', [AdminFileController::class, 'index'])
             ->name('files');
 
-        Route::get(
-            '/transfer-requests',
-            [TransferApprovalController::class, 'index']
-        )->name('transfer.requests');
+        // ✅ TIMELINE (ONLY ONE ROUTE)
+        Route::get('/files/{id}/timeline', [FileTimelineController::class, 'show'])
+            ->name('files.timeline');
 
-        Route::post(
-            '/transfer-requests/{id}/approve',
-            [TransferApprovalController::class, 'approve']
-        )->name('transfer.approve');
+        // ✅ TRANSFER REQUESTS
+        Route::get('/transfer-requests', [TransferApprovalController::class, 'index'])
+            ->name('transfer.requests');
 
-        Route::post(
-            '/transfer-requests/{id}/reject',
-            [TransferApprovalController::class, 'reject']
-        )->name('transfer.reject');
+        Route::post('/transfer-requests/{id}/approve', [TransferApprovalController::class, 'approve'])
+            ->name('transfer.approve');
+
+        Route::post('/transfer-requests/{id}/reject', [TransferApprovalController::class, 'reject'])
+            ->name('transfer.reject');
     });
-
 
 
 Route::middleware('auth')->group(function () {

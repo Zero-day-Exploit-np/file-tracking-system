@@ -32,18 +32,27 @@ class FileRecord extends Model
         return $this->belongsTo(Department::class);
     }
 
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
+   
     public function currentUser()
     {
         return $this->belongsTo(User::class, 'current_user_id');
     }
 
+    
+
+
     public function transfers()
     {
-        return $this->hasMany(FileTransfer::class);
+        return $this->hasMany(FileMovement::class, 'file_id');
+    }
+
+    public function currentHolder()
+    {
+        return $this->belongsTo(User::class, 'current_user_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
