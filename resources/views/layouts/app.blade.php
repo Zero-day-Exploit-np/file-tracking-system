@@ -24,10 +24,16 @@
     // Dashboard route per role
     $dashRoute = $isSuper ? 'super_admin.dashboard' : ($isAdmin ? 'admin.dashboard' : 'user.dashboard');
 
-    // Pending badge (only for admin — they can act on it)
-    $pendingCount = $isAdmin
-        ? \App\Models\TransferRequest::where('status','pending')->where('to_department', $deptId)->count()
-        : 0;
+    // Pending badge (only for admin — they can act on it; cached per request)
+    $pendingCount = 0;
+    if ($isAdmin) {
+        $pendingCount = \Illuminate\Support\Facades\Cache::remember(
+            "pending_transfers_{$deptId}",
+            60, // 1 minute cache
+            fn() => \App\Models\TransferRequest::where('status', 'pending')
+                ->where('to_department', $deptId)->count()
+        );
+    }
 
     $unreadCount = auth()->user()->unreadNotifications->count();
 @endphp
