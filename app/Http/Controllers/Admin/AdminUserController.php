@@ -3,14 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Designation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AdminUserController extends Controller
 {
+    /** Resolve user by UUID, scoped to admin's department */
+    private function resolveUser(string $uuid): User
+    {
+        return User::where('uuid', $uuid)
+            ->where('department_id', auth()->user()->department_id)
+            ->firstOrFail();
+    }
+
     public function index()
     {
         $users = User::where('department_id', auth()->user()->department_id)
@@ -36,7 +44,6 @@ class AdminUserController extends Controller
             'password'       => 'required|min:8',
             'designation_id' => 'required|exists:designations,id',
             'contact_number' => 'nullable|string|max:20',
-            // Secure upload: MIME type + extension + 2 MB max
             'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'can_create_file'=> 'nullable|boolean',
         ]);
@@ -68,33 +75,30 @@ class AdminUserController extends Controller
             ->with('success', 'User created successfully.');
     }
 
-    public function show($id)
+    public function show(string $user)
     {
-        $user = User::where('department_id', auth()->user()->department_id)
-            ->with('designation')
-            ->findOrFail($id);
-
-        return view('admin.users.index', compact('user'));
+        // show() not used — redirect to index
+        return redirect()->route('admin.users.index');
     }
 
-    public function edit($id)
+    public function edit(string $user)
     {
-        $user         = User::where('department_id', auth()->user()->department_id)->findOrFail($id);
+        $userModel    = $this->resolveUser($user);
         $designations = Designation::where('department_id', auth()->user()->department_id)->get();
 
-        return view('admin.users.edit', compact('user', 'designations'));
+        return view('admin.users.edit', ['user' => $userModel, 'designations' => $designations]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, string $user)
     {
-        $user = User::where('department_id', auth()->user()->department_id)->findOrFail($id);
+        $userModel = $this->resolveUser($user);
 
         $request->validate([
             'name'  => 'required|string|max:255',
-            'email' => 'required|email:rfc|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|email:rfc|max:255|unique:users,email,' . $userModel->id,
         ]);
 
-        $user->update([
+        $userModel->update([
             'name'           => $request->name,
             'email'          => $request->email,
             'designation_id' => $request->designation_id,
@@ -104,29 +108,26 @@ class AdminUserController extends Controller
             ->with('success', 'User updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(string $user)
     {
-        $user = User::where('department_id', auth()->user()->department_id)->findOrFail($id);
+        $userModel = $this->resolveUser($user);
 
-        if ($user->id === auth()->id()) {
+        if ($userModel->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
 
-        $this->recordAudit('user_deleted', $user, [
-            'name'  => $user->name,
-            'email' => $user->email,
+        $this->recordAudit('user_deleted', $userModel, [
+            'name'  => $userModel->name,
+            'email' => $userModel->email,
             'ip'    => request()->ip(),
         ], 'User deleted by admin: ' . auth()->user()->name);
 
-        $user->delete();
+        $userModel->delete();
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User deleted successfully.');
     }
 
-    /**
-     * Store profile photo securely with a random UUID filename.
-     */
     private function storePhoto(Request $request): string
     {
         $file      = $request->file('photo');

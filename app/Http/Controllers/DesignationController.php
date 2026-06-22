@@ -38,17 +38,17 @@ class DesignationController extends Controller
             ->with('success', 'Designation created successfully.');
     }
 
-    public function edit($id)
+    /**
+     * Route model binding resolves by Designation::getRouteKeyName() = 'uuid'
+     */
+    public function edit(Designation $designation)
     {
-        $designation = Designation::findOrFail($id);
         $departments = Department::orderBy('name')->get();
         return view('designations.edit', compact('designation', 'departments'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Designation $designation)
     {
-        $designation = Designation::findOrFail($id);
-
         $request->validate([
             'department_id' => 'required|exists:departments,id',
             'name'          => 'required|string|max:255',
@@ -65,10 +65,8 @@ class DesignationController extends Controller
             ->with('success', 'Designation updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Designation $designation)
     {
-        $designation = Designation::findOrFail($id);
-
         if ($designation->users()->count() > 0) {
             return back()->with('error', 'Cannot delete a designation that has users assigned to it.');
         }

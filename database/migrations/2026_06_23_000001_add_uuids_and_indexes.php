@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -11,129 +12,67 @@ return new class extends Migration
     {
         // ── UUIDs ─────────────────────────────────────────────────
 
-        // Users
-        if (!Schema::hasColumn('users', 'uuid')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable()->after('id');
-                $table->index('uuid');
-            });
-            \DB::table('users')->each(fn($r) => \DB::table('users')->where('id', $r->id)->update(['uuid' => Str::uuid()]));
-            Schema::table('users', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable(false)->change();
-            });
-        }
+        $tables = ['users', 'file_records', 'departments', 'designations'];
 
-        // file_records
-        if (!Schema::hasColumn('file_records', 'uuid')) {
-            Schema::table('file_records', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable()->after('id');
-                $table->index('uuid');
-            });
-            \DB::table('file_records')->each(fn($r) => \DB::table('file_records')->where('id', $r->id)->update(['uuid' => Str::uuid()]));
-            Schema::table('file_records', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable(false)->change();
-            });
-        }
+        foreach ($tables as $table) {
+            if (!Schema::hasColumn($table, 'uuid')) {
+                Schema::table($table, function (Blueprint $t) {
+                    $t->string('uuid', 36)->nullable()->after('id');
+                });
 
-        // departments
-        if (!Schema::hasColumn('departments', 'uuid')) {
-            Schema::table('departments', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable()->after('id');
-                $table->index('uuid');
-            });
-            \DB::table('departments')->each(fn($r) => \DB::table('departments')->where('id', $r->id)->update(['uuid' => Str::uuid()]));
-            Schema::table('departments', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable(false)->change();
-            });
-        }
+                // Backfill with orderBy to satisfy chunking requirement
+                DB::table($table)->orderBy('id')->chunk(100, function ($rows) use ($table) {
+                    foreach ($rows as $row) {
+                        DB::table($table)->where('id', $row->id)->update(['uuid' => Str::uuid()->toString()]);
+                    }
+                });
 
-        // designations
-        if (!Schema::hasColumn('designations', 'uuid')) {
-            Schema::table('designations', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable()->after('id');
-                $table->index('uuid');
-            });
-            \DB::table('designations')->each(fn($r) => \DB::table('designations')->where('id', $r->id)->update(['uuid' => Str::uuid()]));
-            Schema::table('designations', function (Blueprint $table) {
-                $table->uuid('uuid')->nullable(false)->change();
-            });
+                Schema::table($table, function (Blueprint $t) use ($table) {
+                    $t->string('uuid', 36)->nullable(false)->change();
+                    $t->unique('uuid', "{$table}_uuid_unique");
+                });
+            }
         }
 
         // ── PERFORMANCE INDEXES ──────────────────────────────────
 
         // file_records
         Schema::table('file_records', function (Blueprint $table) {
-            if (!$this->hasIndex('file_records', 'file_records_file_number_index')) {
-                $table->index('file_number');
-            }
-            if (!$this->hasIndex('file_records', 'file_records_status_index')) {
-                $table->index('status');
-            }
-            if (!$this->hasIndex('file_records', 'file_records_department_id_index')) {
-                $table->index('department_id');
-            }
-            if (!$this->hasIndex('file_records', 'file_records_current_user_id_index')) {
-                $table->index('current_user_id');
-            }
-            if (!$this->hasIndex('file_records', 'file_records_created_at_index')) {
-                $table->index('created_at');
-            }
+            $this->addIndexIfMissing($table, 'file_records', 'file_number',     'file_records_file_number_index');
+            $this->addIndexIfMissing($table, 'file_records', 'status',           'file_records_status_index');
+            $this->addIndexIfMissing($table, 'file_records', 'department_id',    'file_records_department_id_index');
+            $this->addIndexIfMissing($table, 'file_records', 'current_user_id',  'file_records_current_user_id_index');
+            $this->addIndexIfMissing($table, 'file_records', 'created_at',       'file_records_created_at_index');
         });
 
         // transfer_requests
         Schema::table('transfer_requests', function (Blueprint $table) {
-            if (!$this->hasIndex('transfer_requests', 'transfer_requests_status_index')) {
-                $table->index('status');
-            }
-            if (!$this->hasIndex('transfer_requests', 'transfer_requests_to_department_index')) {
-                $table->index('to_department');
-            }
-            if (!$this->hasIndex('transfer_requests', 'transfer_requests_requested_by_index')) {
-                $table->index('requested_by');
-            }
+            $this->addIndexIfMissing($table, 'transfer_requests', 'status',        'transfer_requests_status_index');
+            $this->addIndexIfMissing($table, 'transfer_requests', 'to_department', 'transfer_requests_to_department_index');
+            $this->addIndexIfMissing($table, 'transfer_requests', 'requested_by',  'transfer_requests_requested_by_index');
         });
 
         // file_movements
         Schema::table('file_movements', function (Blueprint $table) {
-            if (!$this->hasIndex('file_movements', 'file_movements_file_id_index')) {
-                $table->index('file_id');
-            }
-            if (!$this->hasIndex('file_movements', 'file_movements_action_index')) {
-                $table->index('action');
-            }
-            if (!$this->hasIndex('file_movements', 'file_movements_from_user_index')) {
-                $table->index('from_user');
-            }
-            if (!$this->hasIndex('file_movements', 'file_movements_to_user_index')) {
-                $table->index('to_user');
-            }
-            if (!$this->hasIndex('file_movements', 'file_movements_created_at_index')) {
-                $table->index('created_at');
-            }
+            $this->addIndexIfMissing($table, 'file_movements', 'file_id',    'file_movements_file_id_index');
+            $this->addIndexIfMissing($table, 'file_movements', 'action',     'file_movements_action_index');
+            $this->addIndexIfMissing($table, 'file_movements', 'from_user',  'file_movements_from_user_index');
+            $this->addIndexIfMissing($table, 'file_movements', 'to_user',    'file_movements_to_user_index');
+            $this->addIndexIfMissing($table, 'file_movements', 'created_at', 'file_movements_created_at_index');
         });
 
         // users
         Schema::table('users', function (Blueprint $table) {
-            if (!$this->hasIndex('users', 'users_department_id_index')) {
-                $table->index('department_id');
-            }
-            if (!$this->hasIndex('users', 'users_role_index')) {
-                $table->index('role');
-            }
+            $this->addIndexIfMissing($table, 'users', 'department_id', 'users_department_id_index');
+            $this->addIndexIfMissing($table, 'users', 'role',          'users_role_index');
         });
 
         // audit_logs
         if (Schema::hasTable('audit_logs')) {
             Schema::table('audit_logs', function (Blueprint $table) {
-                if (!$this->hasIndex('audit_logs', 'audit_logs_action_index')) {
-                    $table->index('action');
-                }
-                if (!$this->hasIndex('audit_logs', 'audit_logs_user_id_index')) {
-                    $table->index('user_id');
-                }
-                if (!$this->hasIndex('audit_logs', 'audit_logs_created_at_index')) {
-                    $table->index('created_at');
-                }
+                $this->addIndexIfMissing($table, 'audit_logs', 'action',     'audit_logs_action_index');
+                $this->addIndexIfMissing($table, 'audit_logs', 'user_id',    'audit_logs_user_id_index');
+                $this->addIndexIfMissing($table, 'audit_logs', 'created_at', 'audit_logs_created_at_index');
             });
         }
     }
@@ -142,19 +81,23 @@ return new class extends Migration
     {
         foreach (['users', 'file_records', 'departments', 'designations'] as $table) {
             if (Schema::hasColumn($table, 'uuid')) {
-                Schema::table($table, fn(Blueprint $t) => $t->dropColumn('uuid'));
+                Schema::table($table, function (Blueprint $t) use ($table) {
+                    $t->dropUnique("{$table}_uuid_unique");
+                    $t->dropColumn('uuid');
+                });
             }
         }
     }
 
-    private function hasIndex(string $table, string $index): bool
+    private function addIndexIfMissing(Blueprint $blueprint, string $table, string $column, string $name): void
     {
         try {
-            $sm = Schema::getConnection()->getDoctrineSchemaManager();
-            $indexes = $sm->listTableIndexes($table);
-            return isset($indexes[$index]);
+            $existing = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$name]);
+            if (empty($existing)) {
+                $blueprint->index($column, $name);
+            }
         } catch (\Throwable) {
-            return false;
+            // If check fails, skip silently — index may already exist
         }
     }
 };

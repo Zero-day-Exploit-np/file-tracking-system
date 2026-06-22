@@ -28,6 +28,9 @@ class FileRecord extends Model
                 $model->uuid = Str::uuid()->toString();
             }
         });
+        // Invalidate dashboard caches after writes
+        static::created(fn()  => \App\Services\DashboardService::clearSuperAdminCache());
+        static::deleted(fn()  => \App\Services\DashboardService::clearSuperAdminCache());
     }
 
     public function getRouteKeyName(): string

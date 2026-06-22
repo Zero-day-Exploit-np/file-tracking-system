@@ -4,11 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Designation;
-use App\Models\Department;
 use Illuminate\Http\Request;
 
 class AdminDesignationController extends Controller
 {
+    /** Resolve designation by UUID, scoped to admin's department */
+    private function resolveDesignation(string $uuid): Designation
+    {
+        return Designation::where('uuid', $uuid)
+            ->where('department_id', auth()->user()->department_id)
+            ->firstOrFail();
+    }
+
     public function index()
     {
         $designations = Designation::with('department')
@@ -33,52 +40,47 @@ class AdminDesignationController extends Controller
 
         Designation::create([
             'department_id' => auth()->user()->department_id,
-            'name'          => $request->name,
-            'is_active'     => $request->status,
+            'name'          => $request->string('name')->trim()->value(),
+            'is_active'     => (bool) $request->status,
         ]);
 
         return redirect()->route('admin.designations.index')
             ->with('success', 'Designation created successfully.');
     }
 
-    public function edit($id)
+    public function show(string $designation)
     {
-        $designation = Designation::where('department_id', auth()->user()->department_id)
-            ->findOrFail($id);
-
-        return view('admin.designations.edit', compact('designation'));
+        return redirect()->route('admin.designations.index');
     }
 
-    public function update(Request $request, $id)
+    public function edit(string $designation)
     {
-        $designation = Designation::where('department_id', auth()->user()->department_id)
-            ->findOrFail($id);
+        $model = $this->resolveDesignation($designation);
+        return view('admin.designations.edit', ['designation' => $model]);
+    }
+
+    public function update(Request $request, string $designation)
+    {
+        $model = $this->resolveDesignation($designation);
 
         $request->validate([
             'name'   => 'required|string|max:255',
             'status' => 'required|boolean',
         ]);
 
-        $designation->update([
-            'name'      => $request->name,
-            'is_active' => $request->status,
+        $model->update([
+            'name'      => $request->string('name')->trim()->value(),
+            'is_active' => (bool) $request->status,
         ]);
 
         return redirect()->route('admin.designations.index')
             ->with('success', 'Designation updated successfully.');
     }
 
-    public function show($id)
+    public function destroy(string $designation)
     {
-        return redirect()->route('admin.designations.index');
-    }
-
-    public function destroy($id)
-    {
-        $designation = Designation::where('department_id', auth()->user()->department_id)
-            ->findOrFail($id);
-
-        $designation->delete();
+        $model = $this->resolveDesignation($designation);
+        $model->delete();
 
         return redirect()->route('admin.designations.index')
             ->with('success', 'Designation deleted.');
