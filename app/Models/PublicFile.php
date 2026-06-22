@@ -33,15 +33,14 @@ class PublicFile extends Model
     }
 
     /**
-     * Return a 15-minute signed download URL via the secure route.
-     * Replaces the old direct /storage URL.
+     * Return a 15-minute signed download URL via the secure route (UUID-based).
      */
     public function getSignedDownloadUrl(): string
     {
         return URL::temporarySignedRoute(
             'admin.public-files.download',
             now()->addMinutes(15),
-            ['id' => $this->id]
+            ['uuid' => $this->uuid]
         );
     }
 }

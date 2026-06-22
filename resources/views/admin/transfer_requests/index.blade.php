@@ -91,7 +91,7 @@
                     </thead>
                     <tbody>
                     @forelse($pending as $req)
-                    <tr id="row-{{ $req->id }}">
+                    <tr id="row-{{ $req->uuid }}">
                         <td>
                             <div class="fw-700">{{ $req->file->file_name ?? 'N/A' }}</div>
                             <div class="text-muted fs-sm">{{ $req->file->file_number ?? '' }}</div>
@@ -104,11 +104,11 @@
                         @if(!$isSuper)
                         <td>
                             <div class="d-flex gap-1">
-                                <button onclick="handleRequest({{ $req->id }}, 'approve')"
+                                <button onclick="handleRequest('{{ $req->uuid }}', 'approve')"
                                     class="btn btn-sm btn-success">
                                     <i class="fa-solid fa-check me-1"></i>Approve
                                 </button>
-                                <button onclick="handleRequest({{ $req->id }}, 'reject')"
+                                <button onclick="handleRequest('{{ $req->uuid }}', 'reject')"
                                     class="btn btn-sm btn-danger">
                                     <i class="fa-solid fa-xmark me-1"></i>Reject
                                 </button>

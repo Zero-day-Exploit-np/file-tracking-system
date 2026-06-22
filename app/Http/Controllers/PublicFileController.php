@@ -19,9 +19,9 @@ class PublicFileController extends Controller
     /**
      * Generate a 15-minute signed download URL (replaces direct /storage access).
      */
-    public function download(int $id)
+    public function download(string $uuid)
     {
-        $file = PublicFile::findOrFail($id);
+        $file = \App\Models\PublicFile::where('uuid', $uuid)->firstOrFail();
 
         if (!$file->attachment_path || !Storage::disk('private')->exists($file->attachment_path)) {
             return redirect()->route('admin.public-files.index')
@@ -32,7 +32,7 @@ class PublicFileController extends Controller
         \App\Models\AuditLog::create([
             'user_id'        => auth()->id(),
             'action'         => 'file_downloaded',
-            'auditable_type' => PublicFile::class,
+            'auditable_type' => \App\Models\PublicFile::class,
             'auditable_id'   => $file->id,
             'description'    => "Downloaded: {$file->subject}",
             'metadata'       => ['ip' => request()->ip()],
