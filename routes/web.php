@@ -123,17 +123,17 @@ Route::prefix('admin')
         // Transfer requests
         Route::get('/transfer-requests', [TransferApprovalController::class, 'index'])->name('transfer.requests');
 
-        Route::post('/transfer-requests/{id}/approve', [TransferApprovalController::class, 'approve'])
+        Route::post('/transfer-requests/{uuid}/approve', [TransferApprovalController::class, 'approve'])
             ->middleware('role:admin')
             ->name('transfer.approve');
 
-        Route::post('/transfer-requests/{id}/reject', [TransferApprovalController::class, 'reject'])
+        Route::post('/transfer-requests/{uuid}/reject', [TransferApprovalController::class, 'reject'])
             ->middleware('role:admin')
             ->name('transfer.reject');
 
-        // Public files — signed download
+        // Public files — private storage, served via signed URL (no direct /storage access)
         Route::get('/public-files',               [PublicFileController::class, 'index'])->name('public-files.index');
-        Route::get('/public-files/{id}/download', [PublicFileController::class, 'download'])
+        Route::get('/public-files/{uuid}/download', [PublicFileController::class, 'download'])
             ->middleware('signed')
             ->name('public-files.download');
 

@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class TransferRequest extends Model
 {
     protected $fillable = [
+        'uuid',
         'file_id',
         'requested_by',
         'from_department',
@@ -14,6 +16,21 @@ class TransferRequest extends Model
         'target_user',
         'status',
     ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->uuid)) {
+                $model->uuid = Str::uuid()->toString();
+            }
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
 
     public function file()
     {
