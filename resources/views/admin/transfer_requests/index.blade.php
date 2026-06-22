@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('title', 'Transfer Requests')
-
 @section('breadcrumb')
 <li class="breadcrumb-item active">Transfer Requests</li>
 @endsection
@@ -9,11 +8,29 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Transfer Requests</h1>
-        <div class="page-subtitle">Review and manage incoming file transfer requests</div>
+        <div class="page-subtitle">
+            @if($isSuper)
+            System-wide view &mdash; <span class="badge bg-secondary">Monitor Only</span>
+            @else
+            {{ auth()->user()->department->name ?? 'Your Department' }} &mdash; Review and action incoming requests
+            @endif
+        </div>
     </div>
 </div>
 
-{{-- STATS ROW --}}
+{{-- Super Admin notice --}}
+@if($isSuper)
+<div class="alert alert-info d-flex align-items-center gap-2 mb-4" role="alert">
+    <i class="fa-solid fa-circle-info fa-lg"></i>
+    <div>
+        <strong>Read-Only View.</strong>
+        As Super Admin you can monitor all transfer requests.
+        Approval and rejection is handled exclusively by the <strong>destination department's Admin</strong>.
+    </div>
+</div>
+@endif
+
+{{-- Stats --}}
 <div class="row g-3 mb-4">
     <div class="col-4">
         <div class="stat-kpi">
@@ -35,7 +52,7 @@
     </div>
 </div>
 
-{{-- TABS --}}
+{{-- Tabs --}}
 <ul class="nav nav-tabs mb-3" id="transferTabs">
     <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-pending">
@@ -56,7 +73,7 @@
 
 <div class="tab-content">
 
-    {{-- PENDING --}}
+    {{-- ── PENDING ─────────────────────────────────── --}}
     <div class="tab-pane fade show active" id="tab-pending">
         <div class="portal-table-wrap">
             <div class="table-responsive">
@@ -69,7 +86,7 @@
                             <th>To Dept.</th>
                             <th>Target User</th>
                             <th>Date</th>
-                            <th>Actions</th>
+                            @if(!$isSuper)<th>Actions</th>@else<th>Approval By</th>@endif
                         </tr>
                     </thead>
                     <tbody>
@@ -84,19 +101,33 @@
                         <td class="text-muted">{{ $req->toDept->name ?? 'N/A' }}</td>
                         <td>{{ $req->receiver->name ?? 'N/A' }}</td>
                         <td class="text-muted fs-sm">{{ $req->created_at->format('d M Y') }}</td>
+                        @if(!$isSuper)
                         <td>
                             <div class="d-flex gap-1">
-                                <button onclick="handleRequest({{ $req->id }}, 'approve')" class="btn btn-sm btn-success">
-                                    <i class="fa-solid fa-check"></i> Approve
+                                <button onclick="handleRequest({{ $req->id }}, 'approve')"
+                                    class="btn btn-sm btn-success">
+                                    <i class="fa-solid fa-check me-1"></i>Approve
                                 </button>
-                                <button onclick="handleRequest({{ $req->id }}, 'reject')" class="btn btn-sm btn-danger">
-                                    <i class="fa-solid fa-xmark"></i> Reject
+                                <button onclick="handleRequest({{ $req->id }}, 'reject')"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="fa-solid fa-xmark me-1"></i>Reject
                                 </button>
                             </div>
                         </td>
+                        @else
+                        <td>
+                            <span class="badge-status badge-pending" title="Only {{ $req->toDept->name ?? '' }} Admin can approve">
+                                <i class="fa-solid fa-lock me-1"></i>{{ $req->toDept->name ?? 'N/A' }} Admin
+                            </span>
+                        </td>
+                        @endif
                     </tr>
                     @empty
-                    <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-clock"></i>No pending requests.</div></td></tr>
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state"><i class="fa-solid fa-clock"></i>No pending requests.</div>
+                        </td>
+                    </tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -104,16 +135,21 @@
         </div>
     </div>
 
-    {{-- APPROVED --}}
+    {{-- ── APPROVED ─────────────────────────────────── --}}
     <div class="tab-pane fade" id="tab-approved">
         <div class="portal-table-wrap">
             <div class="table-responsive">
                 <table class="portal-table">
-                    <thead><tr><th>File</th><th>From</th><th>To</th><th>From Dept.</th><th>To Dept.</th><th>Date</th><th>Status</th></tr></thead>
+                    <thead>
+                        <tr><th>File</th><th>From</th><th>To</th><th>From Dept.</th><th>To Dept.</th><th>Approved</th><th>Status</th></tr>
+                    </thead>
                     <tbody>
                     @forelse($approved as $req)
                     <tr>
-                        <td><div class="fw-700">{{ $req->file->file_name ?? 'N/A' }}</div><div class="text-muted fs-sm">{{ $req->file->file_number ?? '' }}</div></td>
+                        <td>
+                            <div class="fw-700">{{ $req->file->file_name ?? 'N/A' }}</div>
+                            <div class="text-muted fs-sm">{{ $req->file->file_number ?? '' }}</div>
+                        </td>
                         <td>{{ $req->sender->name ?? 'N/A' }}</td>
                         <td>{{ $req->receiver->name ?? 'N/A' }}</td>
                         <td class="text-muted">{{ $req->fromDept->name ?? 'N/A' }}</td>
@@ -130,16 +166,21 @@
         </div>
     </div>
 
-    {{-- REJECTED --}}
+    {{-- ── REJECTED ─────────────────────────────────── --}}
     <div class="tab-pane fade" id="tab-rejected">
         <div class="portal-table-wrap">
             <div class="table-responsive">
                 <table class="portal-table">
-                    <thead><tr><th>File</th><th>From</th><th>To</th><th>From Dept.</th><th>To Dept.</th><th>Date</th><th>Status</th></tr></thead>
+                    <thead>
+                        <tr><th>File</th><th>From</th><th>To</th><th>From Dept.</th><th>To Dept.</th><th>Rejected</th><th>Status</th></tr>
+                    </thead>
                     <tbody>
                     @forelse($rejected as $req)
                     <tr>
-                        <td><div class="fw-700">{{ $req->file->file_name ?? 'N/A' }}</div><div class="text-muted fs-sm">{{ $req->file->file_number ?? '' }}</div></td>
+                        <td>
+                            <div class="fw-700">{{ $req->file->file_name ?? 'N/A' }}</div>
+                            <div class="text-muted fs-sm">{{ $req->file->file_number ?? '' }}</div>
+                        </td>
                         <td>{{ $req->sender->name ?? 'N/A' }}</td>
                         <td>{{ $req->receiver->name ?? 'N/A' }}</td>
                         <td class="text-muted">{{ $req->fromDept->name ?? 'N/A' }}</td>
@@ -155,6 +196,7 @@
             </div>
         </div>
     </div>
+
 </div>
 
 <div id="requestFeedback" class="alert d-none mt-3" role="alert"></div>
@@ -162,9 +204,7 @@
 @push('scripts')
 <script>
 function handleRequest(id, action) {
-    const label = action === 'approve' ? 'Approve' : 'Reject';
-    if (!confirm(`${label} this transfer request?`)) return;
-
+    if (!confirm((action === 'approve' ? 'Approve' : 'Reject') + ' this transfer request?')) return;
     fetch(`/admin/transfer-requests/${id}/${action}`, {
         method: 'POST',
         headers: {
@@ -177,16 +217,18 @@ function handleRequest(id, action) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            const row = document.getElementById(`row-${id}`);
+            const row = document.getElementById('row-' + id);
             if (row) row.remove();
             const fb = document.getElementById('requestFeedback');
             fb.className = 'alert alert-success mt-3';
             fb.textContent = data.message;
+            // Play notification sound on approval
+            const sound = document.getElementById('notif-sound');
+            if (sound) { sound.currentTime = 0; sound.play().catch(()=>{}); }
+            setTimeout(() => fb.className = 'alert d-none', 4000);
         }
     })
-    .catch(() => {
-        alert('An error occurred. Please refresh and try again.');
-    });
+    .catch(() => alert('An error occurred. Please refresh and try again.'));
 }
 </script>
 @endpush
