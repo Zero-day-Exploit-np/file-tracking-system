@@ -1,108 +1,126 @@
 @extends('layouts.app')
+@section('title', 'File Details')
+
+@section('breadcrumb')
+<li class="breadcrumb-item"><a href="{{ route('files.index') }}">Files</a></li>
+<li class="breadcrumb-item active">{{ $file->file_number }}</li>
+@endsection
 
 @section('content')
-
-<div class="container">
-
-    <h2>File Tracking Details</h2>
-
-    <hr>
-
-    <h4>File Information</h4>
-
-    <p>
-        <strong>File Name:</strong>
-        {{ $file->file_name }}
-    </p>
-
-    <p>
-        <strong>File Number:</strong>
-        {{ $file->file_number }}
-    </p>
-    <p>
-        <strong>Status:</strong>
-
-        @if($file->status == 'active')
-        Active
-        @elseif($file->status == 'pending_transfer')
-        Pending Approval
-        @elseif($file->status == 'archived')
-        Archived
-        @else
-        Draft
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ $file->file_name }}</h1>
+        <div class="page-subtitle">{{ $file->file_number }}</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ route('files.index') }}" class="btn-portal-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
+        @if($file->status !== 'archived')
+        <a href="{{ route('files.transfer.create', $file->id) }}" class="btn-portal-primary"><i class="fa-solid fa-right-left"></i> Transfer</a>
         @endif
-    </p>
-
-    <p>
-        <strong>Department:</strong>
-        {{ $file->department->name ?? 'N/A' }}
-    </p>
-
-    <p>
-        <strong>Created By:</strong>
-        {{ $file->creator->name ?? 'N/A' }}
-    </p>
-
-    <p>
-        <strong>Current Holder:</strong>
-        {{ $file->currentHolder->name ?? 'N/A' }}
-    </p>
-
-    <p>
-        <strong>Created At:</strong>
-        {{ $file->created_at }}
-    </p>
-
-    <hr>
-
-    <h4>Transfer History</h4>
-
-    <table class="table table-bordered">
-
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Action</th>
-                <th>From User</th>
-                <th>To User</th>
-                <th>From Department</th>
-                <th>To Department</th>
-                <th>Remarks</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            @forelse($file->movements as $movement)
-            <tr>
-                <td>{{ $movement->created_at }}</td>
-
-                <td>{{ ucfirst($movement->action) }}</td>
-
-                <td>{{ $movement->fromUser->name ?? 'N/A' }}</td>
-
-                <td>{{ $movement->toUser->name ?? 'N/A' }}</td>
-
-                <td>{{ $movement->fromDept->name ?? 'N/A' }}</td>
-
-                <td>{{ $movement->toDept->name ?? 'N/A' }}</td>
-
-                <td>{{ $movement->remarks }}</td>
-            </tr>
-            @empty
-
-            <tr>
-                <td colspan="7">
-                    No transfer history available.
-                </td>
-            </tr>
-
-            @endforelse
-
-        </tbody>
-
-    </table>
-
+    </div>
 </div>
 
+{{-- FILE INFO CARD --}}
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="portal-card">
+            <div class="card-header"><i class="fa-solid fa-circle-info me-2 text-primary"></i>File Information</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="text-muted fs-sm mb-1">File Name</div>
+                        <div class="fw-700">{{ $file->file_name }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted fs-sm mb-1">File Number</div>
+                        <div class="fw-700 text-portal-primary">{{ $file->file_number }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted fs-sm mb-1">Department</div>
+                        <div>{{ $file->department->name ?? 'N/A' }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted fs-sm mb-1">Status</div>
+                        <div>@include('partials.status-badge', ['status' => $file->status])</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted fs-sm mb-1">Created By</div>
+                        <div>{{ $file->creator->name ?? 'N/A' }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted fs-sm mb-1">Current Holder</div>
+                        <div>{{ $file->currentHolder->name ?? 'N/A' }}</div>
+                    </div>
+                    @if($file->remarks)
+                    <div class="col-12">
+                        <div class="text-muted fs-sm mb-1">Remarks</div>
+                        <div>{{ $file->remarks }}</div>
+                    </div>
+                    @endif
+                    <div class="col-sm-6">
+                        <div class="text-muted fs-sm mb-1">Created At</div>
+                        <div>{{ $file->created_at->format('d M Y, h:i A') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="portal-card">
+            <div class="card-header"><i class="fa-solid fa-chart-bar me-2 text-primary"></i>Quick Stats</div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted fs-sm">Total Movements</span>
+                        <span class="fw-700">{{ $file->movements->count() }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted fs-sm">Last Activity</span>
+                        <span class="fw-700">{{ $file->movements->last()?->created_at?->diffForHumans() ?? 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MOVEMENT TIMELINE --}}
+<div class="portal-card">
+    <div class="card-header"><i class="fa-solid fa-timeline me-2 text-primary"></i>Movement History</div>
+    <div class="card-body">
+        @if($file->movements->isEmpty())
+        <div class="empty-state"><i class="fa-solid fa-timeline"></i>No movement history available.</div>
+        @else
+        <div class="timeline-wrapper">
+            @foreach($file->movements->sortByDesc('created_at') as $move)
+            <div class="timeline-entry">
+                <div class="timeline-card">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        @include('partials.action-badge', ['action' => $move->action])
+                        <small class="text-muted">{{ $move->created_at->format('d M Y, h:i A') }}</small>
+                    </div>
+                    <div class="row g-2 mt-2">
+                        <div class="col-sm-6">
+                            <div class="text-muted fs-sm">From</div>
+                            <div class="fw-700">{{ $move->fromUser->name ?? 'System' }}</div>
+                            <div class="text-muted fs-sm">{{ $move->fromDept->name ?? '—' }}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-muted fs-sm">To</div>
+                            <div class="fw-700">{{ $move->toUser->name ?? '—' }}</div>
+                            <div class="text-muted fs-sm">{{ $move->toDept->name ?? '—' }}</div>
+                        </div>
+                        @if($move->remarks)
+                        <div class="col-12">
+                            <div class="text-muted fs-sm">Remarks: {{ $move->remarks }}</div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
+</div>
 @endsection

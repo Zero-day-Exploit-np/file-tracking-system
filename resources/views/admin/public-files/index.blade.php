@@ -1,53 +1,59 @@
 @extends('layouts.app')
+@section('title', 'Public Submissions')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Public Submissions</li>
+@endsection
 
 @section('content')
-
-<div class="container">
-
-    <h2>Public Uploaded Files</h2>
-
-    @if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
-    <table class="table">
-
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Subject</th>
-            <th>File</th>
-            <th>Date</th>
-        </tr>
-
-        @forelse($files as $file)
-        <tr>
-            <td>{{ $file->applicant_name }}</td>
-            <td>{{ $file->email }}</td>
-            <td>{{ $file->subject }}</td>
-            <td>
-                @if($file->attachment_exists)
-                <a href="{{ $file->attachment_url }}" target="_blank" class="btn btn-sm btn-primary me-2">View</a>
-                <a href="{{ route('admin.public-files.download', $file->id) }}" class="btn btn-sm btn-outline-secondary">Download</a>
-                @elseif($file->attachment_path)
-                <span class="text-warning">File missing</span>
-                @else
-                <span class="text-muted">No attachment</span>
-                @endif
-            </td>
-            <td>{{ $file->created_at->format('d-m-Y') }}</td>
-        </tr>
-        @empty
-        <tr>
-            <td colspan="5" class="text-center">No public submissions found.</td>
-        </tr>
-        @endforelse
-
-    </table>
-
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Public File Submissions</h1>
+        <div class="page-subtitle">Files submitted by the public for review</div>
+    </div>
 </div>
 
+<div class="portal-table-wrap">
+    <div class="table-responsive">
+        <table class="portal-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Applicant Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Subject</th>
+                    <th>Attachment</th>
+                    <th>Submitted</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse($files as $file)
+            <tr>
+                <td class="text-muted">{{ $loop->iteration }}</td>
+                <td class="fw-700">{{ $file->applicant_name }}</td>
+                <td class="text-muted">{{ $file->email }}</td>
+                <td class="text-muted">{{ $file->contact_number }}</td>
+                <td>{{ $file->subject }}</td>
+                <td>
+                    @if($file->attachment_exists)
+                    <div class="d-flex gap-1">
+                        <a href="{{ $file->attachment_url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-eye"></i> View</a>
+                        <a href="{{ route('admin.public-files.download', $file->id) }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-download"></i></a>
+                    </div>
+                    @elseif($file->attachment_path)
+                    <span class="badge-status badge-pending">File Missing</span>
+                    @else
+                    <span class="text-muted fs-sm">No attachment</span>
+                    @endif
+                </td>
+                <td class="text-muted fs-sm">{{ $file->created_at->format('d M Y') }}</td>
+            </tr>
+            @empty
+            <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-inbox"></i>No public submissions found.</div></td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection

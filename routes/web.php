@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DepartmentController;
@@ -37,14 +36,18 @@ Route::post('/public-files', [PublicFileController::class, 'store'])->name('publ
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        $user = auth()->user();
+        if ($user->role === 'super_admin' || $user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+        return redirect()->route('files.index');
     })->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('files', FileRecordController::class);
+    Route::resource('files', FileRecordController::class)->only(['index', 'create', 'store', 'show']);
 });
 
 
@@ -120,14 +123,5 @@ Route::middleware('auth')->group(function () {
 });
 
 
-
-Route::post('/logout', function () {
-    Auth::logout();
-
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-
-    return redirect('/');
-})->name('logout');
 
 require __DIR__ . '/auth.php';

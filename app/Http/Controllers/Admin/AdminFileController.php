@@ -52,7 +52,7 @@ class AdminFileController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $files = $query->latest()->get();
+        $files = $query->latest()->paginate(20)->withQueryString();
         $departments = $user->role === 'super_admin'
             ? Department::all()
             : collect();

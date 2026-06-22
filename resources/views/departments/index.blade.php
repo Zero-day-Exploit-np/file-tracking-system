@@ -1,82 +1,76 @@
 @extends('layouts.app')
+@section('title', 'Departments')
+
+@section('breadcrumb')
+<li class="breadcrumb-item active">Departments</li>
+@endsection
 
 @section('content')
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Departments</h1>
+        <div class="page-subtitle">Manage organizational departments</div>
+    </div>
+    <a href="{{ route('departments.create') }}" class="btn-portal-primary"><i class="fa-solid fa-plus"></i> New Department</a>
+</div>
 
-<div style="padding:20px;">
-
-    <h1>Departments</h1>
-
-    <a href="{{ route('departments.create') }}">
-        + Add Department
-    </a>
-
-    <br><br>
-
-    <form method="GET" action="{{ route('departments.index') }}">
-        <input type="text"
-            name="search"
-            value="{{ request('search') }}"
-            placeholder="Search department...">
-
-        <button type="submit">Search</button>
+<div class="portal-table-wrap">
+    <form method="GET" class="table-toolbar">
+        <input type="text" name="search" class="form-control" style="max-width:240px;"
+            placeholder="Search name or code..." value="{{ request('search') }}">
+        <button type="submit" class="btn btn-primary btn-sm px-3"><i class="fa-solid fa-magnifying-glass me-1"></i>Search</button>
+        <a href="{{ route('departments.index') }}" class="btn btn-outline-secondary btn-sm px-3">Reset</a>
     </form>
 
-    <br>
-    @if(session('success'))
-    <div style="color:green;">
-        {{ session('success') }}
-    </div>
-    @endif
-    <table border="2 px" cellpadding="10">
-        <thead>
+    <div class="table-responsive">
+        <table class="portal-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Department Name</th>
+                    <th>Code</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse($departments as $dept)
             <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Code</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @forelse($departments as $department)
-            <tr>
-                <td>{{ $department->id }}</td>
-                <td>{{ $department->name }}</td>
-                <td>{{ $department->code }}</td>
+                <td class="text-muted">{{ $loop->iteration }}</td>
+                <td class="fw-700">{{ $dept->name }}</td>
+                <td><code>{{ $dept->code }}</code></td>
                 <td>
-                    {{ $department->is_active ? 'Active' : 'Inactive' }}
+                    @if($dept->is_active)
+                    <span class="badge-status badge-active">Active</span>
+                    @else
+                    <span class="badge-status badge-archived">Inactive</span>
+                    @endif
                 </td>
-
+                <td class="text-muted fs-sm">{{ $dept->created_at->format('d M Y') }}</td>
                 <td>
-                    <a href="{{ route('departments.edit', $department->id) }}">
-                        Edit
-                    </a>
-
-                    <form action="{{ route('departments.destroy', $department->id) }}"
-                        method="POST"
-                        style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-
-                        <button onclick="return confirm('Delete?')">
-                            Delete
-                        </button>
-                    </form>
+                    <div class="d-flex gap-1">
+                        <a href="{{ route('departments.edit', $dept->id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+                        <form action="{{ route('departments.destroy', $dept->id) }}" method="POST" class="d-inline">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Delete this department?')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty
-            <tr>
-                <td colspan="5">No departments found</td>
-            </tr>
+            <tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-building-columns"></i>No departments found.</div></td></tr>
             @endforelse
-        </tbody>
-    </table>
-
-    <br>
-
-    {{ $departments->links() }}
-
+            </tbody>
+        </table>
+    </div>
+    @if($departments->hasPages())
+    <div class="px-4 py-3 border-top">{{ $departments->links() }}</div>
+    @endif
 </div>
-
 @endsection

@@ -8,15 +8,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SuperAdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->user()->role !== 'super_admin') {
-            abort(403);
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if ($user->role !== 'super_admin') {
+            abort(403, 'Unauthorized. Super Admin access required.');
         }
 
         return $next($request);

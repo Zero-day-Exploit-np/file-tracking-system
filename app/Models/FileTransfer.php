@@ -3,9 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\FileRecord;
-use App\Models\User;
-use App\Models\Department;
 
 class FileTransfer extends Model
 {
@@ -23,12 +20,12 @@ class FileTransfer extends Model
         return $this->belongsTo(FileRecord::class, 'file_record_id');
     }
 
-    public function fromUser()
+    public function sender()
     {
         return $this->belongsTo(User::class, 'from_user_id');
     }
 
-    public function toUser()
+    public function receiver()
     {
         return $this->belongsTo(User::class, 'to_user_id');
     }
@@ -41,15 +38,5 @@ class FileTransfer extends Model
     public function toDepartment()
     {
         return $this->belongsTo(Department::class, 'to_department_id');
-    }
-
-    public function sender()
-    {
-        return $this->belongsTo(User::class, 'from_user_id');
-    }
-
-    public function receiver()
-    {
-        return $this->belongsTo(User::class, 'to_user_id');
     }
 }

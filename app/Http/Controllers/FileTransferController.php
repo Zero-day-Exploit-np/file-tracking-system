@@ -56,11 +56,9 @@ class FileTransferController extends Controller
             $currentUser->role !== 'super_admin' &&
             $targetUser->department_id != $currentUser->department_id
         ) {
+            // Cross-department transfer — must go through approval workflow
             if (!$targetUser->department_id) {
-                return back()->with(
-                    'error',
-                    'Target user has no department assigned.'
-                );
+                return back()->with('error', 'Target user has no department assigned.');
             }
 
             TransferRequest::create([

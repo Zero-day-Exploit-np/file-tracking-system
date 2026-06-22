@@ -58,14 +58,15 @@ class TransferApprovalController extends Controller
             'to_department_id' => $request->to_department,
             'remarks' => 'Approved by Admin'
         ]);
+
         FileMovement::create([
             'file_id' => $file->id,
             'from_user' => $fromUser,
             'to_user' => $targetUser->id,
             'from_department' => $fromDept,
             'to_department' => $request->to_department,
-            'action' => 'transferred',
-            'remarks' => $request->remarks
+            'action' => 'approved',
+            'remarks' => 'File transferred after admin approval'
         ]);
 
         $file->update([
@@ -76,16 +77,6 @@ class TransferApprovalController extends Controller
 
         $request->update([
             'status' => 'approved'
-        ]);
-
-        FileMovement::create([
-            'file_id' => $file->id,
-            'from_user' => $fromUser,
-            'to_user' => $request->target_user,
-            'from_department' => $fromDept,
-            'to_department' => $request->to_department,
-            'action' => 'approved',
-            'remarks' => 'File transferred after admin approval'
         ]);
 
         $this->recordAudit('approved', $file, [
@@ -148,17 +139,6 @@ class TransferApprovalController extends Controller
     }
 
 
-    public function fileDetails($id)
-    {
-        $file = FileRecord::with([
-            'currentUser',
-            'department',
-            'movements.fromUser',
-            'movements.toUser',
-            'movements.fromDept',
-            'movements.toDept'
-        ])->findOrFail($id);
-
-        return view('admin.files.show', compact('file'));
-    }
+    // fileDetails handled by FileTimelineController
 }
+

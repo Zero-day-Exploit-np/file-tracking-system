@@ -21,10 +21,11 @@ class AuditLogController extends Controller
             'toDept',
         ])->latest();
 
+        // Department scope for non-super-admin
         if ($user->role !== 'super_admin') {
             $query->where(function ($q) use ($user) {
                 $q->where('from_department', $user->department_id)
-                    ->orWhere('to_department', $user->department_id);
+                  ->orWhere('to_department', $user->department_id);
             });
         }
 
@@ -38,7 +39,15 @@ class AuditLogController extends Controller
             });
         }
 
-        $logs = $query->paginate(20);
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $logs = $query->paginate(25);
 
         return view('admin.audit_logs.index', compact('logs'));
     }

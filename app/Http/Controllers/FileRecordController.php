@@ -47,7 +47,7 @@ class FileRecordController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $files = $query->latest()->get();
+        $files = $query->latest()->paginate(20)->withQueryString();
 
         return view('files.index', compact('files'));
     }

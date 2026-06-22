@@ -3,11 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\Department;
-use App\Models\FileTransfer;
-use App\Models\FileMovement;
-
 
 class FileRecord extends Model
 {
@@ -20,46 +15,36 @@ class FileRecord extends Model
         'remarks',
         'created_by',
         'current_user_id',
-        'status'
+        'status',
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-
-
-
-    public function transfers()
-    {
-        return $this->hasMany(FileMovement::class, 'file_id');
-    }
-
-    public function currentHolder()
-    {
-        return $this->belongsTo(User::class, 'current_user_id');
-    }
-
+    /** User who created the file */
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-
-
-    public function movements()
+    /** Current holder of the file */
+    public function currentHolder()
     {
-        return $this->hasMany(FileMovement::class, 'file_id');
+        return $this->belongsTo(User::class, 'current_user_id');
     }
 
+    // Alias kept for views that use ->currentUser
     public function currentUser()
     {
         return $this->belongsTo(User::class, 'current_user_id');
     }
 
+    /** Department this file belongs to */
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    /** Movement / timeline history */
+    public function movements()
+    {
+        return $this->hasMany(FileMovement::class, 'file_id');
     }
 }
