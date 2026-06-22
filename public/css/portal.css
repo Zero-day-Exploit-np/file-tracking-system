@@ -199,7 +199,7 @@ body.portal-body {
     transition: background .15s;
 }
 .topbar-user-btn:hover { background: var(--bg); }
-.topbar-avatar {
+/* .topbar-avatar {
     width: 34px; height: 34px;
     border-radius: 50%;
     background: var(--primary);
@@ -207,7 +207,7 @@ body.portal-body {
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: .85rem;
     flex-shrink: 0;
-}
+} */
 .topbar-user-name { font-size: .82rem; font-weight: 600; color: var(--text); line-height: 1.2; }
 .topbar-user-role { font-size: .72rem; color: var(--muted); }
 
@@ -476,4 +476,14 @@ body.portal-body {
     .portal-sidebar.mobile-open { transform: translateX(0); }
     .portal-main { margin-left: 0 !important; }
     .portal-content { padding: 16px; }
+}
+
+
+
+.topbar-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
 }
