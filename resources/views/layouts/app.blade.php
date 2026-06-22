@@ -298,61 +298,61 @@ if (sidebar && mainArea && toggleBtn) {
     });
 }
 
-// ── Notification polling (30 s interval) ─────────────────────────
+// ── Notification polling — Page Visibility aware ─────────────────
 (function () {
-    const sound        = document.getElementById('notif-sound');
-    const topBadge     = document.getElementById('topbar-notif-badge');
-    const sbCount      = document.getElementById('sb-notif-count');
-    const sbTransfer   = document.getElementById('sb-transfer-count');
-    let lastCount      = parseInt(topBadge?.textContent || '0', 10);
-    let soundUnlocked  = false;
+    const sound       = document.getElementById('notif-sound');
+    const topBadge    = document.getElementById('topbar-notif-badge');
+    const sbCount     = document.getElementById('sb-notif-count');
+    const POLL_MS     = 30000;
+    const FIRST_MS    = 8000;
+    let lastCount     = parseInt(topBadge ? topBadge.textContent : '0', 10) || 0;
+    let soundUnlocked = false;
+    let pollTimer     = null;
 
-    // Unlock audio on first user interaction
-    document.addEventListener('click', () => { soundUnlocked = true; }, { once: true });
-    document.addEventListener('keydown', () => { soundUnlocked = true; }, { once: true });
+    ['click', 'keydown', 'touchstart'].forEach(function(ev) {
+        document.addEventListener(ev, function() { soundUnlocked = true; }, { once: true });
+    });
 
     function playSound() {
-        if (sound && soundUnlocked) {
-            sound.currentTime = 0;
-            sound.play().catch(() => {});
-        }
+        if (sound && soundUnlocked) { sound.currentTime = 0; sound.play().catch(function(){}); }
     }
 
-    function updateBadge(el, count) {
+    function setBadge(el, n) {
         if (!el) return;
-        if (count > 0) {
-            el.textContent = count;
-            el.classList.remove('d-none');
-        } else {
-            el.classList.add('d-none');
-        }
+        el.textContent = n > 0 ? n : '';
+        if (n > 0) { el.classList.remove('d-none'); } else { el.classList.add('d-none'); }
     }
 
     function poll() {
+        if (document.hidden) return;
         fetch('{{ route("notifications.poll") }}', {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest',
+                       'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') || {}).content || '' },
+            credentials: 'same-origin'
         })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
             if (!data) return;
-            const newCount = data.unread_count;
-
-            if (newCount > lastCount) {
-                playSound();
-            }
-            lastCount = newCount;
-
-            updateBadge(topBadge, newCount);
-            updateBadge(sbCount, newCount);
+            var n = data.unread_count || 0;
+            if (n > lastCount) { playSound(); }
+            lastCount = n;
+            setBadge(topBadge, n);
+            setBadge(sbCount, n);
         })
-        .catch(() => {});
+        .catch(function(){});
     }
 
-    // Start polling every 30 seconds
-    setTimeout(poll, 5000);      // first poll after 5 s
-    setInterval(poll, 30000);    // then every 30 s
+    function startPolling() { if (!pollTimer) pollTimer = setInterval(poll, POLL_MS); }
+    function stopPolling()  { clearInterval(pollTimer); pollTimer = null; }
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) { stopPolling(); } else { poll(); startPolling(); }
+    });
+
+    setTimeout(function() { poll(); startPolling(); }, FIRST_MS);
 })();
 </script>
 @stack('scripts')
 </body>
 </html>
+

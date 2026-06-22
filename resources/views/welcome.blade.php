@@ -17,7 +17,7 @@
     <header class="site-header sticky-top">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container">
-                <a class="navbar-brand d-flex align-items-center gap-2" href="#home">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('welcome') }}">
                     <span class="brand-icon"><i class="fa-solid fa-folder-tree"></i></span>
                     <span>FileTrack Office</span>
                 </a>
@@ -26,11 +26,11 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-lg-center gap-lg-3">
-                        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#workflow">Workflow</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#stats">Statistics</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#upload">Public Upload</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#about">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#features">Features</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#workflow">Workflow</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#stats">Statistics</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#upload">Public Upload</a></li>
                         <li class="nav-item ms-lg-2">
                             <a href="{{ route('login') }}" class="btn btn-primary btn-sm px-3">Login</a>
                         </li>

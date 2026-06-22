@@ -8,34 +8,31 @@ use App\Models\FileMovement;
 
 class FileTimelineController extends Controller
 {
-    public function show($id)
+    /**
+     * Show file timeline using UUID route binding.
+     * Route: GET /admin/files/{uuid}/timeline
+     */
+    public function show(string $uuid)
     {
+        $file = FileRecord::with(['currentUser', 'department'])
+            ->where('uuid', $uuid)
+            ->firstOrFail();
 
-        $file = FileRecord::with([
-            'currentUser',
-            'department',
-        ])->findOrFail($id);
+        $this->authorizeFile($file);
 
-        if (
-            auth()->user()->role !== 'super_admin' &&
-            $file->department_id != auth()->user()->department_id
-        ) {
-            abort(403);
-        }
-
-        $timeline = FileMovement::with([
-            'fromUser',
-            'toUser',
-            'fromDept',
-            'toDept'
-        ])
-            ->where('file_id', $id)
-            ->orderBy('created_at', 'desc')
+        $timeline = FileMovement::with(['fromUser', 'toUser', 'fromDept', 'toDept'])
+            ->where('file_id', $file->id)
+            ->orderByDesc('created_at')
             ->get();
 
         return view('admin.files.show', compact('file', 'timeline'));
     }
-    public function fileDetails($id)
+
+    /**
+     * Show file details using UUID.
+     * Route: GET /admin/files/{uuid}
+     */
+    public function fileDetails(string $uuid)
     {
         $file = FileRecord::with([
             'currentUser',
@@ -43,16 +40,20 @@ class FileTimelineController extends Controller
             'movements.fromUser',
             'movements.toUser',
             'movements.fromDept',
-            'movements.toDept'
-        ])->findOrFail($id);
+            'movements.toDept',
+        ])->where('uuid', $uuid)->firstOrFail();
 
-        if (
-            auth()->user()->role !== 'super_admin' &&
-            $file->department_id != auth()->user()->department_id
-        ) {
-            abort(403);
-        }
+        $this->authorizeFile($file);
 
         return view('admin.files.show', compact('file'));
+    }
+
+    private function authorizeFile(FileRecord $file): void
+    {
+        $user = auth()->user();
+        if ($user->role !== 'super_admin' &&
+            (int) $file->department_id !== (int) $user->department_id) {
+            abort(403, 'You do not have access to this file.');
+        }
     }
 }

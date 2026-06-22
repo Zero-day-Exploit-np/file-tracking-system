@@ -15,7 +15,7 @@
 </div>
 
 <div class="portal-form-card">
-    <form method="POST" action="{{ route('designations.update', $designation->id) }}" class="portal-form">
+    <form method="POST" action="{{ route('designations.update', $designation->uuid) }}" class="portal-form">
         @csrf @method('PUT')
         <div class="row g-3">
             <div class="col-md-6">

@@ -151,7 +151,7 @@
                             <td class="fw-700">{{ $f->file_name }}</td>
                             <td class="text-muted">{{ $f->currentHolder->name ?? 'N/A' }}</td>
                             <td>@include('partials.status-badge', ['status' => $f->status])</td>
-                            <td><a href="{{ route('admin.files.timeline', $f->id) }}" class="btn btn-sm btn-outline-secondary">Timeline</a></td>
+                            <td><a href="{{ route('admin.files.timeline', $f->uuid) }}" class="btn btn-sm btn-outline-secondary">Timeline</a></td>
                         </tr>
                         @empty
                         <tr><td colspan="5" class="text-center py-3 text-muted">No files found.</td></tr>

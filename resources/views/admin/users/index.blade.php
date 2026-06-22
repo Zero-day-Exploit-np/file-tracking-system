@@ -44,10 +44,10 @@
                 <td><span class="badge-status badge-active">Active</span></td>
                 <td>
                     <div class="d-flex gap-1">
-                        <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('admin.users.edit', $user->uuid) }}" class="btn btn-sm btn-outline-primary">
                             <i class="fa-solid fa-pen"></i>
                         </a>
-                        <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" class="d-inline">
+                        <form method="POST" action="{{ route('admin.users.destroy', $user->uuid) }}" class="d-inline">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                 onclick="return confirm('Delete this user?')">

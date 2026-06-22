@@ -13,18 +13,15 @@ use App\Models\FileMovement;
 
 class FileTransferController extends Controller
 {
-    public function create($fileId)
+    public function create(FileRecord $file)
     {
-        $file        = FileRecord::findOrFail($fileId);
         $currentUser = Auth::user();
 
-        // Authorization: only the file's department members (or super admin) can initiate
         if ($currentUser->role !== 'super_admin' &&
             (int) $file->department_id !== (int) $currentUser->department_id) {
             abort(403, 'You do not have access to transfer this file.');
         }
 
-        // File must not already be pending transfer
         if ($file->status === 'pending_transfer') {
             return back()->with('error', 'This file already has a pending transfer request.');
         }
@@ -41,12 +38,13 @@ class FileTransferController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file_record_id' => 'required|exists:file_records,id',
-            'to_user_id'     => 'required|exists:users,id',
-            'remarks'        => 'nullable|string|max:500',
+            'file_record_uuid' => 'required|string|exists:file_records,uuid',
+            'to_user_id'       => 'required|integer|exists:users,id',
+            'remarks'          => 'nullable|string|max:500',
         ]);
 
-        $file        = FileRecord::findOrFail((int) $request->file_record_id);
+        // Lookup file by UUID (safe — never exposes numeric ID)
+        $file        = FileRecord::where('uuid', $request->file_record_uuid)->firstOrFail();
         $targetUser  = User::findOrFail((int) $request->to_user_id);
         $currentUser = Auth::user();
 

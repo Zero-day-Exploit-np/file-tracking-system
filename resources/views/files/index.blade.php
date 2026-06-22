@@ -59,12 +59,12 @@
                 <td class="text-muted fs-sm">{{ $file->created_at->format('d M Y') }}</td>
                 <td>
                     <div class="d-flex gap-1">
-                        <a href="{{ route('files.show', $file->id) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fa-solid fa-eye"></i></a>
+                        <a href="{{ route('files.show', $file->uuid) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fa-solid fa-eye"></i></a>
                         @if($file->status !== 'archived')
-                        <a href="{{ route('files.transfer.create', $file->id) }}" class="btn btn-sm btn-outline-secondary" title="Transfer"><i class="fa-solid fa-right-left"></i></a>
+                        <a href="{{ route('files.transfer.create', $file->uuid) }}" class="btn btn-sm btn-outline-secondary" title="Transfer"><i class="fa-solid fa-right-left"></i></a>
                         @endif
                         @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
-                        <a href="{{ route('admin.files.timeline', $file->id) }}" class="btn btn-sm btn-outline-success" title="Timeline"><i class="fa-solid fa-timeline"></i></a>
+                        <a href="{{ route('admin.files.timeline', $file->uuid) }}" class="btn btn-sm btn-outline-success" title="Timeline"><i class="fa-solid fa-timeline"></i></a>
                         @endif
                     </div>
                 </td>

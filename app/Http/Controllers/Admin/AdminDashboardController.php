@@ -3,113 +3,52 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Department;
-use App\Models\Designation;
-use App\Models\FileMovement;
-use App\Models\FileRecord;
-use App\Models\FileTransfer;
-use App\Models\PublicFile;
-use App\Models\TransferRequest;
-use App\Models\User;
+use App\Services\DashboardService;
 use Illuminate\Support\Facades\Auth;
 
 class AdminDashboardController extends Controller
 {
+    public function __construct(private readonly DashboardService $dashboard) {}
+
     public function index()
     {
         $user    = Auth::user();
         $isSuper = $user->role === 'super_admin';
-        $deptId  = $user->department_id;
 
         if ($isSuper) {
-            return $this->superAdminDashboard();
+            $stats  = $this->dashboard->superAdminStats();
+            $audit  = $this->dashboard->superAdminAuditStats();
+            $depts  = $this->dashboard->departmentFileCounts();
+            $recent = $this->dashboard->superAdminRecentData();
+
+            return view('super_admin.dashboard', [
+                'totalFiles'           => $stats['total_files'],
+                'totalDepartments'     => $stats['total_departments'],
+                'totalUsers'           => $stats['total_users'],
+                'pendingTransfers'     => $stats['pending_transfers'],
+                'publicSubmissions'    => $stats['public_submissions'],
+                'auditStats'           => $audit,
+                'departmentFileCounts' => $depts,
+                'recentTransfers'      => $recent['recentTransfers'],
+                'recentAudit'          => $recent['recentAudit'],
+                'pendingRequests'      => $recent['pendingRequests'],
+            ]);
         }
 
-        return $this->adminDashboard($deptId);
-    }
+        // Admin (department-scoped)
+        $deptId = $user->department_id;
+        $stats  = $this->dashboard->adminStats($deptId);
+        $recent = $this->dashboard->adminRecentData($deptId);
 
-    /* ------------------------------------------------------------------ */
-    /*  SUPER ADMIN DASHBOARD                                               */
-    /* ------------------------------------------------------------------ */
-    private function superAdminDashboard()
-    {
-        $totalFiles       = FileRecord::count();
-        $totalDepartments = Department::count();
-        $totalUsers       = User::count();
-        $pendingTransfers = TransferRequest::where('status', 'pending')->count();
-        $publicSubmissions = PublicFile::count();
-
-        // Audit statistics (action breakdown)
-        $auditStats = [
-            'created'     => FileMovement::where('action', 'created')->count(),
-            'requested'   => FileMovement::where('action', 'requested')->count(),
-            'approved'    => FileMovement::where('action', 'approved')->count(),
-            'rejected'    => FileMovement::where('action', 'rejected')->count(),
-            'transferred' => FileMovement::where('action', 'transferred')->count(),
-        ];
-
-        // Recent transfers (all departments — monitor view)
-        $recentTransfers = FileTransfer::with(['sender', 'receiver', 'file.department'])
-            ->latest()->take(8)->get();
-
-        // Files per department chart data
-        $departmentFileCounts = Department::withCount('files')
-            ->orderByDesc('files_count')->get();
-
-        // Recent audit movements
-        $recentAudit = FileMovement::with(['file', 'fromUser', 'toUser', 'fromDept', 'toDept'])
-            ->latest()->take(8)->get();
-
-        // All pending transfer requests (read-only for super admin)
-        $pendingRequests = TransferRequest::with(['file', 'sender', 'receiver', 'fromDept', 'toDept'])
-            ->where('status', 'pending')->latest()->get();
-
-        return view('super_admin.dashboard', compact(
-            'totalFiles', 'totalDepartments', 'totalUsers',
-            'pendingTransfers', 'publicSubmissions',
-            'auditStats', 'recentTransfers',
-            'departmentFileCounts', 'recentAudit',
-            'pendingRequests'
-        ));
-    }
-
-    /* ------------------------------------------------------------------ */
-    /*  ADMIN DASHBOARD (department-scoped)                                 */
-    /* ------------------------------------------------------------------ */
-    private function adminDashboard($deptId)
-    {
-        $deptFiles       = FileRecord::where('department_id', $deptId)->count();
-        $deptUsers       = User::where('department_id', $deptId)->count();
-        $pendingRequests = TransferRequest::where('status', 'pending')
-            ->where('to_department', $deptId)->count();
-        $completedTransfers = TransferRequest::where('status', 'approved')
-            ->where('to_department', $deptId)->count();
-
-        // Recent files in department
-        $recentFiles = FileRecord::with(['currentHolder', 'creator'])
-            ->where('department_id', $deptId)
-            ->latest()->take(7)->get();
-
-        // Recent activity in department
-        $recentActivity = FileMovement::with(['file', 'fromUser', 'toUser'])
-            ->where(fn($q) => $q->where('from_department', $deptId)
-                                ->orWhere('to_department', $deptId))
-            ->latest()->take(7)->get();
-
-        // Pending transfers to approve
-        $pendingApprovals = TransferRequest::with(['file', 'sender', 'receiver', 'fromDept'])
-            ->where('status', 'pending')
-            ->where('to_department', $deptId)
-            ->latest()->get();
-
-        // Recent users in department
-        $recentUsers = User::with('designation')
-            ->where('department_id', $deptId)
-            ->latest()->take(5)->get();
-
-        return view('admin.dashboard', compact(
-            'deptFiles', 'deptUsers', 'pendingRequests', 'completedTransfers',
-            'recentFiles', 'recentActivity', 'pendingApprovals', 'recentUsers'
-        ));
+        return view('admin.dashboard', [
+            'deptFiles'          => $stats['dept_files'],
+            'deptUsers'          => $stats['dept_users'],
+            'pendingRequests'    => $stats['pending_requests'],
+            'completedTransfers' => $stats['completed_transfers'],
+            'recentFiles'        => $recent['recentFiles'],
+            'recentActivity'     => $recent['recentActivity'],
+            'pendingApprovals'   => $recent['pendingApprovals'],
+            'recentUsers'        => $recent['recentUsers'],
+        ]);
     }
 }

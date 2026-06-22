@@ -16,7 +16,7 @@
 </div>
 
 <div class="portal-form-card">
-    <form method="POST" action="{{ route('admin.users.update', $user->id) }}" class="portal-form">
+    <form method="POST" action="{{ route('admin.users.update', $user->uuid) }}" class="portal-form">
         @csrf @method('PUT')
 
         <div class="row g-3">

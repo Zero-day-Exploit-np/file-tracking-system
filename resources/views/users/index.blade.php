@@ -46,9 +46,9 @@
                 <td class="text-muted">{{ $user->designation->name ?? '—' }}</td>
                 <td>
                     <div class="d-flex gap-1">
-                        <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                        <a href="{{ route('users.edit', $user->uuid) }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
                         @if($user->id !== auth()->id())
-                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline">
+                        <form action="{{ route('users.destroy', $user->uuid) }}" method="POST" class="d-inline">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                 onclick="return confirm('Delete this user?')"><i class="fa-solid fa-trash"></i></button>

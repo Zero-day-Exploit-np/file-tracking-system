@@ -15,7 +15,7 @@
     <div class="d-flex gap-2">
         <a href="{{ route('files.index') }}" class="btn-portal-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
         @if($file->status !== 'archived')
-        <a href="{{ route('files.transfer.create', $file->id) }}" class="btn-portal-primary"><i class="fa-solid fa-right-left"></i> Transfer</a>
+        <a href="{{ route('files.transfer.create', $file->uuid) }}" class="btn-portal-primary"><i class="fa-solid fa-right-left"></i> Transfer</a>
         @endif
     </div>
 </div>

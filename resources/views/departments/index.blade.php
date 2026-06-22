@@ -50,10 +50,10 @@
                 <td class="text-muted fs-sm">{{ $dept->created_at->format('d M Y') }}</td>
                 <td>
                     <div class="d-flex gap-1">
-                        <a href="{{ route('departments.edit', $dept->id) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('departments.edit', $dept->uuid) }}" class="btn btn-sm btn-outline-primary">
                             <i class="fa-solid fa-pen"></i>
                         </a>
-                        <form action="{{ route('departments.destroy', $dept->id) }}" method="POST" class="d-inline">
+                        <form action="{{ route('departments.destroy', $dept->uuid) }}" method="POST" class="d-inline">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                 onclick="return confirm('Delete this department?')">

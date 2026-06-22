@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Cache\RateLimiting\Limit;
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DepartmentController;
@@ -25,47 +23,48 @@ use App\Http\Controllers\Admin\FileTimelineController;
 
 /*
 |--------------------------------------------------------------------------
-| PUBLIC ROUTES (no auth required)
+| PUBLIC
 |--------------------------------------------------------------------------
 */
 Route::get('/', [LandingPageController::class, 'index'])->name('welcome');
 
-// Rate-limited public file upload
 Route::post('/public-files', [PublicFileController::class, 'store'])
     ->middleware('throttle:public-upload')
     ->name('public-files.store');
 
 /*
 |--------------------------------------------------------------------------
-| ALL AUTHENTICATED ROUTES — no.cache applied globally here
+| ALL AUTH ROUTES — no.cache prevents back-button after logout
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
 
-    // Role-based dashboard redirect
     Route::get('/dashboard', function () {
-        $role = auth()->user()->role;
-        if ($role === 'super_admin') return redirect()->route('super_admin.dashboard');
-        if ($role === 'admin')       return redirect()->route('admin.dashboard');
-        return redirect()->route('user.dashboard');
+        return match(auth()->user()->role) {
+            'super_admin' => redirect()->route('super_admin.dashboard'),
+            'admin'       => redirect()->route('admin.dashboard'),
+            default       => redirect()->route('user.dashboard'),
+        };
     })->name('dashboard');
 
-    // Profile
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Files (all roles)
-    Route::resource('files', FileRecordController::class)->only(['index', 'create', 'store', 'show']);
+    // Files — UUID-based route model binding (FileRecord::getRouteKeyName = 'uuid')
+    Route::get('/files',               [FileRecordController::class, 'index'])->name('files.index');
+    Route::get('/files/create',        [FileRecordController::class, 'create'])->name('files.create');
+    Route::post('/files',              [FileRecordController::class, 'store'])->name('files.store');
+    Route::get('/files/{file}',        [FileRecordController::class, 'show'])->name('files.show');
 
-    // File transfers (all roles — controller enforces dept scope)
+    // Transfer uses UUID
     Route::get('/files/{file}/transfer', [FileTransferController::class, 'create'])->name('files.transfer.create');
     Route::post('/files/transfer',       [FileTransferController::class, 'store'])->name('files.transfer.store');
 
-    // Notifications (all roles)
-    Route::get('/notifications',          [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/read-all',[NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
-    Route::get('/notifications/poll',     [NotificationController::class, 'poll'])->name('notifications.poll');
+    // Notifications
+    Route::get('/notifications',           [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+    Route::get('/notifications/poll',      [NotificationController::class, 'poll'])->name('notifications.poll');
 });
 
 /*
@@ -79,17 +78,21 @@ Route::middleware(['auth', 'verified', 'role:user', 'no.cache'])->group(function
 
 /*
 |--------------------------------------------------------------------------
-| SUPER ADMIN — SYSTEM-WIDE MANAGEMENT
+| SUPER ADMIN
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:super_admin', 'no.cache'])->group(function () {
+    // UUID-based route binding via Department/User model getRouteKeyName
     Route::resource('departments', DepartmentController::class);
-    Route::resource('users', UserController::class);
+    Route::resource('users',       UserController::class);
+
+    Route::get('/super-admin/dashboard', [AdminDashboardController::class, 'index'])
+        ->name('super_admin.dashboard');
 });
 
 /*
 |--------------------------------------------------------------------------
-| SUPER ADMIN + ADMIN — SHARED
+| SUPER ADMIN + ADMIN SHARED
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:super_admin,admin', 'no.cache'])->group(function () {
@@ -98,17 +101,7 @@ Route::middleware(['auth', 'role:super_admin,admin', 'no.cache'])->group(functio
 
 /*
 |--------------------------------------------------------------------------
-| SUPER ADMIN DEDICATED DASHBOARD
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'role:super_admin', 'no.cache'])->group(function () {
-    Route::get('/super-admin/dashboard', [AdminDashboardController::class, 'index'])
-        ->name('super_admin.dashboard');
-});
-
-/*
-|--------------------------------------------------------------------------
-| ADMIN PANEL  (/admin prefix)
+| ADMIN PANEL
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')
@@ -118,14 +111,16 @@ Route::prefix('admin')
 
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+        // Users & designations (UUID binding)
         Route::resource('users',        AdminUserController::class);
         Route::resource('designations', AdminDesignationController::class);
 
-        Route::get('/files',               [AdminFileController::class, 'index'])->name('files');
-        Route::get('/files/{id}/timeline', [FileTimelineController::class, 'show'])->name('files.timeline');
-        Route::get('/files/{id}',          [FileTimelineController::class, 'fileDetails'])->name('files.show');
+        // Files — UUID-based timeline (no numeric ID in URL)
+        Route::get('/files',                    [AdminFileController::class, 'index'])->name('files');
+        Route::get('/files/{uuid}/timeline',    [FileTimelineController::class, 'show'])->name('files.timeline');
+        Route::get('/files/{uuid}',             [FileTimelineController::class, 'fileDetails'])->name('files.show');
 
-        // Transfer requests — view: all; approve/reject: admin only
+        // Transfer requests
         Route::get('/transfer-requests', [TransferApprovalController::class, 'index'])->name('transfer.requests');
 
         Route::post('/transfer-requests/{id}/approve', [TransferApprovalController::class, 'approve'])
@@ -136,9 +131,13 @@ Route::prefix('admin')
             ->middleware('role:admin')
             ->name('transfer.reject');
 
+        // Public files — signed download
         Route::get('/public-files',               [PublicFileController::class, 'index'])->name('public-files.index');
-        Route::get('/public-files/{id}/download', [PublicFileController::class, 'download'])->name('public-files.download');
+        Route::get('/public-files/{id}/download', [PublicFileController::class, 'download'])
+            ->middleware('signed')
+            ->name('public-files.download');
 
+        // Audit logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
     });
 

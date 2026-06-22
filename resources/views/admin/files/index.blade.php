@@ -22,7 +22,7 @@
         <select name="department_id" class="form-select" style="max-width:180px;">
             <option value="">All Departments</option>
             @foreach($departments as $dept)
-            <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+            <option value="{{ $dept->uuid }}" {{ request('department_id') == $dept->uuid ? 'selected' : '' }}>{{ $dept->name }}</option>
             @endforeach
         </select>
         @endif
@@ -63,7 +63,7 @@
                 <td>@include('partials.status-badge', ['status' => $file->status])</td>
                 <td class="text-muted fs-sm">{{ $file->created_at->format('d M Y') }}</td>
                 <td>
-                    <a href="{{ route('admin.files.timeline', $file->id) }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ route('admin.files.timeline', $file->uuid) }}" class="btn btn-sm btn-outline-primary">
                         <i class="fa-solid fa-timeline"></i> Timeline
                     </a>
                 </td>

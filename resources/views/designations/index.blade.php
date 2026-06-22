@@ -43,10 +43,10 @@
                 <td class="text-muted fs-sm">{{ $des->created_at->format('d M Y') }}</td>
                 <td>
                     <div class="d-flex gap-1">
-                        <a href="{{ route('designations.edit', $des->id) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('designations.edit', $des->uuid) }}" class="btn btn-sm btn-outline-primary">
                             <i class="fa-solid fa-pen"></i>
                         </a>
-                        <form action="{{ route('designations.destroy', $des->id) }}" method="POST" class="d-inline">
+                        <form action="{{ route('designations.destroy', $des->uuid) }}" method="POST" class="d-inline">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger"
                                 onclick="return confirm('Delete this designation?')">

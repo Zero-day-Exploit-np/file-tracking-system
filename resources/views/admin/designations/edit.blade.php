@@ -10,7 +10,7 @@
     <a href="{{ route('admin.designations.index') }}" class="btn-portal-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
 </div>
 <div class="portal-form-card">
-    <form method="POST" action="{{ route('admin.designations.update', $designation->id) }}" class="portal-form">
+    <form method="POST" action="{{ route('admin.designations.update', $designation->uuid) }}" class="portal-form">
         @csrf @method('PUT')
         <div class="row g-3">
             <div class="col-md-8">

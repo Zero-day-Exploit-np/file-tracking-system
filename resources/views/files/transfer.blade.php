@@ -45,7 +45,7 @@
             <h5 class="fw-700 mb-4"><i class="fa-solid fa-right-left me-2 text-primary"></i>Transfer Details</h5>
             <form action="{{ route('files.transfer.store') }}" method="POST" class="portal-form">
                 @csrf
-                <input type="hidden" name="file_record_id" value="{{ $file->id }}">
+                <input type="hidden" name="file_record_uuid" value="{{ $file->uuid }}">
 
                 <div class="mb-3">
                     <label class="form-label">Transfer To <span class="required-star">*</span></label>

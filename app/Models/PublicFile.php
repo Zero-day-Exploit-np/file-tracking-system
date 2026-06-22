@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class PublicFile extends Model
 {
@@ -18,21 +19,29 @@ class PublicFile extends Model
         'attachment_path',
     ];
 
-    protected $appends = ['attachment_url', 'attachment_exists'];
+    // No longer exposes a direct public URL
+    // Use getSignedUrl() for secure, time-limited access
 
-    public function getAttachmentUrlAttribute(): ?string
-    {
-        if (! $this->attachment_path) {
-            return null;
-        }
-
-        return Storage::disk('public')->url($this->attachment_path);
-    }
-
+    /**
+     * Check if the file physically exists in private storage.
+     */
     public function getAttachmentExistsAttribute(): bool
     {
         return $this->attachment_path
-            ? Storage::disk('public')->exists($this->attachment_path)
+            ? Storage::disk('private')->exists($this->attachment_path)
             : false;
+    }
+
+    /**
+     * Return a 15-minute signed download URL via the secure route.
+     * Replaces the old direct /storage URL.
+     */
+    public function getSignedDownloadUrl(): string
+    {
+        return URL::temporarySignedRoute(
+            'admin.public-files.download',
+            now()->addMinutes(15),
+            ['id' => $this->id]
+        );
     }
 }

@@ -37,10 +37,13 @@
                 <td>{{ $file->subject }}</td>
                 <td>
                     @if($file->attachment_exists)
-                    <div class="d-flex gap-1">
-                        <a href="{{ $file->attachment_url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-eye"></i> View</a>
-                        <a href="{{ route('admin.public-files.download', $file->id) }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-download"></i></a>
-                    </div>
+                    {{-- Signed URL — expires in 15 min, no direct /storage access --}}
+                    <a href="{{ $file->getSignedDownloadUrl() }}"
+                       class="btn btn-sm btn-outline-primary"
+                       target="_blank"
+                       title="Secure download (expires in 15 minutes)">
+                        <i class="fa-solid fa-download me-1"></i>Download
+                    </a>
                     @elseif($file->attachment_path)
                     <span class="badge-status badge-pending">File Missing</span>
                     @else
@@ -55,5 +58,8 @@
             </tbody>
         </table>
     </div>
+    @if($files->hasPages())
+    <div class="px-4 py-3 border-top">{{ $files->links() }}</div>
+    @endif
 </div>
 @endsection
