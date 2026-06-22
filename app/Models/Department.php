@@ -4,9 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\User;
-use App\Models\Designation;
-
 
 class Department extends Model
 {
@@ -20,8 +17,14 @@ class Department extends Model
     {
         return $this->hasMany(User::class);
     }
-    public function designations()
+
+    public function designations(): HasMany
     {
         return $this->hasMany(Designation::class);
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(FileRecord::class);
     }
 }

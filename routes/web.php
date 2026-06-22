@@ -9,9 +9,10 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\FileRecordController;
 use App\Http\Controllers\FileTransferController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\PublicFileController;
 use App\Http\Controllers\Admin\TransferApprovalController;
 
-// ADMIN CONTROLLERS (IMPORT THESE)
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminFileController;
@@ -23,9 +24,8 @@ use App\Http\Controllers\Admin\FileTimelineController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [LandingPageController::class, 'index'])->name('welcome');
+Route::post('/public-files', [PublicFileController::class, 'store'])->name('public-files.store');
 
 /*
 |--------------------------------------------------------------------------
