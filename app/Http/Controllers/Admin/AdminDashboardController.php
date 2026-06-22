@@ -8,6 +8,7 @@ use App\Models\Designation;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
 use App\Models\FileTransfer;
+use App\Models\PublicFile;
 use App\Models\TransferRequest;
 use App\Models\User;
 
@@ -21,6 +22,11 @@ class AdminDashboardController extends Controller
             ->get();
 
         $recentFiles = FileRecord::with(['department', 'currentUser'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $recentAudit = FileMovement::with(['file', 'fromUser', 'toUser'])
             ->latest()
             ->take(5)
             ->get();
@@ -41,12 +47,14 @@ class AdminDashboardController extends Controller
             'departments' => Department::count(),
             'designations' => Designation::count(),
             'files' => FileRecord::count(),
-            'pendingTransfers' => TransferRequest::where('status', 'pending')->count(),
+            'pendingTransfers' => TransferRequest::query()->where('status', 'pending')->count(),
+            'publicSubmissions' => PublicFile::count(),
             'recentTransfers' => $recentTransfers,
             'recentFiles' => $recentFiles,
+            'recentAudit' => $recentAudit,
             'timelineStats' => $timelineStats,
             'departmentFileCounts' => $departmentFileCounts,
-            'recentUsers' => User::with(['designation', 'department'])->latest()->take(5)->get(),
+            'recentUsers' => User::query()->with(['designation', 'department'])->latest()->take(5)->get(),
         ]);
     }
 }

@@ -7,13 +7,15 @@ use App\Models\FileRecord;
 use Illuminate\Http\Request;
 use App\Models\FileMovement;
 use App\Models\Department;
+use Illuminate\Support\Facades\Auth;
 
 
 class AdminFileController extends Controller
 {
     public function index(Request $request)
     {
-        $query = FileRecord::query();
+        $user = Auth::user();
+        $query = FileRecord::with(['department', 'creator', 'currentHolder']);
 
         // Search
         if ($request->filled('search')) {
@@ -24,6 +26,15 @@ class AdminFileController extends Controller
                     ->orWhere('file_name', 'like', "%{$search}%")
                     ->orWhere('remarks', 'like', "%{$search}%");
             });
+        }
+
+        // Department Filter
+        if ($user->role !== 'super_admin') {
+            $query->where('department_id', $user->department_id);
+        }
+
+        if ($request->filled('department_id') && $user->role === 'super_admin') {
+            $query->where('department_id', $request->department_id);
         }
 
         // Status Filter
@@ -42,8 +53,11 @@ class AdminFileController extends Controller
         }
 
         $files = $query->latest()->get();
+        $departments = $user->role === 'super_admin'
+            ? Department::all()
+            : collect();
 
-        return view('admin.files.index', compact('files'));
+        return view('admin.files.index', compact('files', 'departments'));
     }
     public function timeline($id)
     {

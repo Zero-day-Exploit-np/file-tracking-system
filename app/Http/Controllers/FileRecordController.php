@@ -15,7 +15,7 @@ class FileRecordController extends Controller
     {
         $user = auth()->user();
 
-        $query = FileRecord::query();
+        $query = FileRecord::with(['department', 'creator', 'currentHolder']);
 
         // Department restriction
         if ($user->role !== 'super_admin') {
@@ -69,13 +69,16 @@ class FileRecordController extends Controller
             ? $request->department_id
             : auth()->user()->department_id;
 
-       $file= FileRecord::create([
+        $file = FileRecord::create([
             'created_by' => auth()->id(),
+            'current_user_id' => auth()->id(),
             'department_id' => $departmentId,
             'file_name' => $request->file_name,
             'file_number' => 'FILE-' . strtoupper(Str::random(10)),
             'remarks' => $request->remarks,
+            'status' => 'active',
         ]);
+
         FileMovement::create([
             'file_id' => $file->id,
             'from_user' => auth()->id(),
@@ -86,6 +89,16 @@ class FileRecordController extends Controller
             'remarks' => 'File created'
         ]);
 
+        $this->recordAudit('created', $file, [
+            'file_number' => $file->file_number,
+            'file_name' => $file->file_name,
+            'from_user' => auth()->id(),
+            'to_user' => auth()->id(),
+            'from_department' => $departmentId,
+            'to_department' => $departmentId,
+            'remarks' => 'File created',
+        ], 'File created');
+
         return redirect()
             ->route('files.index')
             ->with('success', 'File created successfully');
@@ -93,7 +106,7 @@ class FileRecordController extends Controller
 
     public function show($id)
     {
-        
+
         $file = FileRecord::with([
             'department',
             'creator',
@@ -116,4 +129,3 @@ class FileRecordController extends Controller
         return view('files.show', compact('file'));
     }
 }
-

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\FileTransfer;
+use App\Models\FileMovement;
 
 
 class FileRecord extends Model
@@ -18,7 +19,8 @@ class FileRecord extends Model
         'file_number',
         'remarks',
         'created_by',
-        'current_user_id'
+        'current_user_id',
+        'status'
     ];
 
     public function user()

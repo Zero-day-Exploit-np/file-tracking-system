@@ -10,6 +10,8 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QFh8VgI21PFS/XKLQYJq5aRl88VktB+CRfXdf7PcXr2E9aw3n86ksallFFX12cod" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ asset('css/app-custom.css') }}">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -27,13 +29,16 @@
             </div>
         </header>
         @endisset
-        @if(auth()->user()->role == 'admin')
-        <a href="{{ route('admin.dashboard') }}">Admin Dashboard</a>
+        @if(auth()->check() && auth()->user()->role == 'admin')
+        <div class="container mt-3">
+            <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-primary">Admin Dashboard</a>
+        </div>
         @endif
-        <main>
+        <main class="py-4">
             @yield('content')
         </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-HoA+CQ9/j3zYYzKg0U8a+RbxqSBOW5hwG5V0qMVF5C7wL+7z/gfzxW2cA8QDpbFG" crossorigin="anonymous"></script>
 </body>
 
 </html>

@@ -56,22 +56,32 @@
 
     </div>
 
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-top:20px;">
+        <div style="padding:20px; background:white; border-radius:12px;">
+            <h5>Pending Transfers</h5>
+            <p class="display-6">{{ $pendingTransfers }}</p>
+        </div>
 
-    {{-- =======================
-        MAIN CONTENT GRID
-    ======================== --}}
-    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-top:30px;">
+        <div style="padding:20px; background:white; border-radius:12px;">
+            <h5>Public Submissions</h5>
+            <p class="display-6">{{ $publicSubmissions }}</p>
+        </div>
 
+        <div style="padding:20px; background:white; border-radius:12px;">
+            <h5>Recent Audit Events</h5>
+            <p class="mb-1">{{ $recentAudit->count() }} latest entries</p>
+            <small>Updated in real time</small>
+        </div>
+    </div>
 
-        {{-- LEFT SIDE: TRANSFERS --}}
+    <div style="margin-top:30px; display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+
         <div style="background:white; padding:15px; border-radius:12px;">
-
             <h3>Recent File Transfers</h3>
 
-            <table width="100%" cellpadding="8" border="0">
-
+            <table class="table table-sm">
                 <thead>
-                    <tr style="text-align:left; border-bottom:1px solid #ddd;">
+                    <tr>
                         <th>File</th>
                         <th>From</th>
                         <th>To</th>
@@ -79,60 +89,65 @@
                         <th>Date</th>
                     </tr>
                 </thead>
-
                 <tbody>
-                    @foreach($recentTransfers as $t)
+                    @forelse($recentTransfers as $t)
                     <tr>
-                        <td>{{ $t->file->title ?? 'N/A' }}</td>
-                        <td>
-                            {{ $t->sender->name }}
-                            <br>
-                            <small>{{ $t->sender->designation->name ?? '' }}</small>
-                        </td>
-                        <td>
-                            {{ $t->receiver->name }}
-                            <br>
-                            <small>{{ $t->receiver->designation->name ?? '' }}</small>
-                        </td>
-                        <td>{{ $t->remarks }}</td>
+                        <td>{{ $t->file->file_name ?? 'N/A' }}</td>
+                        <td>{{ $t->sender->name ?? 'System' }}</td>
+                        <td>{{ $t->receiver->name ?? 'N/A' }}</td>
+                        <td>{{ $t->remarks ?? 'No remarks' }}</td>
                         <td>{{ $t->created_at->format('d M Y') }}</td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5">No transfers available.</td>
+                    </tr>
+                    @endforelse
                 </tbody>
-
             </table>
-
         </div>
 
+        <div style="display:grid; gap:20px;">
+            <div style="background:white; padding:15px; border-radius:12px;">
+                <h3>Recent Users</h3>
 
-        {{-- RIGHT SIDE: USERS ACTIVITY --}}
-        <div style="background:white; padding:15px; border-radius:12px;">
-
-            <h3>Recent Users</h3>
-
-            @foreach($recentUsers as $user)
-            <div style="padding:10px; border-bottom:1px solid #eee;">
-
-                <strong>{{ $user->name }}</strong>
-                <br>
-
-                <small>
-                    {{ $user->email }}
-                </small>
-
-                <br>
-
-                <small>
-                    {{ $user->department->name ?? 'No Dept' }}
-                    |
-                    {{ $user->designation->name ?? 'No Designation' }}
-                </small>
-
+                @forelse($recentUsers as $user)
+                <div style="padding:10px; border-bottom:1px solid #eee;">
+                    <strong>{{ $user->name }}</strong><br>
+                    <small>{{ $user->email }}</small><br>
+                    <small>{{ $user->department->name ?? 'No Dept' }} | {{ $user->designation->name ?? 'No Designation' }}</small>
+                </div>
+                @empty
+                <p>No recent users found.</p>
+                @endforelse
             </div>
-            @endforeach
 
+            <div style="background:white; padding:15px; border-radius:12px;">
+                <h4>Recent Audit Events</h4>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Action</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentAudit as $item)
+                        <tr>
+                            <td>{{ $item->created_at->format('d M Y H:i') }}</td>
+                            <td>{{ ucfirst($item->action) }}</td>
+                            <td>{{ $item->file->file_number ?? 'N/A' }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="3">No audit activity found.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-
     </div>
 
 </div>

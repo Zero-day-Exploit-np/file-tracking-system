@@ -16,19 +16,12 @@ class FileTimelineController extends Controller
             'department',
         ])->findOrFail($id);
 
-
         if (
             auth()->user()->role !== 'super_admin' &&
             $file->department_id != auth()->user()->department_id
         ) {
             abort(403);
         }
-
-
-        $file = FileRecord::with([
-            'currentUser',
-            'department',
-        ])->findOrFail($id);
 
         $timeline = FileMovement::with([
             'fromUser',

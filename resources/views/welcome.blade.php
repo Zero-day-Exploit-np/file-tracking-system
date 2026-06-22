@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app-custom.css') }}">
 </head>
+
 <body>
     <header class="site-header sticky-top">
         <nav class="navbar navbar-expand-lg navbar-light">
@@ -99,10 +101,18 @@
                     <div class="col-lg-6">
                         <div class="info-panel">
                             <div class="row g-3">
-                                <div class="col-sm-6"><div class="info-box"><i class="fa-solid fa-building-columns"></i><span>Departments</span></div></div>
-                                <div class="col-sm-6"><div class="info-box"><i class="fa-solid fa-users"></i><span>Users</span></div></div>
-                                <div class="col-sm-6"><div class="info-box"><i class="fa-solid fa-file-lines"></i><span>Files</span></div></div>
-                                <div class="col-sm-6"><div class="info-box"><i class="fa-solid fa-right-left"></i><span>Transfers</span></div></div>
+                                <div class="col-sm-6">
+                                    <div class="info-box"><i class="fa-solid fa-building-columns"></i><span>Departments</span></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="info-box"><i class="fa-solid fa-users"></i><span>Users</span></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="info-box"><i class="fa-solid fa-file-lines"></i><span>Files</span></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="info-box"><i class="fa-solid fa-right-left"></i><span>Transfers</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -118,21 +128,21 @@
                 </div>
                 <div class="row g-4">
                     @php($featureCards = [
-                        ['icon' => 'fa-file-circle-plus', 'title' => 'File Management', 'text' => 'Create, edit, review, and archive official documents with clear ownership.'],
-                        ['icon' => 'fa-building-user', 'title' => 'Department Management', 'text' => 'Organize team structure, departments, and office responsibilities with ease.'],
-                        ['icon' => 'fa-user-gear', 'title' => 'User Management', 'text' => 'Assign roles, maintain records, and control access levels securely.'],
-                        ['icon' => 'fa-check-to-slot', 'title' => 'Transfer Approval', 'text' => 'Approve or reject transfer requests with full audit history.'],
-                        ['icon' => 'fa-timeline', 'title' => 'Timeline Tracking', 'text' => 'See every event in the file lifecycle from creation to delivery.'],
-                        ['icon' => 'fa-magnifying-glass', 'title' => 'Search & Filters', 'text' => 'Locate records quickly with advanced search, status, and date filters.']
+                    ['icon' => 'fa-file-circle-plus', 'title' => 'File Management', 'text' => 'Create, edit, review, and archive official documents with clear ownership.'],
+                    ['icon' => 'fa-building-user', 'title' => 'Department Management', 'text' => 'Organize team structure, departments, and office responsibilities with ease.'],
+                    ['icon' => 'fa-user-gear', 'title' => 'User Management', 'text' => 'Assign roles, maintain records, and control access levels securely.'],
+                    ['icon' => 'fa-check-to-slot', 'title' => 'Transfer Approval', 'text' => 'Approve or reject transfer requests with full audit history.'],
+                    ['icon' => 'fa-timeline', 'title' => 'Timeline Tracking', 'text' => 'See every event in the file lifecycle from creation to delivery.'],
+                    ['icon' => 'fa-magnifying-glass', 'title' => 'Search & Filters', 'text' => 'Locate records quickly with advanced search, status, and date filters.']
                     ])
                     @foreach($featureCards as $card)
-                        <div class="col-md-6 col-lg-4">
-                            <div class="feature-card h-100">
-                                <div class="feature-icon"><i class="fa-solid {{ $card['icon'] }}"></i></div>
-                                <h5>{{ $card['title'] }}</h5>
-                                <p>{{ $card['text'] }}</p>
-                            </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon"><i class="fa-solid {{ $card['icon'] }}"></i></div>
+                            <h5>{{ $card['title'] }}</h5>
+                            <p>{{ $card['text'] }}</p>
                         </div>
+                    </div>
                     @endforeach
                 </div>
             </div>
@@ -244,17 +254,38 @@
                     <div class="col-lg-6">
                         <div class="upload-card">
                             @if(session('success'))
-                                <div class="alert alert-success">{{ session('success') }}</div>
+                            <div class="alert alert-success">{{ session('success') }}</div>
+                            @endif
+                            @if($errors->any())
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
                             @endif
                             <form action="{{ route('public-files.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="row g-3">
-                                    <div class="col-md-6"><input type="text" name="applicant_name" class="form-control" placeholder="Applicant Name" required></div>
-                                    <div class="col-md-6"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
-                                    <div class="col-md-6"><input type="text" name="contact_number" class="form-control" placeholder="Contact Number" required></div>
-                                    <div class="col-md-6"><input type="text" name="subject" class="form-control" placeholder="Subject" required></div>
-                                    <div class="col-12"><input type="file" name="attachment" class="form-control" required></div>
-                                    <div class="col-12"><textarea name="remarks" class="form-control" rows="4" placeholder="Remarks"></textarea></div>
+                                    <div class="col-md-6">
+                                        <input type="text" name="applicant_name" value="{{ old('applicant_name') }}" class="form-control" placeholder="Applicant Name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="email" name="email" value="{{ old('email') }}" class="form-control" placeholder="Email" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" name="contact_number" value="{{ old('contact_number') }}" class="form-control" placeholder="Contact Number" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" name="subject" value="{{ old('subject') }}" class="form-control" placeholder="Subject" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <input type="file" name="attachment" class="form-control" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <textarea name="remarks" class="form-control" rows="4" placeholder="Remarks">{{ old('remarks') }}</textarea>
+                                    </div>
                                     <div class="col-12"><button type="submit" class="btn btn-primary w-100">Submit File</button></div>
                                 </div>
                             </form>
@@ -273,25 +304,33 @@
                 <div class="row g-4">
                     <div class="col-md-6 col-xl-3">
                         <div class="stat-card">
-                            <div><small>Total Departments</small><h3>{{ $stats['departments'] }}</h3></div>
+                            <div><small>Total Departments</small>
+                                <h3>{{ $stats['departments'] }}</h3>
+                            </div>
                             <i class="fa-solid fa-building-columns"></i>
                         </div>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <div class="stat-card">
-                            <div><small>Total Users</small><h3>{{ $stats['users'] }}</h3></div>
+                            <div><small>Total Users</small>
+                                <h3>{{ $stats['users'] }}</h3>
+                            </div>
                             <i class="fa-solid fa-users"></i>
                         </div>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <div class="stat-card">
-                            <div><small>Total Files</small><h3>{{ $stats['files'] }}</h3></div>
+                            <div><small>Total Files</small>
+                                <h3>{{ $stats['files'] }}</h3>
+                            </div>
                             <i class="fa-solid fa-file-lines"></i>
                         </div>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <div class="stat-card">
-                            <div><small>Total Transfers</small><h3>{{ $stats['transfers'] }}</h3></div>
+                            <div><small>Total Transfers</small>
+                                <h3>{{ $stats['transfers'] }}</h3>
+                            </div>
                             <i class="fa-solid fa-paper-plane"></i>
                         </div>
                     </div>
@@ -310,4 +349,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

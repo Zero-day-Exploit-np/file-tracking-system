@@ -27,7 +27,7 @@ class FileTransferredNotification extends Notification
     {
         return [
             'file_id' => $this->transfer->file_id,
-            'file_title' => $this->transfer->file->title ?? 'Unknown File',
+            'file_title' => $this->transfer->file->file_name ?? 'Unknown File',
             'sender' => $this->transfer->sender->name ?? 'System',
             'receiver' => $this->transfer->receiver->name ?? 'N/A',
             'remarks' => $this->transfer->remarks,

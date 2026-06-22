@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+use App\Models\Department;
+use App\Models\FileRecord;
 
 class FileMovement extends Model
 {
@@ -42,6 +45,4 @@ class FileMovement extends Model
     {
         return $this->belongsTo(Department::class, 'to_department');
     }
-
-    
 }

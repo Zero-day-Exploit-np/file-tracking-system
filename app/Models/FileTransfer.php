@@ -5,13 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\FileRecord;
 use App\Models\User;
+use App\Models\Department;
 
 class FileTransfer extends Model
 {
     protected $fillable = [
-        'file_id',
-        'sender_id',
-        'receiver_id',
+        'file_record_id',
+        'from_user_id',
+        'to_user_id',
+        'from_department_id',
+        'to_department_id',
         'remarks',
     ];
 
@@ -42,13 +45,11 @@ class FileTransfer extends Model
 
     public function sender()
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->belongsTo(User::class, 'from_user_id');
     }
 
     public function receiver()
     {
-        return $this->belongsTo(User::class, 'receiver_id');
+        return $this->belongsTo(User::class, 'to_user_id');
     }
-
-
 }

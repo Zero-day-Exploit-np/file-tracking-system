@@ -8,6 +8,29 @@ use Illuminate\Support\Facades\Storage;
 
 class PublicFileController extends Controller
 {
+    public function index()
+    {
+        $files = PublicFile::latest()->get();
+
+        return view(
+            'admin.public-files.index',
+            compact('files')
+        );
+    }
+
+    public function download($id)
+    {
+        $file = PublicFile::findOrFail($id);
+
+        if (! $file->attachment_path || ! Storage::disk('public')->exists($file->attachment_path)) {
+            return redirect()
+                ->route('admin.public-files.index')
+                ->with('error', 'Attachment not found or has been removed.');
+        }
+
+        return Storage::disk('public')->download($file->attachment_path);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Department;
+use App\Models\FileRecord;
+use App\Models\User;
 
 // class TransferRequest extends Model
 // {

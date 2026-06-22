@@ -11,12 +11,14 @@ use App\Http\Controllers\FileTransferController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PublicFileController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\TransferApprovalController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminFileController;
 use App\Http\Controllers\Admin\AdminDesignationController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\FileTimelineController;
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +45,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('files', FileRecordController::class);
-    Route::post('/file-transfer', [FileTransferController::class, 'store'])->name('files.transfer');
 });
 
 
@@ -59,7 +60,7 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'role:admin'])
+    ->middleware(['auth', 'role:super_admin,admin'])
     ->group(function () {
 
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
@@ -87,6 +88,15 @@ Route::prefix('admin')
 
         Route::post('/transfer-requests/{id}/reject', [TransferApprovalController::class, 'reject'])
             ->name('transfer.reject');
+
+        Route::get('/public-files', [PublicFileController::class, 'index'])
+            ->name('public-files.index');
+
+        Route::get('/public-files/{id}/download', [PublicFileController::class, 'download'])
+            ->name('public-files.download');
+
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])
+            ->name('audit.logs');
     });
 
 
@@ -101,7 +111,15 @@ Route::middleware('auth')->group(function () {
         '/files/transfer',
         [FileTransferController::class, 'store']
     )->name('files.transfer.store');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.readAll');
 });
+
+
 
 Route::post('/logout', function () {
     Auth::logout();

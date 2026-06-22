@@ -19,6 +19,22 @@
             Files
         </x-nav-link>
 
+        <x-nav-link :href="route('notifications.index')">
+            Notifications
+            @if(auth()->user()->unreadNotifications->count())
+            <span class="badge bg-danger">
+                {{ auth()->user()->unreadNotifications->count() }}
+            </span>
+            @endif
+        </x-nav-link>
+
+        @if(auth()->user()->role == 'admin' || auth()->user()->role == 'super_admin')
+        <li>
+            <a href="{{ route('admin.public-files.index') }}">
+                Public Submissions
+            </a>
+        </li>
+        @endif
         {{-- SUPER ADMIN --}}
         @if(auth()->user()->role === 'super_admin')
 
@@ -37,6 +53,7 @@
         <x-nav-link :href="route('users.create')">
             Create Admin
         </x-nav-link>
+
 
         {{-- ADMIN --}}
         @elseif(auth()->user()->role === 'admin')
@@ -58,6 +75,10 @@
 
         <x-nav-link :href="route('admin.transfer.requests')">
             Transfer Requests
+        </x-nav-link>
+
+        <x-nav-link :href="route('admin.audit.logs')">
+            Audit Logs
         </x-nav-link>
 
         {{-- USER --}}
@@ -97,6 +118,15 @@
 
         <x-responsive-nav-link :href="route('files.index')">
             Files
+        </x-responsive-nav-link>
+
+        <x-responsive-nav-link :href="route('notifications.index')">
+            Notifications
+            @if(auth()->user()->unreadNotifications->count())
+            <span class="badge bg-danger">
+                {{ auth()->user()->unreadNotifications->count() }}
+            </span>
+            @endif
         </x-responsive-nav-link>
 
         {{-- SUPER ADMIN --}}
@@ -139,6 +169,10 @@
 
         <x-responsive-nav-link :href="route('admin.transfer.requests')">
             Transfer Requests
+        </x-responsive-nav-link>
+
+        <x-responsive-nav-link :href="route('admin.audit.logs')">
+            Audit Logs
         </x-responsive-nav-link>
 
         {{-- USER --}}

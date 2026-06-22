@@ -15,26 +15,18 @@ class TransferApprovalController extends Controller
 {
     public function index()
     {
-        $deptId = Auth::user()->department_id;
+        $user = Auth::user();
         $relations = ['file', 'sender', 'receiver', 'fromDept', 'toDept'];
 
-        $pending = TransferRequest::with($relations)
-            ->where('to_department', $deptId)
-            ->where('status', 'pending')
-            ->latest()
-            ->get();
+        $query = TransferRequest::with($relations)->latest();
 
-        $approved = TransferRequest::with($relations)
-            ->where('to_department', $deptId)
-            ->where('status', 'approved')
-            ->latest()
-            ->get();
+        if ($user->role !== 'super_admin') {
+            $query->where('to_department', $user->department_id);
+        }
 
-        $rejected = TransferRequest::with($relations)
-            ->where('to_department', $deptId)
-            ->where('status', 'rejected')
-            ->latest()
-            ->get();
+        $pending = (clone $query)->where('status', 'pending')->get();
+        $approved = (clone $query)->where('status', 'approved')->get();
+        $rejected = (clone $query)->where('status', 'rejected')->get();
 
         return view('admin.transfer_requests.index', compact(
             'pending',
@@ -46,6 +38,11 @@ class TransferApprovalController extends Controller
     public function approve($id)
     {
         $request = TransferRequest::findOrFail($id);
+        $user = Auth::user();
+
+        if ($user->role !== 'super_admin' && $request->to_department !== $user->department_id) {
+            abort(403);
+        }
 
         $file = FileRecord::findOrFail($request->file_id);
         $targetUser = User::findOrFail($request->target_user);
@@ -54,17 +51,19 @@ class TransferApprovalController extends Controller
         $fromDept = $file->department_id;
 
         FileTransfer::create([
-            'file_id' => $file->id,
-            'sender_id' => $request->requested_by,
-            'receiver_id' => $request->target_user,
+            'file_record_id' => $file->id,
+            'from_user_id' => $request->requested_by,
+            'to_user_id' => $request->target_user,
+            'from_department_id' => $request->from_department,
+            'to_department_id' => $request->to_department,
             'remarks' => 'Approved by Admin'
         ]);
         FileMovement::create([
             'file_id' => $file->id,
-            'from_user' => auth()->id(),
+            'from_user' => $fromUser,
             'to_user' => $targetUser->id,
-            'from_department' => auth()->user()->department_id,
-            'to_department' => $targetUser->department_id,
+            'from_department' => $fromDept,
+            'to_department' => $request->to_department,
             'action' => 'transferred',
             'remarks' => $request->remarks
         ]);
@@ -89,6 +88,17 @@ class TransferApprovalController extends Controller
             'remarks' => 'File transferred after admin approval'
         ]);
 
+        $this->recordAudit('approved', $file, [
+            'file_number' => $file->file_number,
+            'file_name' => $file->file_name,
+            'requested_by' => $request->requested_by,
+            'from_user' => $fromUser,
+            'to_user' => $request->target_user,
+            'from_department' => $fromDept,
+            'to_department' => $request->to_department,
+            'remarks' => $request->remarks,
+        ], 'Transfer request approved');
+
         return response()->json([
             'success' => true,
             'message' => 'Transfer Approved'
@@ -98,6 +108,12 @@ class TransferApprovalController extends Controller
     public function reject($id)
     {
         $request = TransferRequest::findOrFail($id);
+        $user = Auth::user();
+
+        if ($user->role !== 'super_admin' && $request->to_department !== $user->department_id) {
+            abort(403);
+        }
+
         $file = FileRecord::findOrFail($request->file_id);
 
         $request->update(['status' => 'rejected']);
@@ -114,6 +130,16 @@ class TransferApprovalController extends Controller
         $file->update([
             'status' => 'active'
         ]);
+
+        $this->recordAudit('rejected', $file, [
+            'file_number' => $file->file_number,
+            'file_name' => $file->file_name,
+            'from_user' => $file->current_user_id,
+            'to_user' => $request->target_user,
+            'from_department' => $file->department_id,
+            'to_department' => $request->to_department,
+            'remarks' => 'Transfer rejected',
+        ], 'Transfer request rejected');
 
         return response()->json([
             'success' => true,
