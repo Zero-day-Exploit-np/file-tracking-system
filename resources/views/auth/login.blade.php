@@ -1,4 +1,5 @@
 <x-guest-layout>
+@section('title', 'Sign In')
     <h2>Sign In</h2>
     <p class="auth-sub">Enter your credentials to access the portal</p>
 

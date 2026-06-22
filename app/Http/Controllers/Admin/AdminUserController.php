@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AdminUserController extends Controller
 {
@@ -31,9 +32,13 @@ class AdminUserController extends Controller
     {
         $request->validate([
             'name'           => 'required|string|max:255',
-            'email'          => 'required|email|unique:users',
-            'password'       => 'required|min:6',
+            'email'          => 'required|email:rfc|max:255|unique:users,email',
+            'password'       => 'required|min:8',
             'designation_id' => 'required|exists:designations,id',
+            'contact_number' => 'nullable|string|max:20',
+            // Secure upload: MIME type + extension + 2 MB max
+            'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'can_create_file'=> 'nullable|boolean',
         ]);
 
         $data = [
@@ -48,12 +53,16 @@ class AdminUserController extends Controller
         ];
 
         if ($request->hasFile('photo')) {
-            $filename = time() . '_' . $request->file('photo')->getClientOriginalName();
-            $request->file('photo')->move(public_path('uploads/users'), $filename);
-            $data['photo'] = $filename;
+            $data['photo'] = $this->storePhoto($request);
         }
 
-        User::create($data);
+        $user = User::create($data);
+
+        $this->recordAudit('user_created', $user, [
+            'name'  => $user->name,
+            'email' => $user->email,
+            'ip'    => $request->ip(),
+        ], 'User created by admin: ' . auth()->user()->name);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully.');
@@ -82,7 +91,7 @@ class AdminUserController extends Controller
 
         $request->validate([
             'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email:rfc|max:255|unique:users,email,' . $user->id,
         ]);
 
         $user->update([
@@ -103,9 +112,27 @@ class AdminUserController extends Controller
             return back()->with('error', 'You cannot delete your own account.');
         }
 
+        $this->recordAudit('user_deleted', $user, [
+            'name'  => $user->name,
+            'email' => $user->email,
+            'ip'    => request()->ip(),
+        ], 'User deleted by admin: ' . auth()->user()->name);
+
         $user->delete();
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Store profile photo securely with a random UUID filename.
+     */
+    private function storePhoto(Request $request): string
+    {
+        $file      = $request->file('photo');
+        $extension = strtolower($file->getClientOriginalExtension());
+        $filename  = Str::uuid() . '.' . $extension;
+
+        return $file->storeAs('uploads/users', $filename, 'public');
     }
 }

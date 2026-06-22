@@ -1,4 +1,5 @@
 <x-guest-layout>
+@section('title', 'Register')
     <h2>Create Account</h2>
     <p class="auth-sub">Register to access the file tracking portal</p>
 

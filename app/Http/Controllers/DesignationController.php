@@ -8,77 +8,74 @@ use Illuminate\Http\Request;
 
 class DesignationController extends Controller
 {
-
     public function index()
     {
-        $designations = Designation::with('department')
-            ->latest()
-            ->paginate(10);
-
+        $designations = Designation::with('department')->latest()->paginate(15);
         return view('designations.index', compact('designations'));
     }
 
-    // SHOW CREATE PAGE
     public function create()
     {
-        $departments = Department::all();
+        $departments = Department::orderBy('name')->get();
         return view('designations.create', compact('departments'));
     }
 
-    // STORE DATA (THIS FIXES YOUR ERROR)
     public function store(Request $request)
     {
         $request->validate([
-            'department_id' => 'required',
-            'name' => 'required|string|max:255',
-            'status' => 'required'
+            'department_id' => 'required|exists:departments,id',
+            'name'          => 'required|string|max:255',
+            'status'        => 'required|boolean',
         ]);
 
         Designation::create([
-            'department_id' => $request->department_id,
-            'name' => $request->name,
-            'is_active' => $request->status,   // ✅ FIXED
+            'department_id' => (int) $request->department_id,
+            'name'          => $request->string('name')->trim()->value(),
+            'is_active'     => (bool) $request->status,
         ]);
 
-        return redirect()->route('designations.index');
+        return redirect()->route('designations.index')
+            ->with('success', 'Designation created successfully.');
     }
 
-    // EDIT
     public function edit($id)
     {
         $designation = Designation::findOrFail($id);
-        $departments = Department::all();
-
+        $departments = Department::orderBy('name')->get();
         return view('designations.edit', compact('designation', 'departments'));
     }
 
-    // UPDATE
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'department_id' => 'required',
-            'name' => 'required',
-            'status' => 'required'
-        ]);
-
         $designation = Designation::findOrFail($id);
 
+        $request->validate([
+            'department_id' => 'required|exists:departments,id',
+            'name'          => 'required|string|max:255',
+            'status'        => 'required|boolean',
+        ]);
+
         $designation->update([
-            'department_id' => $request->department_id,
-            'name' => $request->name,
-            'is_active' => $request->status,   // ✅ FIXED
+            'department_id' => (int) $request->department_id,
+            'name'          => $request->string('name')->trim()->value(),
+            'is_active'     => (bool) $request->status,
         ]);
 
         return redirect()->route('designations.index')
-            ->with('success', 'Designation updated successfully');
+            ->with('success', 'Designation updated successfully.');
     }
 
-    // DELETE
     public function destroy($id)
     {
-        Designation::findOrFail($id)->delete();
+        $designation = Designation::findOrFail($id);
+
+        if ($designation->users()->count() > 0) {
+            return back()->with('error', 'Cannot delete a designation that has users assigned to it.');
+        }
+
+        $designation->delete();
 
         return redirect()->route('designations.index')
-            ->with('success', 'Designation deleted successfully');
+            ->with('success', 'Designation deleted successfully.');
     }
 }

@@ -12,11 +12,14 @@ class DepartmentController extends Controller
         $query = Department::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('code', 'like', '%' . $request->search . '%');
+            $search = $request->string('search')->trim()->value();
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            });
         }
 
-        $departments = $query->latest()->paginate(10)->withQueryString();
+        $departments = $query->latest()->paginate(15)->withQueryString();
 
         return view('departments.index', compact('departments'));
     }
@@ -29,12 +32,16 @@ class DepartmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50',
+            'name'      => 'required|string|max:255|unique:departments,name',
+            'code'      => 'required|string|max:50|unique:departments,code|alpha_num',
             'is_active' => 'required|boolean',
         ]);
 
-        Department::create($request->all());
+        Department::create([
+            'name'      => $request->string('name')->trim()->value(),
+            'code'      => strtoupper($request->string('code')->trim()->value()),
+            'is_active' => (bool) $request->is_active,
+        ]);
 
         return redirect()->route('departments.index')
             ->with('success', 'Department created successfully.');
@@ -53,19 +60,31 @@ class DepartmentController extends Controller
     public function update(Request $request, Department $department)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50',
+            'name'      => 'required|string|max:255|unique:departments,name,' . $department->id,
+            'code'      => 'required|string|max:50|unique:departments,code,' . $department->id . '|alpha_num',
             'is_active' => 'required|boolean',
         ]);
 
         $department->update([
-            'name' => $request->name,
-            'code' => $request->code,
-            'is_active' => $request->is_active,
+            'name'      => $request->string('name')->trim()->value(),
+            'code'      => strtoupper($request->string('code')->trim()->value()),
+            'is_active' => (bool) $request->is_active,
         ]);
 
-        return redirect()
-            ->route('departments.index')
+        return redirect()->route('departments.index')
             ->with('success', 'Department updated successfully.');
+    }
+
+    public function destroy(Department $department)
+    {
+        // Prevent deleting if users are assigned
+        if ($department->users()->count() > 0) {
+            return back()->with('error', 'Cannot delete a department that has users assigned to it.');
+        }
+
+        $department->delete();
+
+        return redirect()->route('departments.index')
+            ->with('success', 'Department deleted successfully.');
     }
 }

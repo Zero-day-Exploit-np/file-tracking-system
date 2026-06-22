@@ -1,4 +1,5 @@
 <x-guest-layout>
+@section('title', 'Forgot Password')
     <h2>Forgot Password</h2>
     <p class="auth-sub">Enter your email address and we'll send you a reset link.</p>
 
