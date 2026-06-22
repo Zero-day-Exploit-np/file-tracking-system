@@ -1,59 +1,517 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# File Tracking System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based **Government Style File Tracking and Management System** designed for organizations, educational institutions, government offices, and departments to track file movement, approvals, and departmental workflows.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Authentication & Roles
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Secure Login System
+* Role-Based Access Control
+* Super Admin
+* Admin
+* User
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Department Management
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* Create Departments
+* Edit Departments
+* Delete Departments
+* Department-wise File Access
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Designation Management
 
-### Premium Partners
+* Create Designations
+* Manage Designations
+* Assign Designations to Users
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## User Management
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+* Create Users
+* Edit Users
+* Delete Users
+* Department Assignment
+* Role Assignment
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## File Management
 
-## Security Vulnerabilities
+* Create Files
+* Upload Attachments
+* View Files
+* Download Files
+* Edit Files
+* Delete Files
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## File Transfer System
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+* Transfer Files Between Departments
+* Transfer Files Between Users
+* Approval Workflow
+* Transfer Requests
+
+---
+
+## File Movement Timeline
+
+Track complete file history:
+
+* File Created
+* Transfer Requested
+* Transfer Approved
+* Transfer Rejected
+* Department Changes
+* User Changes
+
+---
+
+## Public File Submission
+
+Public users can submit files from the landing page.
+
+Submitted files can be reviewed by administrators.
+
+---
+
+## Notifications
+
+* Transfer Notifications
+* Approval Notifications
+* Rejection Notifications
+* Notification Center
+
+---
+
+## Audit Logs
+
+Track system activities:
+
+* Login
+* Logout
+* File Creation
+* File Updates
+* File Transfers
+* User Management Activities
+
+---
+
+# Technology Stack
+
+| Technology | Version       |
+| ---------- | ------------- |
+| PHP        | 8.2+          |
+| Laravel    | 12            |
+| MySQL      | 8+            |
+| Bootstrap  | 5             |
+| Blade      | Laravel Blade |
+| Composer   | Latest        |
+
+---
+
+# System Roles
+
+## Super Admin
+
+Can:
+
+* Manage All Departments
+* Manage All Users
+* View All Files
+* View All Timelines
+* Approve Transfers
+* View Audit Logs
+* Access Entire System
+
+---
+
+## Admin
+
+Can:
+
+* Manage Files of Own Department
+* View Department Files
+* Approve Department Transfers
+* Manage Department Users
+
+Cannot:
+
+* Access Other Departments
+* Access Super Admin Features
+
+---
+
+## User
+
+Can:
+
+* View Assigned Files
+* Transfer Assigned Files
+* View Own Timeline
+* Receive Notifications
+
+Cannot:
+
+* Manage Users
+* Manage Departments
+* Access Admin Panels
+
+---
+
+# Installation Guide
+
+## Step 1: Download Project
+
+Clone project:
+
+```bash
+git clone https://github.com/your-repository/file-tracking-system.git
+```
+
+Or extract ZIP file.
+
+---
+
+## Step 2: Open Project
+
+```bash
+cd file-tracking-system
+```
+
+---
+
+## Step 3: Install Dependencies
+
+```bash
+composer install
+```
+
+---
+
+## Step 4: Create Environment File
+
+Copy:
+
+```bash
+cp .env.example .env
+```
+
+Windows:
+
+```bash
+copy .env.example .env
+```
+
+---
+
+## Step 5: Configure Database
+
+Open `.env`
+
+Update:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=file_tracking_system
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Create database in MySQL:
+
+```sql
+CREATE DATABASE file_tracking_system;
+```
+
+---
+
+## Step 6: Generate Application Key
+
+```bash
+php artisan key:generate
+```
+
+---
+
+## Step 7: Run Migrations
+
+```bash
+php artisan migrate
+```
+
+If seeders exist:
+
+```bash
+php artisan db:seed
+```
+
+Or
+
+```bash
+php artisan migrate --seed
+```
+
+---
+
+## Step 8: Create Storage Link
+
+Required for file uploads.
+
+```bash
+php artisan storage:link
+```
+
+Expected output:
+
+```text
+The [public/storage] link has been connected.
+```
+
+---
+
+## Step 9: Clear Cache
+
+```bash
+php artisan optimize:clear
+```
+
+---
+
+## Step 10: Start Application
+
+```bash
+php artisan serve
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+# Deployment on Own Server
+
+## Shared Hosting
+
+Upload project files.
+
+Run:
+
+```bash
+composer install --no-dev
+```
+
+Set document root:
+
+```text
+/public
+```
+
+Run:
+
+```bash
+php artisan storage:link
+php artisan optimize
+```
+
+---
+
+## VPS / Linux Server
+
+Install:
+
+* PHP 8.2+
+* Composer
+* MySQL
+* Nginx or Apache
+
+Run:
+
+```bash
+composer install
+php artisan migrate
+php artisan storage:link
+php artisan optimize
+```
+
+Configure web server to point to:
+
+```text
+project/public
+```
+
+---
+
+# Common Commands
+
+## Start Server
+
+```bash
+php artisan serve
+```
+
+---
+
+## Run Tests
+
+```bash
+php artisan test
+```
+
+---
+
+## Show Routes
+
+```bash
+php artisan route:list
+```
+
+---
+
+## Clear Cache
+
+```bash
+php artisan optimize:clear
+```
+
+---
+
+## Recreate Storage Link
+
+```bash
+php artisan storage:unlink
+php artisan storage:link
+```
+
+---
+
+# Troubleshooting
+
+## Files Not Opening
+
+Run:
+
+```bash
+php artisan storage:link
+```
+
+Check:
+
+```text
+storage/app/public
+```
+
+---
+
+## 403 Unauthorized
+
+Verify:
+
+* User Role
+* Department Assignment
+* Route Middleware
+
+---
+
+## Database Connection Error
+
+Verify `.env` database credentials.
+
+Run:
+
+```bash
+php artisan config:clear
+```
+
+---
+
+## Route Not Found
+
+Run:
+
+```bash
+php artisan route:list
+```
+
+Then clear cache:
+
+```bash
+php artisan optimize:clear
+```
+
+---
+
+# Project Structure
+
+```text
+app/
+ ├── Http/
+ ├── Models/
+ ├── Notifications/
+
+database/
+ ├── migrations/
+
+resources/
+ ├── views/
+
+routes/
+ ├── web.php
+
+storage/
+ ├── app/public
+```
+
+---
+
+# Security Features
+
+* Role-Based Access Control
+* Department-Level Authorization
+* File Ownership Validation
+* Secure Downloads
+* Request Validation
+* CSRF Protection
+* Authentication Middleware
+
+---
+
+# Future Improvements
+
+* Email Notifications
+* PDF Reports
+* Digital Signatures
+* QR Code Tracking
+* Advanced Search
+* Mobile Application
+* REST API
+
+---
+
+# Author
+
+Bikram Kumar Das
+
+B.Sc. Computer Science
+
+Sikkim Manipal University
+
+---
+
+# License
+
+This project is intended for educational and organizational use.
