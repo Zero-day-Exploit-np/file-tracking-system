@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 class PublicFile extends Model
 {
     protected $table = 'public_files';
 
     protected $fillable = [
+        'uuid',
         'applicant_name',
         'email',
         'contact_number',
@@ -19,8 +21,15 @@ class PublicFile extends Model
         'attachment_path',
     ];
 
-    // No longer exposes a direct public URL
-    // Use getSignedUrl() for secure, time-limited access
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->uuid)) {
+                $model->uuid = Str::uuid()->toString();
+            }
+        });
+    }
 
     /**
      * Check if the file physically exists in private storage.
@@ -33,10 +42,14 @@ class PublicFile extends Model
     }
 
     /**
-     * Return a 15-minute signed download URL via the secure route (UUID-based).
+     * Return a 15-minute temporary signed download URL (UUID-based — no numeric ID exposed).
      */
     public function getSignedDownloadUrl(): string
     {
+        if (!$this->uuid) {
+            return '#';
+        }
+
         return URL::temporarySignedRoute(
             'admin.public-files.download',
             now()->addMinutes(15),

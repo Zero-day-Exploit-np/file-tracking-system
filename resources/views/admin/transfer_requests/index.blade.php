@@ -203,9 +203,9 @@
 
 @push('scripts')
 <script>
-function handleRequest(id, action) {
+function handleRequest(uuid, action) {
     if (!confirm((action === 'approve' ? 'Approve' : 'Reject') + ' this transfer request?')) return;
-    fetch(`/admin/transfer-requests/${id}/${action}`, {
+    fetch('/admin/transfer-requests/' + uuid + '/' + action, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -214,21 +214,20 @@ function handleRequest(id, action) {
         },
         body: JSON.stringify({})
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
         if (data.success) {
-            const row = document.getElementById('row-' + id);
+            var row = document.getElementById('row-' + uuid);
             if (row) row.remove();
-            const fb = document.getElementById('requestFeedback');
+            var fb = document.getElementById('requestFeedback');
             fb.className = 'alert alert-success mt-3';
             fb.textContent = data.message;
-            // Play notification sound on approval
-            const sound = document.getElementById('notif-sound');
-            if (sound) { sound.currentTime = 0; sound.play().catch(()=>{}); }
-            setTimeout(() => fb.className = 'alert d-none', 4000);
+            var sound = document.getElementById('notif-sound');
+            if (sound) { sound.currentTime = 0; sound.play().catch(function(){}); }
+            setTimeout(function() { fb.className = 'alert d-none'; }, 4000);
         }
     })
-    .catch(() => alert('An error occurred. Please refresh and try again.'));
+    .catch(function() { alert('An error occurred. Please refresh and try again.'); });
 }
 </script>
 @endpush
