@@ -27,6 +27,12 @@ use App\Http\Controllers\Admin\FileTimelineController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', [LandingPageController::class, 'index'])->name('welcome');
+Route::get('/about',           fn() => redirect('/#about'))->name('about');
+Route::get('/features',        fn() => redirect('/#features'))->name('features');
+Route::get('/public-upload',   fn() => redirect('/#upload'))->name('public-upload');
+Route::get('/privacy-policy',  fn() => view('pages.privacy'))->name('privacy');
+Route::get('/terms',           fn() => view('pages.terms'))->name('terms');
+Route::get('/help',            fn() => view('pages.help'))->name('help');
 
 Route::post('/public-files', [PublicFileController::class, 'store'])
     ->middleware('throttle:public-upload')
@@ -47,9 +53,12 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
         };
     })->name('dashboard');
 
-    Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile',         [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile',       [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo',  [ProfileController::class, 'uploadPhoto'])->name('profile.photo.upload');
+    Route::delete('/profile/photo',[ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+    Route::put('/profile/password',[ProfileController::class, 'changePassword'])->name('profile.password.update');
+    Route::delete('/profile',      [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Files — UUID-based route model binding (FileRecord::getRouteKeyName = 'uuid')
     Route::get('/files',               [FileRecordController::class, 'index'])->name('files.index');
