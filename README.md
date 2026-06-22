@@ -1,112 +1,130 @@
 # File Tracking System
 
-A Laravel-based **Government Style File Tracking and Management System** designed for organizations, educational institutions, government offices, and departments to track file movement, approvals, and departmental workflows.
+A Government-Style File Tracking and Management System built with Laravel 12 for managing file movement, departmental workflows, approvals, notifications, and audit tracking.
 
 ---
 
-# Features
+## Overview
 
-## Authentication & Roles
+The File Tracking System helps organizations, educational institutions, and government offices manage files efficiently through a secure role-based workflow.
 
-* Secure Login System
-* Role-Based Access Control
-* Super Admin
-* Admin
-* User
+The system provides complete visibility of file movement from creation to final delivery while maintaining departmental security and audit records.
 
 ---
 
-## Department Management
+## Key Features
 
-* Create Departments
-* Edit Departments
-* Delete Departments
-* Department-wise File Access
+### Authentication & Authorization
 
----
+* Secure Login & Logout
+* Role-Based Access Control (RBAC)
+* Super Admin, Admin, and User Roles
+* Session Protection
+* Access Restriction by Department
 
-## Designation Management
+### Department & User Management
 
-* Create Designations
-* Manage Designations
-* Assign Designations to Users
-
----
-
-## User Management
-
-* Create Users
-* Edit Users
-* Delete Users
-* Department Assignment
+* Department Management
+* Designation Management
+* User Management
 * Role Assignment
+* Department Assignment
 
----
-
-## File Management
+### File Management
 
 * Create Files
 * Upload Attachments
 * View Files
 * Download Files
-* Edit Files
-* Delete Files
+* Unique File Number Generation
+* Current Holder Tracking
 
----
+### File Transfer Workflow
 
-## File Transfer System
+* User-to-User File Transfer
+* Cross-Department Transfer Requests
+* Admin Approval/Rejection Workflow
+* File Status Management
 
-* Transfer Files Between Departments
-* Transfer Files Between Users
-* Approval Workflow
-* Transfer Requests
+### File Tracking
 
----
-
-## File Movement Timeline
-
-Track complete file history:
-
-* File Created
-* Transfer Requested
-* Transfer Approved
-* Transfer Rejected
+* Complete File Movement History
+* Timeline Tracking
 * Department Changes
 * User Changes
+* Current Location Tracking
 
----
-
-## Public File Submission
-
-Public users can submit files from the landing page.
-
-Submitted files can be reviewed by administrators.
-
----
-
-## Notifications
+### Notifications
 
 * Transfer Notifications
 * Approval Notifications
 * Rejection Notifications
 * Notification Center
+* Sound Alerts
+
+### Public File Submission
+
+* Public File Upload Without Login
+* Administrator Review Panel
+
+### Audit Logs
+
+* Login Activity
+* Logout Activity
+* File Creation Logs
+* File Transfer Logs
+* User Management Logs
+* System Activity Monitoring
+
+### Security Features
+
+* CSRF Protection
+* SQL Injection Protection
+* XSS Protection
+* Role-Based Authorization
+* Department-Level Authorization
+* Security Headers
+* Session Protection
+* Audit Trail
 
 ---
 
-## Audit Logs
+## User Roles
 
-Track system activities:
+### Super Admin
 
-* Login
-* Logout
-* File Creation
-* File Updates
-* File Transfers
-* User Management Activities
+Can:
+
+* Manage Departments
+* Manage Admin Users
+* View All Files
+* View All Timelines
+* View Audit Logs
+* Monitor System Activities
+
+### Admin
+
+Can:
+
+* Manage Department Users
+* Manage Department Files
+* Approve Transfer Requests
+* View Department Statistics
+* Manage Designations
+
+### User
+
+Can:
+
+* Create Files
+* Transfer Files
+* Track File Status
+* View File Timeline
+* Receive Notifications
 
 ---
 
-# Technology Stack
+## Technology Stack
 
 | Technology | Version       |
 | ---------- | ------------- |
@@ -119,88 +137,24 @@ Track system activities:
 
 ---
 
-# System Roles
-
-## Super Admin
-
-Can:
-
-* Manage All Departments
-* Manage All Users
-* View All Files
-* View All Timelines
-* Approve Transfers
-* View Audit Logs
-* Access Entire System
-
----
-
-## Admin
-
-Can:
-
-* Manage Files of Own Department
-* View Department Files
-* Approve Department Transfers
-* Manage Department Users
-
-Cannot:
-
-* Access Other Departments
-* Access Super Admin Features
-
----
-
-## User
-
-Can:
-
-* View Assigned Files
-* Transfer Assigned Files
-* View Own Timeline
-* Receive Notifications
-
-Cannot:
-
-* Manage Users
-* Manage Departments
-* Access Admin Panels
-
----
-
 # Installation Guide
 
-## Step 1: Download Project
-
-Clone project:
+## 1. Clone the Project
 
 ```bash
-git clone https://github.com/your-repository/file-tracking-system.git
-```
-
-Or extract ZIP file.
-
----
-
-## Step 2: Open Project
-
-```bash
+git clone <repository-url>
 cd file-tracking-system
 ```
 
----
-
-## Step 3: Install Dependencies
+## 2. Install Dependencies
 
 ```bash
 composer install
 ```
 
----
+## 3. Create Environment File
 
-## Step 4: Create Environment File
-
-Copy:
+Linux/macOS:
 
 ```bash
 cp .env.example .env
@@ -212,13 +166,9 @@ Windows:
 copy .env.example .env
 ```
 
----
+## 4. Configure Database
 
-## Step 5: Configure Database
-
-Open `.env`
-
-Update:
+Open `.env` and update:
 
 ```env
 DB_CONNECTION=mysql
@@ -229,67 +179,43 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Create database in MySQL:
+Create database:
 
 ```sql
 CREATE DATABASE file_tracking_system;
 ```
 
----
-
-## Step 6: Generate Application Key
+## 5. Generate Application Key
 
 ```bash
 php artisan key:generate
 ```
 
----
-
-## Step 7: Run Migrations
+## 6. Run Migrations
 
 ```bash
 php artisan migrate
 ```
 
-If seeders exist:
-
-```bash
-php artisan db:seed
-```
-
-Or
+If seeders are available:
 
 ```bash
 php artisan migrate --seed
 ```
 
----
-
-## Step 8: Create Storage Link
-
-Required for file uploads.
+## 7. Create Storage Link
 
 ```bash
 php artisan storage:link
 ```
 
-Expected output:
-
-```text
-The [public/storage] link has been connected.
-```
-
----
-
-## Step 9: Clear Cache
+## 8. Clear Cache
 
 ```bash
 php artisan optimize:clear
 ```
 
----
-
-## Step 10: Start Application
+## 9. Start the Application
 
 ```bash
 php artisan serve
@@ -303,94 +229,33 @@ http://127.0.0.1:8000
 
 ---
 
-# Deployment on Own Server
-
-## Shared Hosting
-
-Upload project files.
-
-Run:
-
-```bash
-composer install --no-dev
-```
-
-Set document root:
-
-```text
-/public
-```
-
-Run:
-
-```bash
-php artisan storage:link
-php artisan optimize
-```
-
----
-
-## VPS / Linux Server
-
-Install:
-
-* PHP 8.2+
-* Composer
-* MySQL
-* Nginx or Apache
-
-Run:
-
-```bash
-composer install
-php artisan migrate
-php artisan storage:link
-php artisan optimize
-```
-
-Configure web server to point to:
-
-```text
-project/public
-```
-
----
-
 # Common Commands
 
-## Start Server
+### Start Server
 
 ```bash
 php artisan serve
 ```
 
----
-
-## Run Tests
+### Run Tests
 
 ```bash
 php artisan test
 ```
 
----
-
-## Show Routes
+### Show Routes
 
 ```bash
 php artisan route:list
 ```
 
----
-
-## Clear Cache
+### Clear Cache
 
 ```bash
 php artisan optimize:clear
 ```
 
----
-
-## Recreate Storage Link
+### Recreate Storage Link
 
 ```bash
 php artisan storage:unlink
@@ -401,7 +266,7 @@ php artisan storage:link
 
 # Troubleshooting
 
-## Files Not Opening
+### Files Not Opening
 
 Run:
 
@@ -409,49 +274,29 @@ Run:
 php artisan storage:link
 ```
 
-Check:
-
-```text
-storage/app/public
-```
-
----
-
-## 403 Unauthorized
-
-Verify:
-
-* User Role
-* Department Assignment
-* Route Middleware
-
----
-
-## Database Connection Error
-
-Verify `.env` database credentials.
+### Route Not Found
 
 Run:
+
+```bash
+php artisan optimize:clear
+```
+
+### Database Connection Error
+
+Check `.env` database configuration and run:
 
 ```bash
 php artisan config:clear
 ```
 
----
+### 403 Unauthorized
 
-## Route Not Found
+Verify:
 
-Run:
-
-```bash
-php artisan route:list
-```
-
-Then clear cache:
-
-```bash
-php artisan optimize:clear
-```
+* User Role
+* Department Assignment
+* Route Permissions
 
 ---
 
@@ -459,52 +304,74 @@ php artisan optimize:clear
 
 ```text
 app/
- ├── Http/
- ├── Models/
- ├── Notifications/
+├── Http/
+├── Models/
+├── Notifications/
 
 database/
- ├── migrations/
+├── migrations/
 
 resources/
- ├── views/
+├── views/
 
 routes/
- ├── web.php
+├── web.php
 
 storage/
- ├── app/public
+├── app/public
 ```
 
 ---
 
-# Security Features
+# Future Enhancements
 
-* Role-Based Access Control
-* Department-Level Authorization
-* File Ownership Validation
-* Secure Downloads
-* Request Validation
-* CSRF Protection
-* Authentication Middleware
+* Email Notifications
+* SMS Notifications
+* QR Code Tracking
+* Digital Signatures
+* Mobile Application
+* REST API
+* Analytics Dashboard
 
 ---
 
-# Future Improvements
+# Project Status
 
-* Email Notifications
-* PDF Reports
-* Digital Signatures
-* QR Code Tracking
-* Advanced Search
-* Mobile Application
-* REST API
+✅ Authentication System
+
+✅ Role-Based Access Control
+
+✅ Department Management
+
+✅ User Management
+
+✅ File Creation & Tracking
+
+✅ File Transfer Workflow
+
+✅ Approval System
+
+✅ File Timeline Tracking
+
+✅ Public File Submission
+
+✅ Notification System
+
+✅ Audit Logs
+
+✅ Security Hardening
+
+✅ Government Portal UI
+
+✅ Dashboard & Reports
+
+🚀 Production Ready (Version 1.0)
 
 ---
 
 # Author
 
-Bikram Kumar Das
+**Bikram Kumar Das**
 
 B.Sc. Computer Science
 
