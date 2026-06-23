@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Department;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class FileRecordController extends Controller
 {
@@ -23,7 +25,7 @@ class FileRecordController extends Controller
         if ($request->filled('search')) {
             $s = $request->string('search')->trim()->value();
             $query->where(fn($q) => $q
-                ->where('file_name',   'like', "%{$s}%")
+                ->where('file_name',    'like', "%{$s}%")
                 ->orWhere('file_number', 'like', "%{$s}%"));
         }
 
@@ -47,12 +49,15 @@ class FileRecordController extends Controller
 
     public function create()
     {
+        $this->authorize('create', FileRecord::class);
         $departments = Department::orderBy('name')->get();
         return view('files.create', compact('departments'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', FileRecord::class);
+
         $request->validate([
             'department_id' => 'required|exists:departments,id',
             'file_name'     => 'required|string|max:255',
@@ -93,15 +98,11 @@ class FileRecordController extends Controller
     }
 
     /**
-     * Route model binding resolves by UUID (FileRecord::getRouteKeyName = 'uuid').
+     * Show file details — policy check via FileRecordPolicy::view().
      */
     public function show(FileRecord $file)
     {
-        $user = Auth::user();
-        if ($user->role !== 'super_admin' &&
-            (int) $file->department_id !== (int) $user->department_id) {
-            abort(403, 'You do not have access to this file.');
-        }
+        $this->authorize('view', $file);
 
         $file->load([
             'department', 'creator', 'currentHolder',
@@ -110,5 +111,40 @@ class FileRecordController extends Controller
         ]);
 
         return view('files.show', compact('file'));
+    }
+
+    /**
+     * Download a file attachment — policy check via FileRecordPolicy::download().
+     * Logs every download to audit log.
+     */
+    public function download(FileRecord $file)
+    {
+        $this->authorize('download', $file);
+
+        try {
+            // File records in this system don't have physical attachments
+            // (those are in PublicFile). This action logs the access.
+            AuditLog::create([
+                'user_id'        => Auth::id(),
+                'action'         => 'file_accessed',
+                'auditable_type' => FileRecord::class,
+                'auditable_id'   => $file->id,
+                'description'    => 'File record accessed: ' . $file->file_name,
+                'metadata'       => [
+                    'file_number' => $file->file_number,
+                    'ip'          => request()->ip(),
+                ],
+            ]);
+
+            return redirect()->route('files.show', $file->uuid)
+                ->with('info', 'File record viewed and access logged.');
+        } catch (\Throwable $e) {
+            Log::error('File access error', [
+                'file_id' => $file->id,
+                'user_id' => Auth::id(),
+                'error'   => $e->getMessage(),
+            ]);
+            abort(500, 'File access error. Please try again.');
+        }
     }
 }
