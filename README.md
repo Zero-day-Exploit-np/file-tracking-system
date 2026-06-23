@@ -1,243 +1,29 @@
-# File Tracking System
+#  Setup File Tracking System on Your Local Machine
 
-## Overview
+## Prerequisites
 
-File Tracking System is a Laravel 12 based Government-Style File Management and Tracking Portal designed for organizations, educational institutions, government offices, and departments.
+Install:
 
-The system enables secure file creation, tracking, transfer, approval workflows, audit logging, and role-based access management across departments.
-
----
-
-# Key Features
-
-## Authentication & Authorization
-
-* Secure Login System
-* Email Verification
-* Password Reset
-* Role-Based Access Control (RBAC)
-* Session Security
-* Account Activity Logging
-
-### Roles
-
-* Super Admin
-* Admin
-* User
+* PHP 8.2+
+* Composer
+* MySQL 8+
+* Git
+* Node.js (optional, if frontend assets need building)
+* XAMPP / Laragon / WAMP
 
 ---
 
-# Super Admin Features
+## 1. Fork the Repository
 
-Super Admin has complete system access.
+Click **Fork** on GitHub.
 
-### Can Manage
-
-* Departments
-* Designations
-* Admin Users
-* System Users
-* Public File Submissions
-* Audit Logs
-
-### Can View
-
-* All Files
-* All Departments
-* Transfer Requests
-* System Statistics
-* User Activities
-
----
-
-# Admin Features
-
-Department-level administration.
-
-### Can Manage
-
-* Department Users
-* Department Designations
-* Department Files
-
-### Can
-
-* Approve Transfer Requests
-* Reject Transfer Requests
-* View Department Statistics
-* Monitor User Activities
-
----
-
-# User Features
-
-### Can
-
-* Create Files
-* Upload Attachments
-* View Assigned Files
-* Transfer Files
-* Track File Status
-* Receive Notifications
-* Manage Profile
-* Upload/Delete Profile Photo
-* Change Password
-
----
-
-# File Management
-
-### File Creation
-
-Each file receives:
-
-* Unique File Number
-* Department Assignment
-* Creator Information
-* Current Holder
-* Creation Date
-
-### File Tracking
-
-Track:
-
-* Creator
-* Current Holder
-* Department
-* Status
-* Complete Movement History
-
-### File Status
-
-* Active
-* Pending Transfer
-* Approved
-* Rejected
-* Archived
-
----
-
-# Transfer Workflow
-
-## Same Department Transfer
-
-User → User
-
-Transfer occurs immediately.
-
----
-
-## Cross Department Transfer
-
-User → Different Department
-
-Workflow:
-
-User Request
-↓
-Destination Department Admin
-↓
-Approve / Reject
-↓
-Transfer Completed
-
-All actions are recorded in audit logs.
-
----
-
-# Notifications
-
-Users receive notifications for:
-
-* Transfer Requests
-* Transfer Approval
-* Transfer Rejection
-* New File Assignments
-
-Features:
-
-* Notification Bell
-* Unread Count
-* Notification History
-* Sound Alerts
-
----
-
-# Audit Logs
-
-Tracks all major activities:
-
-* Login
-* Logout
-* Profile Update
-* Password Change
-* File Creation
-* File Transfer
-* Transfer Approval
-* Transfer Rejection
-* User Creation
-* Department Creation
-
-Each log stores:
-
-* User
-* Action
-* Timestamp
-* IP Address
-
----
-
-# Public File Submission
-
-Visitors can submit files without logging in.
-
-Submitted files are reviewed by administrators.
-
----
-
-# Security Features
-
-* Role-Based Authorization
-* Department-Level Access Control
-* CSRF Protection
-* XSS Protection
-* SQL Injection Protection
-* Session Security
-* Secure Password Hashing
-* File Validation
-* Audit Logging
-* Rate Limiting
-* Security Headers
-
----
-
-# Technology Stack
-
-| Component       | Technology   |
-| --------------- | ------------ |
-| Backend         | Laravel 12   |
-| Language        | PHP 8.2+     |
-| Database        | MySQL 8+     |
-| Frontend        | Bootstrap 5  |
-| Icons           | Font Awesome |
-| Template Engine | Blade        |
-| Authentication  | Laravel Auth |
-
----
-
-# Local Installation Guide
-
-## Step 1: Clone Project
+Then clone your fork:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/YOUR_USERNAME/file-tracking-system.git
 ```
 
-or download ZIP and extract.
-
----
-
-## Step 2: Open Project
+Move into the project:
 
 ```bash
 cd file-tracking-system
@@ -245,21 +31,17 @@ cd file-tracking-system
 
 ---
 
-## Step 3: Install Dependencies
+## 2. Install Dependencies
 
 ```bash
 composer install
 ```
 
+If `vendor/autoload.php` is missing, this step was not completed successfully.
+
 ---
 
-## Step 4: Create Environment File
-
-Linux/Mac:
-
-```bash
-cp .env.example .env
-```
+## 3. Create Environment File
 
 Windows:
 
@@ -267,17 +49,31 @@ Windows:
 copy .env.example .env
 ```
 
+Linux/Mac:
+
+```bash
+cp .env.example .env
+```
+
 ---
 
-## Step 5: Configure Database
+## 4. Generate Application Key
 
-Create database:
+```bash
+php artisan key:generate
+```
+
+---
+
+## 5. Create Database
+
+Create a new MySQL database:
 
 ```sql
 CREATE DATABASE file_tracking_system;
 ```
 
-Update `.env`
+Update `.env`:
 
 ```env
 DB_CONNECTION=mysql
@@ -290,21 +86,13 @@ DB_PASSWORD=
 
 ---
 
-## Step 6: Generate Application Key
-
-```bash
-php artisan key:generate
-```
-
----
-
-## Step 7: Run Migrations
+## 6. Run Migrations
 
 ```bash
 php artisan migrate
 ```
 
-If seeders exist:
+If seeders are available:
 
 ```bash
 php artisan migrate --seed
@@ -312,23 +100,15 @@ php artisan migrate --seed
 
 ---
 
-## Step 8: Create Storage Link
-
-Required for profile photos and uploads.
+## 7. Create Storage Link
 
 ```bash
 php artisan storage:link
 ```
 
-Expected output:
-
-```text
-The [public/storage] link has been connected.
-```
-
 ---
 
-## Step 9: Clear Cache
+## 8. Clear Cache
 
 ```bash
 php artisan optimize:clear
@@ -336,13 +116,13 @@ php artisan optimize:clear
 
 ---
 
-## Step 10: Start Application
+## 9. Start Development Server
 
 ```bash
 php artisan serve
 ```
 
-Open browser:
+Open:
 
 ```text
 http://127.0.0.1:8000
@@ -350,134 +130,84 @@ http://127.0.0.1:8000
 
 ---
 
-# Creating First Super Admin
+## 10. Create Super Admin
 
-Open database and update any user:
+If no Super Admin exists:
 
-```sql
-UPDATE users
-SET role='super_admin'
-WHERE email='your-email@example.com';
+```bash
+php artisan tinker
 ```
 
-Then login using that account.
+```php
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
+User::create([
+    'name' => 'Super Admin',
+    'email' => 'admin@example.com',
+    'password' => Hash::make('password123'),
+    'role' => 'super_admin',
+    'is_active' => true,
+]);
+```
+
+Exit:
+
+```bash
+exit
+```
+
+Login:
+
+```text
+Email: admin@example.com
+Password: password123
+```
 
 ---
 
-# Useful Commands
+## Common Fixes
 
-## Start Server
-
-```bash
-php artisan serve
-```
-
-## Show Routes
+### Missing Vendor Folder
 
 ```bash
-php artisan route:list
+composer install
 ```
 
-## Run Tests
+### Storage Files Not Opening
 
 ```bash
-php artisan test
+php artisan storage:link
 ```
 
-## Clear Cache
+### Route Errors
 
 ```bash
 php artisan optimize:clear
 ```
 
-## Rebuild Cache
+### Database Connection Error
+
+Check `.env` credentials and restart the server.
+
+### Too Many Redirects
+
+Clear browser cookies and run:
 
 ```bash
-php artisan optimize
+php artisan optimize:clear
 ```
 
-## Recreate Storage Link
+---
+
+## Update From Upstream Repository
 
 ```bash
-php artisan storage:unlink
-php artisan storage:link
+git remote add upstream https://github.com/ORIGINAL_OWNER/file-tracking-system.git
+
+git fetch upstream
+
+git merge upstream/main
 ```
 
----
-
-# Project Structure
-
-```text
-app/
-├── Http/
-├── Models/
-├── Notifications/
-
-database/
-├── migrations/
-
-resources/
-├── views/
-
-routes/
-├── web.php
-
-storage/
-├── app/
-├── public/
-```
-
----
-
-# Production Deployment
-
-### Requirements
-
-* PHP 8.2+
-* Composer
-* MySQL 8+
-* Apache or Nginx
-
-### Commands
-
-```bash
-composer install --no-dev
-php artisan migrate
-php artisan storage:link
-php artisan optimize
-```
-
-Set web root to:
-
-```text
-/public
-```
-
----
-
-# Future Enhancements
-
-* Mobile Application
-* Email Notifications
-* SMS Notifications
-* Digital Signatures
-* QR Code Tracking
-* REST API
-* Analytics Dashboard
-* File Version Control
-
----
-
-# Developer
-
-**Bikram Kumar Das**
-
-B.Sc. Computer Science
-
-Sikkim Manipal University
-
----
-
-# License
-
-This project is intended for educational, organizational, and research purposes.
+This keeps your fork updated with the latest fixes and features.
