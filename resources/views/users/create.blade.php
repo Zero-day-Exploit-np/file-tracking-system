@@ -43,11 +43,15 @@
                 <label class="form-label">Role <span class="required-star">*</span></label>
                 <select name="role" class="form-select @error('role') is-invalid @enderror" required>
                     <option value="">Select Role</option>
-                    <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                    <option value="admin"       {{ old('role') === 'admin'       ? 'selected' : '' }}>Admin</option>
-                    <option value="user"        {{ old('role') === 'user'        ? 'selected' : '' }}>User</option>
+                    {{-- Super Admin is system-reserved — never created via UI --}}
+                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="user"  {{ old('role') === 'user'  ? 'selected' : '' }}>User</option>
                 </select>
                 @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <div class="form-text text-muted">
+                    <i class="fa-solid fa-lock me-1"></i>
+                    Super Admin accounts can only be created via system command.
+                </div>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Department</label>

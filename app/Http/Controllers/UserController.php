@@ -31,14 +31,18 @@ class UserController extends Controller
             'name'           => 'required|string|max:255',
             'email'          => 'required|email:rfc,dns|max:255|unique:users,email',
             'password'       => 'required|min:8|confirmed',
-            'role'           => 'required|in:super_admin,admin,user',
+            'role'           => 'required|in:admin,user', // super_admin never via UI
             'department_id'  => 'nullable|exists:departments,id',
             'designation_id' => 'nullable|exists:designations,id',
             'contact_number' => 'nullable|string|max:20',
-            // Strict: MIME type + extension + size limit (2 MB)
             'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'can_create_file'=> 'nullable|boolean',
         ]);
+
+        // Extra server-side guard — super_admin is system-reserved
+        if ($request->role === 'super_admin') {
+            abort(403, 'Super Admin accounts cannot be created via the web interface.');
+        }
 
         $data = $request->only(['name', 'email', 'role', 'department_id', 'designation_id', 'contact_number']);
         $data['password']        = Hash::make($request->password);
@@ -78,12 +82,16 @@ class UserController extends Controller
         $request->validate([
             'name'           => 'required|string|max:255',
             'email'          => 'required|email:rfc,dns|max:255|unique:users,email,' . $user->id,
-            'role'           => 'required|in:super_admin,admin,user',
+            'role'           => 'required|in:admin,user', // super_admin never via UI
             'department_id'  => 'nullable|exists:departments,id',
             'designation_id' => 'nullable|exists:designations,id',
             'contact_number' => 'nullable|string|max:20',
             'password'       => 'nullable|min:8|confirmed',
         ]);
+
+        if ($request->role === 'super_admin') {
+            abort(403, 'Super Admin role cannot be assigned via the web interface.');
+        }
 
         // Only allow updating safe fields (not id, remember_token, etc.)
         $data = $request->only(['name', 'email', 'role', 'department_id', 'designation_id', 'contact_number']);

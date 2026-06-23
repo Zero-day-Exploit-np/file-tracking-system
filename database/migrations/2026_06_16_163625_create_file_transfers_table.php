@@ -11,8 +11,8 @@ return new class extends Migration {
             $table->id();
 
             // File being transferred
-            $table->foreignId('file_record_id')
-                ->constrained('file_records')
+            $table->foreignId('file_record_id')     // file_id
+                ->constrained('file_records')       // files
                 ->onDelete('cascade');
 
             // Transfer tracking
