@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\AdminFileController;
 use App\Http\Controllers\Admin\AdminDesignationController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\FileTimelineController;
+use App\Http\Controllers\Admin\BackupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -153,6 +154,12 @@ Route::prefix('admin')
 
         // Audit logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
+
+        // Backup — super_admin only (enforced in controller constructor too)
+        Route::get('/backup',                     [BackupController::class, 'index'])->name('backup.index');
+        Route::post('/backup',                    [BackupController::class, 'create'])->name('backup.create');
+        Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
+        Route::delete('/backup/{filename}',       [BackupController::class, 'destroy'])->name('backup.destroy');
     });
 
 require __DIR__ . '/auth.php';

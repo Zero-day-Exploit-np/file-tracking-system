@@ -116,6 +116,13 @@
                 class="sidebar-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-list-check"></i><span>Audit Logs</span>
             </a>
+
+            @if($isSuper)
+            <a href="{{ route('admin.backup.index') }}"
+                class="sidebar-link {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-database"></i><span>Backup</span>
+            </a>
+            @endif
             @endif
 
             {{-- ── SUPER ADMIN ONLY ────────────────────────────── --}}
