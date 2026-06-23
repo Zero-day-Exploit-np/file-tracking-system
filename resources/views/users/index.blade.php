@@ -34,9 +34,7 @@
                 <td class="text-muted">{{ $loop->iteration }}</td>
                 <td>
                     <div class="d-flex align-items-center gap-2">
-                        <div style="width:32px;height:32px;border-radius:50%;background:#dbeafe;color:#2563eb;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;">
-                            {{ strtoupper(substr($user->name,0,1)) }}
-                        </div>
+                        <x-user-avatar :user="$user" :size="32" />
                         <div class="fw-700">{{ $user->name }}</div>
                     </div>
                 </td>
