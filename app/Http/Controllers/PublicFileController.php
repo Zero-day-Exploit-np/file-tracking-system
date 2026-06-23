@@ -42,8 +42,12 @@ class PublicFileController extends Controller
         }
 
         if (!$disk) {
-            return redirect()->route('admin.public-files.index')
-                ->with('error', 'Attachment file not found on storage. It may have been removed.');
+            \Illuminate\Support\Facades\Log::warning('PublicFile download: file not found on any disk', [
+                'uuid'            => $uuid,
+                'attachment_path' => $file->attachment_path,
+                'user_id'         => auth()->id(),
+            ]);
+            abort(404, 'Attachment file not found. It may have been removed.');
         }
 
         // Audit the download
