@@ -78,11 +78,18 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| USER DASHBOARD
+| USER DASHBOARD — role:user only
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified', 'role:user', 'no.cache'])->group(function () {
-    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
+    Route::get('/user/dashboard', function () {
+        // If a non-user somehow hits this, redirect to their dashboard
+        $role = auth()->user()->role;
+        if ($role !== 'user') {
+            return redirect()->route($role === 'super_admin' ? 'super_admin.dashboard' : 'admin.dashboard');
+        }
+        return app(\App\Http\Controllers\UserDashboardController::class)->index();
+    })->name('user.dashboard');
 });
 
 /*
