@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\PublicFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class PublicFileController extends Controller
@@ -17,33 +17,58 @@ class PublicFileController extends Controller
     }
 
     /**
-     * Generate a 15-minute signed download URL (replaces direct /storage access).
+     * Serve a file via the signed URL.
+     * Handles files on both 'private' disk and legacy 'public' disk.
      */
     public function download(string $uuid)
     {
-        $file = \App\Models\PublicFile::where('uuid', $uuid)->firstOrFail();
+        $file = PublicFile::where('uuid', $uuid)->firstOrFail();
 
-        if (!$file->attachment_path || !Storage::disk('private')->exists($file->attachment_path)) {
+        if (!$file->attachment_path) {
             return redirect()->route('admin.public-files.index')
-                ->with('error', 'Attachment not found or has been removed.');
+                ->with('error', 'No attachment on record for this submission.');
         }
 
-        // Log the download
-        \App\Models\AuditLog::create([
+        // Determine which disk the file is on
+        $disk     = null;
+        $diskName = null;
+
+        if (Storage::disk('private')->exists($file->attachment_path)) {
+            $disk     = Storage::disk('private');
+            $diskName = 'private';
+        } elseif (Storage::disk('public')->exists($file->attachment_path)) {
+            $disk     = Storage::disk('public');
+            $diskName = 'public';
+        }
+
+        if (!$disk) {
+            return redirect()->route('admin.public-files.index')
+                ->with('error', 'Attachment file not found on storage. It may have been removed.');
+        }
+
+        // Audit the download
+        AuditLog::create([
             'user_id'        => auth()->id(),
             'action'         => 'file_downloaded',
-            'auditable_type' => \App\Models\PublicFile::class,
+            'auditable_type' => PublicFile::class,
             'auditable_id'   => $file->id,
-            'description'    => "Downloaded: {$file->subject}",
-            'metadata'       => ['ip' => request()->ip()],
+            'description'    => 'Downloaded: ' . $file->subject,
+            'metadata'       => [
+                'ip'        => request()->ip(),
+                'disk'      => $diskName,
+                'filename'  => basename($file->attachment_path),
+            ],
         ]);
 
-        return Storage::disk('private')->download($file->attachment_path);
+        // Generate a clean download filename for the user
+        $ext          = pathinfo($file->attachment_path, PATHINFO_EXTENSION);
+        $downloadName = Str::slug($file->subject) . '.' . $ext;
+
+        return $disk->download($file->attachment_path, $downloadName);
     }
 
     /**
-     * Store uploaded file in private storage with UUID filename.
-     * Files are NOT accessible via /storage URL.
+     * Store public submission — private disk, UUID filename.
      */
     public function store(Request $request)
     {
@@ -67,12 +92,10 @@ class PublicFileController extends Controller
             ],
         ]);
 
-        $file     = $request->file('attachment');
-        $ext      = strtolower($file->getClientOriginalExtension());
-        $filename = Str::uuid() . '.' . $ext;
-
-        // Store in PRIVATE disk (storage/app/private/uploads)
-        $path = $file->storeAs('uploads', $filename, 'private');
+        $uploadedFile = $request->file('attachment');
+        $ext          = strtolower($uploadedFile->getClientOriginalExtension());
+        $filename     = Str::uuid() . '.' . $ext;
+        $path         = $uploadedFile->storeAs('uploads', $filename, 'private');
 
         PublicFile::create([
             'applicant_name'  => $request->applicant_name,

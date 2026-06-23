@@ -32,13 +32,14 @@ class PublicFile extends Model
     }
 
     /**
-     * Check if the file physically exists in private storage.
+     * Check if the file physically exists on either storage disk.
      */
     public function getAttachmentExistsAttribute(): bool
     {
-        return $this->attachment_path
-            ? Storage::disk('private')->exists($this->attachment_path)
-            : false;
+        if (!$this->attachment_path) return false;
+
+        return Storage::disk('private')->exists($this->attachment_path)
+            || Storage::disk('public')->exists($this->attachment_path);
     }
 
     /**

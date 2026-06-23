@@ -140,11 +140,9 @@ Route::prefix('admin')
             ->middleware('role:admin')
             ->name('transfer.reject');
 
-        // Public files — private storage, served via signed URL (no direct /storage access)
-        Route::get('/public-files',               [PublicFileController::class, 'index'])->name('public-files.index');
-        Route::get('/public-files/{uuid}/download', [PublicFileController::class, 'download'])
-            ->middleware('signed')
-            ->name('public-files.download');
+        // Public files — private storage, auth-protected download
+        Route::get('/public-files',                [PublicFileController::class, 'index'])->name('public-files.index');
+        Route::get('/public-files/{uuid}/download', [PublicFileController::class, 'download'])->name('public-files.download');
 
         // Audit logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');

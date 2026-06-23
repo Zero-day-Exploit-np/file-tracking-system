@@ -37,11 +37,8 @@
                 <td>{{ $file->subject }}</td>
                 <td>
                     @if($file->attachment_exists)
-                    {{-- Signed URL — expires in 15 min, no direct /storage access --}}
-                    <a href="{{ $file->getSignedDownloadUrl() }}"
-                       class="btn btn-sm btn-outline-primary"
-                       target="_blank"
-                       title="Secure download (expires in 15 minutes)">
+                    <a href="{{ route('admin.public-files.download', $file->uuid) }}"
+                       class="btn btn-sm btn-outline-primary">
                         <i class="fa-solid fa-download me-1"></i>Download
                     </a>
                     @elseif($file->attachment_path)
