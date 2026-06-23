@@ -155,11 +155,13 @@ Route::prefix('admin')
         // Audit logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
-        // Backup — super_admin only (enforced in controller constructor too)
-        Route::get('/backup',                     [BackupController::class, 'index'])->name('backup.index');
-        Route::post('/backup',                    [BackupController::class, 'create'])->name('backup.create');
-        Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
-        Route::delete('/backup/{filename}',       [BackupController::class, 'destroy'])->name('backup.destroy');
+        // Backup — super_admin only (route-level enforcement; Laravel 12 removed controller middleware)
+        Route::middleware('role:super_admin')->group(function () {
+            Route::get('/backup',                     [BackupController::class, 'index'])->name('backup.index');
+            Route::post('/backup',                    [BackupController::class, 'create'])->name('backup.create');
+            Route::get('/backup/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
+            Route::delete('/backup/{filename}',       [BackupController::class, 'destroy'])->name('backup.destroy');
+        });
     });
 
 require __DIR__ . '/auth.php';
