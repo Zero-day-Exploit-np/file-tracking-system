@@ -20,12 +20,7 @@ class FileTransferController extends Controller
     {
         $currentUser = Auth::user();
 
-        if (
-            $currentUser->role !== 'super_admin' &&
-            (int) $file->department_id !== (int) $currentUser->department_id
-        ) {
-            abort(403, 'You do not have access to transfer this file.');
-        }
+        $this->authorize('transfer', $file);
 
         if ($file->status === 'pending_transfer') {
             return redirect()->route('files.show', $file->uuid)
@@ -80,12 +75,11 @@ class FileTransferController extends Controller
 
             DB::transaction(function () use ($file, $currentUser, $targetUser, $remarks, $request, &$transfer) {
                 $transfer = FileTransfer::create([
-                    'file_id'            => $file->id,
-                    'sender_id'          => $currentUser->id,
-                    'receiver_id'        => $targetUser->id,
-                    'from_department_id' => $currentUser->department_id,
-                    'to_department_id'   => $targetUser->department_id,
-                    'remarks'            => $remarks,
+                    'file_id'       => $file->id,
+                    'sender_id'     => $currentUser->id,
+                    'receiver_id'   => $targetUser->id,
+                    'remarks'       => $remarks,
+                    'transferred_at' => now(),
                 ]);
 
                 FileMovement::create([

@@ -72,12 +72,11 @@ class TransferApprovalController extends Controller
 
                 // 1. Create transfer record
                 $transfer = FileTransfer::create([
-                    'file_id'            => $file->id,
-                    'sender_id'          => $transferReq->requested_by,
-                    'receiver_id'        => $transferReq->target_user,
-                    'from_department_id' => $transferReq->from_department,
-                    'to_department_id'   => $transferReq->to_department,
-                    'remarks'            => 'Approved by ' . $admin->name,
+                    'file_id'        => $file->id,
+                    'sender_id'      => $transferReq->requested_by,
+                    'receiver_id'    => $transferReq->target_user,
+                    'remarks'        => 'Approved by ' . $admin->name,
+                    'transferred_at' => now(),
                 ]);
 
                 // 2. Record movement in timeline
@@ -185,10 +184,9 @@ class TransferApprovalController extends Controller
                     'to_department'   => $transferReq->to_department,
                     'ip'              => request()->ip(),
                 ], 'Transfer rejected by ' . $admin->name);
-
-                // 5. Notify the requester that their request was rejected
-                $requester->notify(new TransferStatusNotification($transferReq, 'rejected', $admin->name));
             });
+
+            $requester->notify(new TransferStatusNotification($transferReq, 'rejected', $admin->name));
 
             // Invalidate caches
             DashboardService::clearAdminCache($admin->department_id);

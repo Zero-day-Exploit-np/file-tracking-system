@@ -25,16 +25,8 @@ return new class extends Migration {
                 ->onDelete('cascade');
 
             // Department tracking (important for SRS)
-            $table->foreignId('from_department_id')
-                ->constrained('departments')
-                ->onDelete('cascade');
-
-            $table->foreignId('to_department_id')
-                ->constrained('departments')
-                ->onDelete('cascade');
-
+            $table->timestamp('transferred_at')->nullable();
             $table->text('remarks')->nullable();
-
             $table->timestamps();
         });
     }

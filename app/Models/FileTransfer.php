@@ -12,9 +12,12 @@ class FileTransfer extends Model
         'file_id',
         'sender_id',
         'receiver_id',
-        'from_department_id',
-        'to_department_id',
         'remarks',
+        'transferred_at',
+    ];
+
+    protected $casts = [
+        'transferred_at' => 'datetime',
     ];
 
     public function file()

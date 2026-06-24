@@ -43,9 +43,8 @@ it('shows the notifications page for an authenticated user', function () {
         'file_id' => $file->id,
         'sender_id' => $sender->id,
         'receiver_id' => $recipient->id,
-        'from_department_id' => $department->id,
-        'to_department_id' => $department->id,
         'remarks' => 'Unit handoff',
+        'transferred_at' => now(),
     ]);
 
     $recipient->notify(new FileTransferredNotification($transfer));
@@ -87,9 +86,8 @@ it('marks all notifications as read when the action is posted', function () {
         'file_id' => $file->id,
         'sender_id' => $sender->id,
         'receiver_id' => $recipient->id,
-        'from_department_id' => $department->id,
-        'to_department_id' => $department->id,
         'remarks' => 'Unit handoff',
+        'transferred_at' => now(),
     ]);
 
     $recipient->notify(new FileTransferredNotification($transfer));
