@@ -75,9 +75,10 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>
                     <i class="fa-solid fa-right-left me-2 text-primary"></i>Pending Approvals for {{ $deptName }}
-                    @if($pendingApprovals->count() > 0)
-                    <span class="badge bg-warning text-dark ms-1">{{ $pendingApprovals->count() }}</span>
-                    @endif
+                    <span id="pending-badge" class="badge bg-warning text-dark ms-1"
+                          style="{{ $pendingApprovals->count() > 0 ? '' : 'display:none;' }}">
+                        {{ $pendingApprovals->count() }}
+                    </span>
                 </span>
                 <a href="{{ route('admin.transfer.requests') }}" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
@@ -93,7 +94,7 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="pending-approvals-tbody">
                             @forelse($pendingApprovals as $req)
                             <tr id="dash-row-{{ $req->uuid }}">
                                 <td>
@@ -235,62 +236,97 @@
 
 @push('scripts')
 <script>
-    function dashAction(uuid, action, btn) {
-        var label = action === 'approve' ? 'Approve' : 'Reject';
-        if (!confirm(label + ' this transfer request?')) return;
-        var originalHtml = btn ? btn.innerHTML : null;
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+// ── Approve / Reject action ───────────────────────────────────────
+function dashAction(uuid, action, btn) {
+    var label = action === 'approve' ? 'Approve' : 'Reject';
+    if (!confirm(label + ' this transfer request?')) return;
+    var originalHtml = btn ? btn.innerHTML : null;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+
+    fetch('/admin/transfer-requests/' + uuid + '/' + action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(function(r) { return r.json().then(function(d){ return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+        var fb = document.getElementById('dashFeedback');
+        if (res.data.success) {
+            // Remove row immediately, then refresh via poll
+            var row = document.getElementById('dash-row-' + uuid);
+            if (row) row.remove();
+            fb.className = 'alert alert-success mt-3';
+            fb.textContent = res.data.message;
+            // Force an immediate poll to refresh counts and rows
+            pollDashboard();
+        } else {
+            fb.className = 'alert alert-danger mt-3';
+            fb.textContent = res.data.message || 'Action failed.';
+            if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+        }
+        setTimeout(function() { fb.className = 'alert d-none'; }, 5000);
+    })
+    .catch(function() {
+        alert('Network error. Please refresh.');
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+    });
+}
+
+// ── Dashboard live polling every 10 seconds ───────────────────────
+var lastPendingCount = {{ $pendingApprovals->count() }};
+
+function pollDashboard() {
+    fetch('{{ route("admin.dashboard.poll") }}', {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+        },
+        credentials: 'same-origin'
+    })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(data) {
+        if (!data) return;
+
+        var count   = data.pending_count || 0;
+        var badge   = document.getElementById('pending-badge');
+        var tbody   = document.getElementById('pending-approvals-tbody');
+        var kpiVal  = document.querySelector('.stat-kpi-icon.orange + div .stat-kpi-value');
+
+        // Update badge in card header
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
-        fetch('/admin/transfer-requests/' + uuid + '/' + action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({})
-            })
-            .then(function(r) {
-                return r.json().then(function(data) {
-                    return {
-                        ok: r.ok,
-                        data: data
-                    };
-                });
-            })
-            .then(function(res) {
-                var fb = document.getElementById('dashFeedback');
-                if (res.data.success) {
-                    var row = document.getElementById('dash-row-' + uuid);
-                    if (row) row.remove();
-                    fb.className = 'alert alert-success mt-3';
-                    fb.textContent = res.data.message;
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    fb.className = 'alert alert-danger mt-3';
-                    fb.textContent = res.data.message || 'Action failed.';
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHtml;
-                    }
-                }
-                setTimeout(function() {
-                    fb.className = 'alert d-none';
-                }, 5000);
-            })
-            .catch(function() {
-                alert('Network error. Please refresh.');
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                }
-            });
-    }
+        // Update KPI card value
+        if (kpiVal) kpiVal.textContent = count;
+
+        // Play sound if new requests arrived
+        if (count > lastPendingCount) {
+            var sound = document.getElementById('notif-sound');
+            if (sound) { sound.currentTime = 0; sound.play().catch(function(){}); }
+        }
+        lastPendingCount = count;
+
+        // Refresh table rows (only if count changed to avoid flickering)
+        if (tbody && data.rows !== undefined) {
+            tbody.innerHTML = data.rows;
+        }
+    })
+    .catch(function() {});
+}
+
+// Start polling after 10s, then every 10s
+setTimeout(function() { pollDashboard(); setInterval(pollDashboard, 10000); }, 10000);
 </script>
 @endpush
 @endsection

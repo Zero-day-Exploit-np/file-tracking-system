@@ -128,6 +128,7 @@ Route::prefix('admin')
     ->group(function () {
 
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/poll', [AdminDashboardController::class, 'poll'])->name('dashboard.poll');
 
         // Users & designations (UUID binding)
         Route::resource('users',        AdminUserController::class);
