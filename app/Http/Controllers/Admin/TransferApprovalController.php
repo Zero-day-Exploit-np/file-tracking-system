@@ -114,6 +114,7 @@ class TransferApprovalController extends Controller
             if ($transfer) {
                 // 6. Notify the target user (file receiver)
                 $targetUser->notify(new FileTransferredNotification($transfer));
+                event(new \App\Events\FileTransferred($transfer));
 
                 // 7. Notify the requester that their request was approved
                 $requester->notify(new TransferStatusNotification($transferReq, 'approved', $admin->name));

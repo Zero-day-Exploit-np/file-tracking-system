@@ -45,7 +45,10 @@ class DashboardService
 
     public function departmentFileCounts(): object
     {
-        return Cache::remember('dept_file_counts', self::TTL, fn() =>
+        return Cache::remember(
+            'dept_file_counts',
+            self::TTL,
+            fn() =>
             Department::withCount('files')->orderByDesc('files_count')->get()
         );
     }
@@ -71,8 +74,8 @@ class DashboardService
         return Cache::remember("admin_stats_{$deptId}", self::TTL, fn() => [
             'dept_files'          => FileRecord::where('department_id', $deptId)->count(),
             'dept_users'          => User::where('department_id', $deptId)->count(),
-            'pending_requests'    => TransferRequest::where('status', 'pending')->where('to_department', $deptId)->count(),
-            'completed_transfers' => TransferRequest::where('status', 'approved')->where('to_department', $deptId)->count(),
+            'pending_requests'    => TransferRequest::where('status', 'pending')->where('from_department', $deptId)->count(),
+            'completed_transfers' => TransferRequest::where('status', 'approved')->where('from_department', $deptId)->count(),
         ]);
     }
 
@@ -97,7 +100,7 @@ class DashboardService
     {
         return Cache::remember("user_stats_{$userId}", self::TTL, fn() => [
             'total_my_files'    => FileRecord::where(fn($q) =>
-                $q->where('created_by', $userId)->orWhere('current_user_id', $userId))->count(),
+            $q->where('created_by', $userId)->orWhere('current_user_id', $userId))->count(),
             'sent_files'        => FileMovement::where('from_user', $userId)->where('action', 'transferred')->count(),
             'received_files'    => FileMovement::where('to_user', $userId)->whereIn('action', ['transferred', 'approved'])->count(),
             'pending_transfers' => TransferRequest::where('requested_by', $userId)->where('status', 'pending')->count(),

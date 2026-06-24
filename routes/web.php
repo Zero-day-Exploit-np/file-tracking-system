@@ -72,9 +72,10 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
     Route::post('/files/transfer',       [FileTransferController::class, 'store'])->name('files.transfer.store');
 
     // Notifications
-    Route::get('/notifications',           [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
-    Route::get('/notifications/poll',      [NotificationController::class, 'poll'])->name('notifications.poll');
+    Route::get('/notifications',             [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all',   [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+    Route::post('/notifications/{id}/read',  [NotificationController::class, 'markRead'])->name('notifications.markRead');
+    Route::get('/notifications/poll',        [NotificationController::class, 'poll'])->name('notifications.poll');
 });
 
 /*

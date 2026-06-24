@@ -18,9 +18,23 @@ class FileRecordController extends Controller
         $user  = Auth::user();
         $query = FileRecord::with(['department', 'creator', 'currentHolder']);
 
-        if ($user->role !== 'super_admin') {
+        if ($user->role === 'user') {
+            // Show files the user: created, currently holds, or was involved in via transfer history
+            $involvedFileIds = \App\Models\FileTransfer::where(fn($q) => $q
+                ->where('sender_id',   $user->id)
+                ->orWhere('receiver_id', $user->id))
+                ->pluck('file_id')
+                ->unique()
+                ->values();
+
+            $query->where(fn($q) => $q
+                ->where('created_by',       $user->id)
+                ->orWhere('current_user_id', $user->id)
+                ->orWhereIn('id',            $involvedFileIds));
+        } elseif ($user->role === 'admin') {
             $query->where('department_id', $user->department_id);
         }
+        // super_admin sees all — no additional scope
 
         if ($request->filled('search')) {
             $s = $request->string('search')->trim()->value();
@@ -105,9 +119,13 @@ class FileRecordController extends Controller
         $this->authorize('view', $file);
 
         $file->load([
-            'department', 'creator', 'currentHolder',
-            'movements.fromUser', 'movements.toUser',
-            'movements.fromDept', 'movements.toDept',
+            'department',
+            'creator',
+            'currentHolder',
+            'movements.fromUser',
+            'movements.toUser',
+            'movements.fromDept',
+            'movements.toDept',
         ]);
 
         return view('files.show', compact('file'));

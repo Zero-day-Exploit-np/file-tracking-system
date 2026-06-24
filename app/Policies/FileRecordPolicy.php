@@ -3,23 +3,33 @@
 namespace App\Policies;
 
 use App\Models\FileRecord;
+use App\Models\FileTransfer;
 use App\Models\User;
 
 class FileRecordPolicy
 {
     /**
-     * Super Admin can do anything.
+     * Super Admin: can view/download/transfer but CANNOT create files.
      */
     public function before(User $user, string $ability): ?bool
     {
         if ($user->role === 'super_admin') {
+            // Block create/store
+            if (in_array($ability, ['create', 'store'], true)) {
+                return false;
+            }
+            // Allow all other abilities
             return true;
         }
         return null;
     }
 
     /**
-     * View a file: creator, current holder, or same-department admin.
+     * View a file:
+     * - creator
+     * - current holder
+     * - same-department admin
+     * - anyone who appeared in transfer history (sent or received)
      */
     public function view(User $user, FileRecord $file): bool
     {
@@ -27,7 +37,7 @@ class FileRecordPolicy
     }
 
     /**
-     * Download a file: same as view.
+     * Download: same as view.
      */
     public function download(User $user, FileRecord $file): bool
     {
@@ -35,7 +45,7 @@ class FileRecordPolicy
     }
 
     /**
-     * Transfer a file: must be current holder or department admin.
+     * Transfer: must be current holder OR same-department admin.
      */
     public function transfer(User $user, FileRecord $file): bool
     {
@@ -46,23 +56,43 @@ class FileRecordPolicy
     }
 
     /**
-     * Create a file: any authenticated user with can_create_file or admin.
+     * Create: admins and users granted can_create_file.
+     * Super Admin is explicitly BLOCKED via before().
      */
     public function create(User $user): bool
     {
-        return $user->can_create_file || in_array($user->role, ['admin', 'super_admin'], true);
+        return $user->role === 'admin' || (bool) $user->can_create_file;
     }
 
+    // ──────────────────────────────────────────────────────────
+    // PRIVATE HELPERS
+    // ──────────────────────────────────────────────────────────
+
     /**
-     * Core check: creator, current holder, or same-department admin.
+     * A user has access if they are:
+     * 1. The creator
+     * 2. The current holder
+     * 3. A same-department admin
+     * 4. Previously involved as sender OR receiver in file_transfers
      */
     private function hasFileAccess(User $user, FileRecord $file): bool
     {
-        if ($user->id === (int) $file->created_by)      return true;
-        if ($user->id === (int) $file->current_user_id) return true;
+        // 1. Creator
+        if ((int) $file->created_by === $user->id) return true;
+
+        // 2. Current holder
+        if ((int) $file->current_user_id === $user->id) return true;
+
+        // 3. Same-department admin
         if ($user->role === 'admin' && (int) $user->department_id === (int) $file->department_id) {
             return true;
         }
-        return false;
+
+        // 4. Was involved in a transfer for this file
+        return FileTransfer::where('file_id', $file->id)
+            ->where(fn($q) => $q
+                ->where('sender_id',   $user->id)
+                ->orWhere('receiver_id', $user->id))
+            ->exists();
     }
 }

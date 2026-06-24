@@ -23,7 +23,7 @@ class FileTransferred implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('admin-channel');
+        return new PrivateChannel('user.' . $this->transfer->receiver_id);
     }
 
     public function broadcastAs()

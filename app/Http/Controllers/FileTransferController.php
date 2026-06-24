@@ -108,6 +108,7 @@ class FileTransferController extends Controller
 
             if ($transfer) {
                 $targetUser->notify(new FileTransferredNotification($transfer));
+                event(new \App\Events\FileTransferred($transfer));
             }
 
             \App\Services\DashboardService::clearUserCache($currentUser->id);
@@ -157,12 +158,14 @@ class FileTransferController extends Controller
         });
 
         // Notify the SOURCE department admin (correct per SRS FR8)
-        $sourceAdmin = User::where('department_id', $currentUser->department_id)
+        $sourceAdmins = User::where('department_id', $currentUser->department_id)
             ->where('role', 'admin')
-            ->first();
+            ->get();
 
-        if ($sourceAdmin && $transferReq) {
-            $sourceAdmin->notify(new TransferRequestNotification($transferReq));
+        if ($transferReq) {
+            foreach ($sourceAdmins as $sourceAdmin) {
+                $sourceAdmin->notify(new TransferRequestNotification($transferReq));
+            }
         }
 
         // Invalidate source admin's cache

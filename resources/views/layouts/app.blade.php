@@ -334,8 +334,8 @@
             const sound = document.getElementById('notif-sound');
             const topBadge = document.getElementById('topbar-notif-badge');
             const sbCount = document.getElementById('sb-notif-count');
-            const POLL_MS = 30000;
-            const FIRST_MS = 8000;
+            const POLL_MS = 15000; // 15-second polling
+            const FIRST_MS = 5000;  // first poll after 5s
             let lastCount = parseInt(topBadge ? topBadge.textContent : '0', 10) || 0;
             let soundUnlocked = false;
             let pollTimer = null;
@@ -381,12 +381,16 @@
                     .then(function(data) {
                         if (!data) return;
                         var n = data.unread_count || 0;
-                        if (n > lastCount) {
-                            playSound();
-                        }
+                        if (n > lastCount) { playSound(); }
                         lastCount = n;
                         setBadge(topBadge, n);
                         setBadge(sbCount, n);
+
+                        // Also update the transfer request badge for admins
+                        var transferBadge = document.getElementById('sb-transfer-count');
+                        if (transferBadge !== null && data.pending_transfers !== undefined) {
+                            setBadge(transferBadge, data.pending_transfers);
+                        }
                     })
                     .catch(function() {});
             }
@@ -419,4 +423,5 @@
 </body>
 
 </html>
+
 
