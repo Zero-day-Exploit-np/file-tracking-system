@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Pagination\Paginator;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(FileRecord::class, FileRecordPolicy::class);
 
         $this->configureRateLimiting();
+        Paginator::useBootstrapFive();
     }
 
     protected function configureRateLimiting(): void
