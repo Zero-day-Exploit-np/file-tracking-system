@@ -66,13 +66,15 @@ class TransferApprovalController extends Controller
             $fromUser   = $file->current_user_id;
             $fromDept   = $file->department_id;
 
-            DB::transaction(function () use ($transferReq, $file, $targetUser, $requester, $admin, $fromUser, $fromDept) {
+            $transfer = null;
+
+            DB::transaction(function () use ($transferReq, $file, $targetUser, $requester, $admin, $fromUser, $fromDept, &$transfer) {
 
                 // 1. Create transfer record
                 $transfer = FileTransfer::create([
-                    'file_record_id'     => $file->id,
-                    'from_user_id'       => $transferReq->requested_by,
-                    'to_user_id'         => $transferReq->target_user,
+                    'file_id'            => $file->id,
+                    'sender_id'          => $transferReq->requested_by,
+                    'receiver_id'        => $transferReq->target_user,
                     'from_department_id' => $transferReq->from_department,
                     'to_department_id'   => $transferReq->to_department,
                     'remarks'            => 'Approved by ' . $admin->name,
@@ -108,13 +110,15 @@ class TransferApprovalController extends Controller
                     'to_department'   => $transferReq->to_department,
                     'ip'              => request()->ip(),
                 ], 'Transfer approved by ' . $admin->name);
+            });
 
+            if ($transfer) {
                 // 6. Notify the target user (file receiver)
                 $targetUser->notify(new FileTransferredNotification($transfer));
 
                 // 7. Notify the requester that their request was approved
                 $requester->notify(new TransferStatusNotification($transferReq, 'approved', $admin->name));
-            });
+            }
 
             // Invalidate all relevant caches
             DashboardService::clearAdminCache($admin->department_id);

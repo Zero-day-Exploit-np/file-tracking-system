@@ -16,18 +16,19 @@
         <i class="fa-solid fa-plus"></i> New File
     </a>
     @endcan
-    <input type="text" name="search" class="form-control" style="max-width:220px;"
-        placeholder="Search name or number..." value="{{ request('search') }}">
-    <select name="status" class="form-select" style="max-width:160px;">
-        <option value="">All Statuses</option>
-        <option value="active" {{ request('status') === 'active'           ? 'selected' : '' }}>Active</option>
-        <option value="pending_transfer" {{ request('status') === 'pending_transfer' ? 'selected' : '' }}>Pending Transfer</option>
-        <option value="archived" {{ request('status') === 'archived'         ? 'selected' : '' }}>Archived</option>
-    </select>
-    <input type="date" name="from_date" class="form-control" style="max-width:145px;" value="{{ request('from_date') }}">
-    <input type="date" name="to_date" class="form-control" style="max-width:145px;" value="{{ request('to_date') }}">
-    <button type="submit" class="btn btn-primary btn-sm px-3"><i class="fa-solid fa-magnifying-glass me-1"></i>Search</button>
-    <a href="{{ route('files.index') }}" class="btn btn-outline-secondary btn-sm px-3">Reset</a>
+    <form action="{{ route('files.index') }}" method="GET" class="d-flex flex-wrap gap-2 align-items-center mb-4">
+        <input type="text" name="search" class="form-control" style="max-width:220px;"
+            placeholder="Search name or number..." value="{{ request('search') }}">
+        <select name="status" class="form-select" style="max-width:160px;">
+            <option value="">All Statuses</option>
+            <option value="active" {{ request('status') === 'active'           ? 'selected' : '' }}>Active</option>
+            <option value="pending_transfer" {{ request('status') === 'pending_transfer' ? 'selected' : '' }}>Pending Transfer</option>
+            <option value="archived" {{ request('status') === 'archived'         ? 'selected' : '' }}>Archived</option>
+        </select>
+        <input type="date" name="from_date" class="form-control" style="max-width:145px;" value="{{ request('from_date') }}">
+        <input type="date" name="to_date" class="form-control" style="max-width:145px;" value="{{ request('to_date') }}">
+        <button type="submit" class="btn btn-primary btn-sm px-3"><i class="fa-solid fa-magnifying-glass me-1"></i>Search</button>
+        <a href="{{ route('files.index') }}" class="btn btn-outline-secondary btn-sm px-3">Reset</a>
     </form>
 
     <div class="table-responsive">

@@ -26,7 +26,7 @@ class FileTransferredNotification extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'file_id'    => $this->transfer->file_record_id,
+            'file_id'    => $this->transfer->file_id,
             'file_title' => $this->transfer->file->file_name ?? 'Unknown File',
             'sender'     => $this->transfer->sender->name ?? 'System',
             'receiver'   => $this->transfer->receiver->name ?? 'N/A',

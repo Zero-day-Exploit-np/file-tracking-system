@@ -6,23 +6,27 @@ use App\Models\FileRecord;
 use App\Models\FileTransfer;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
 beforeEach(function () {
     Storage::fake('public');
 });
 
 it('shows the notifications page for an authenticated user', function () {
+    /** @var \Tests\TestCase $this */
     $department = Department::create([
         'name' => 'Operations',
         'code' => 'OPS',
         'is_active' => true,
     ]);
 
+    /** @var \App\Models\User $sender */
     $sender = User::factory()->create([
         'role' => 'admin',
         'department_id' => $department->id,
     ]);
 
+    /** @var \App\Models\User $recipient */
     $recipient = User::factory()->create([
         'role' => 'user',
         'department_id' => $department->id,
@@ -36,9 +40,9 @@ it('shows the notifications page for an authenticated user', function () {
     ]);
 
     $transfer = FileTransfer::create([
-        'file_record_id' => $file->id,
-        'from_user_id' => $sender->id,
-        'to_user_id' => $recipient->id,
+        'file_id' => $file->id,
+        'sender_id' => $sender->id,
+        'receiver_id' => $recipient->id,
         'from_department_id' => $department->id,
         'to_department_id' => $department->id,
         'remarks' => 'Unit handoff',
@@ -53,17 +57,20 @@ it('shows the notifications page for an authenticated user', function () {
 });
 
 it('marks all notifications as read when the action is posted', function () {
+    /** @var \Tests\TestCase $this */
     $department = Department::create([
         'name' => 'Operations',
         'code' => 'OPS',
         'is_active' => true,
     ]);
 
+    /** @var \App\Models\User $sender */
     $sender = User::factory()->create([
         'role' => 'admin',
         'department_id' => $department->id,
     ]);
 
+    /** @var \App\Models\User $recipient */
     $recipient = User::factory()->create([
         'role' => 'user',
         'department_id' => $department->id,
@@ -77,9 +84,9 @@ it('marks all notifications as read when the action is posted', function () {
     ]);
 
     $transfer = FileTransfer::create([
-        'file_record_id' => $file->id,
-        'from_user_id' => $sender->id,
-        'to_user_id' => $recipient->id,
+        'file_id' => $file->id,
+        'sender_id' => $sender->id,
+        'receiver_id' => $recipient->id,
         'from_department_id' => $department->id,
         'to_department_id' => $department->id,
         'remarks' => 'Unit handoff',

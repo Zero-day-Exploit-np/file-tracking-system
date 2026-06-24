@@ -1,6 +1,6 @@
 <?php
 
- use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -11,16 +11,16 @@ return new class extends Migration {
             $table->id();
 
             // File being transferred
-            $table->foreignId('file_record_id')     // file_id
-                ->constrained('file_records')       // files
+            $table->foreignId('file_id')
+                ->constrained('file_records')
                 ->onDelete('cascade');
 
             // Transfer tracking
-            $table->foreignId('from_user_id')
+            $table->foreignId('sender_id')
                 ->constrained('users')
                 ->onDelete('cascade');
 
-            $table->foreignId('to_user_id')
+            $table->foreignId('receiver_id')
                 ->constrained('users')
                 ->onDelete('cascade');
 

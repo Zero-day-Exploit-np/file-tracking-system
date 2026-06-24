@@ -12,6 +12,7 @@ use App\Notifications\FileTransferredNotification;
 use App\Notifications\TransferRequestNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FileTransferController extends Controller
 {
@@ -19,13 +20,16 @@ class FileTransferController extends Controller
     {
         $currentUser = Auth::user();
 
-        if ($currentUser->role !== 'super_admin' &&
-            (int) $file->department_id !== (int) $currentUser->department_id) {
+        if (
+            $currentUser->role !== 'super_admin' &&
+            (int) $file->department_id !== (int) $currentUser->department_id
+        ) {
             abort(403, 'You do not have access to transfer this file.');
         }
 
         if ($file->status === 'pending_transfer') {
-            return back()->with('error', 'This file already has a pending transfer request.');
+            return redirect()->route('files.show', $file->uuid)
+                ->with('error', 'This file already has a pending transfer request.');
         }
 
         $users = User::where('id', '!=', Auth::id())
@@ -50,8 +54,10 @@ class FileTransferController extends Controller
         $currentUser = Auth::user();
 
         // IDOR check
-        if ($currentUser->role !== 'super_admin' &&
-            (int) $file->department_id !== (int) $currentUser->department_id) {
+        if (
+            $currentUser->role !== 'super_admin' &&
+            (int) $file->department_id !== (int) $currentUser->department_id
+        ) {
             abort(403, 'You do not have access to transfer this file.');
         }
 
@@ -60,7 +66,8 @@ class FileTransferController extends Controller
         }
 
         if ($file->status === 'pending_transfer') {
-            return back()->with('error', 'This file already has a pending transfer request.');
+            return redirect()->route('files.show', $file->uuid)
+                ->with('error', 'This file already has a pending transfer request.');
         }
 
         $remarks = $request->string('remarks')->trim()->value() ?: null;
@@ -69,42 +76,46 @@ class FileTransferController extends Controller
         $isSameDept = (int) $targetUser->department_id === (int) $currentUser->department_id;
 
         if ($isSameDept || $currentUser->role === 'super_admin') {
-            $transfer = FileTransfer::create([
-                'file_record_id'     => $file->id,
-                'from_user_id'       => $currentUser->id,
-                'to_user_id'         => $targetUser->id,
-                'from_department_id' => $currentUser->department_id,
-                'to_department_id'   => $targetUser->department_id,
-                'remarks'            => $remarks,
-            ]);
+            $transfer = null;
 
-            FileMovement::create([
-                'file_id'         => $file->id,
-                'from_user'       => $currentUser->id,
-                'to_user'         => $targetUser->id,
-                'from_department' => $currentUser->department_id,
-                'to_department'   => $targetUser->department_id,
-                'action'          => 'transferred',
-                'remarks'         => $remarks ?? 'Same-department direct transfer',
-            ]);
+            DB::transaction(function () use ($file, $currentUser, $targetUser, $remarks, $request, &$transfer) {
+                $transfer = FileTransfer::create([
+                    'file_id'            => $file->id,
+                    'sender_id'          => $currentUser->id,
+                    'receiver_id'        => $targetUser->id,
+                    'from_department_id' => $currentUser->department_id,
+                    'to_department_id'   => $targetUser->department_id,
+                    'remarks'            => $remarks,
+                ]);
 
-            $file->update([
-                'current_user_id' => $targetUser->id,
-                'status'          => 'active',
-            ]);
+                FileMovement::create([
+                    'file_id'         => $file->id,
+                    'from_user'       => $currentUser->id,
+                    'to_user'         => $targetUser->id,
+                    'from_department' => $currentUser->department_id,
+                    'to_department'   => $targetUser->department_id,
+                    'action'          => 'transferred',
+                    'remarks'         => $remarks ?? 'Same-department direct transfer',
+                ]);
 
-            $this->recordAudit('file_transferred', $file, [
-                'from_user'      => $currentUser->id,
-                'to_user'        => $targetUser->id,
-                'from_department'=> $currentUser->department_id,
-                'to_department'  => $targetUser->department_id,
-                'ip'             => $request->ip(),
-            ], 'Direct transfer by ' . $currentUser->name);
+                $file->update([
+                    'current_user_id' => $targetUser->id,
+                    'status'          => 'active',
+                ]);
 
-            // Notify the receiver
-            $targetUser->notify(new FileTransferredNotification($transfer));
+                $this->recordAudit('file_transferred', $file, [
+                    'from_user'      => $currentUser->id,
+                    'to_user'        => $targetUser->id,
+                    'from_department' => $currentUser->department_id,
+                    'to_department'  => $targetUser->department_id,
+                    'ip'             => $request->ip(),
+                ], 'Direct transfer by ' . $currentUser->name);
+            });
 
-            // Invalidate caches
+            if ($transfer) {
+                $targetUser->notify(new FileTransferredNotification($transfer));
+            }
+
             \App\Services\DashboardService::clearUserCache($currentUser->id);
             \App\Services\DashboardService::clearUserCache($targetUser->id);
 
@@ -118,41 +129,45 @@ class FileTransferController extends Controller
         }
 
         // SRS FR8: notification goes to SOURCE department admin
-        $transferReq = TransferRequest::create([
-            'file_id'         => $file->id,
-            'requested_by'    => $currentUser->id,
-            'from_department' => $currentUser->department_id,  // source
-            'to_department'   => $targetUser->department_id,   // destination
-            'target_user'     => $targetUser->id,
-            'status'          => 'pending',
-        ]);
+        $transferReq = null;
 
-        FileMovement::create([
-            'file_id'         => $file->id,
-            'from_user'       => $currentUser->id,
-            'to_user'         => $targetUser->id,
-            'from_department' => $currentUser->department_id,
-            'to_department'   => $targetUser->department_id,
-            'action'          => 'requested',
-            'remarks'         => $remarks ?? 'Cross-department transfer request submitted',
-        ]);
+        DB::transaction(function () use ($file, $currentUser, $targetUser, $remarks, $request, &$transferReq) {
+            $transferReq = TransferRequest::create([
+                'file_id'         => $file->id,
+                'requested_by'    => $currentUser->id,
+                'from_department' => $currentUser->department_id,  // source
+                'to_department'   => $targetUser->department_id,   // destination
+                'target_user'     => $targetUser->id,
+                'status'          => 'pending',
+            ]);
 
-        $file->update(['status' => 'pending_transfer']);
+            FileMovement::create([
+                'file_id'         => $file->id,
+                'from_user'       => $currentUser->id,
+                'to_user'         => $targetUser->id,
+                'from_department' => $currentUser->department_id,
+                'to_department'   => $targetUser->department_id,
+                'action'          => 'requested',
+                'remarks'         => $remarks ?? 'Cross-department transfer request submitted',
+            ]);
 
-        $this->recordAudit('transfer_requested', $file, [
-            'from_user'       => $currentUser->id,
-            'to_user'         => $targetUser->id,
-            'from_department' => $currentUser->department_id,
-            'to_department'   => $targetUser->department_id,
-            'ip'              => $request->ip(),
-        ], 'Transfer request submitted by ' . $currentUser->name);
+            $file->update(['status' => 'pending_transfer']);
+
+            $this->recordAudit('transfer_requested', $file, [
+                'from_user'       => $currentUser->id,
+                'to_user'         => $targetUser->id,
+                'from_department' => $currentUser->department_id,
+                'to_department'   => $targetUser->department_id,
+                'ip'              => $request->ip(),
+            ], 'Transfer request submitted by ' . $currentUser->name);
+        });
 
         // Notify the SOURCE department admin (correct per SRS FR8)
         $sourceAdmin = User::where('department_id', $currentUser->department_id)
             ->where('role', 'admin')
             ->first();
 
-        if ($sourceAdmin) {
+        if ($sourceAdmin && $transferReq) {
             $sourceAdmin->notify(new TransferRequestNotification($transferReq));
         }
 
@@ -160,8 +175,10 @@ class FileTransferController extends Controller
         \App\Services\DashboardService::clearAdminCache($currentUser->department_id);
         \App\Services\DashboardService::clearSuperAdminCache();
 
-        return back()->with('success',
+        return back()->with(
+            'success',
             'Transfer request submitted. Awaiting approval from your department admin (' .
-            ($currentUser->department->name ?? 'your department') . ').');
+                ($currentUser->department->name ?? 'your department') . ').'
+        );
     }
 }
