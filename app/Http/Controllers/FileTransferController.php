@@ -18,16 +18,16 @@ class FileTransferController extends Controller
 {
     public function create(FileRecord $file)
     {
-        $currentUser = Auth::user();
-
-        $this->authorize('transfer', $file);
-
+        // Prevent accessing transfer page for pending files — clear UX instead of 403
         if ($file->status === 'pending_transfer') {
-            return redirect()->route('files.show', $file->uuid)
-                ->with('error', 'This file already has a pending transfer request.');
+            return redirect()->route('files.index')
+                ->with('info', 'File "' . $file->file_name . '" already has a pending transfer request awaiting admin approval.');
         }
 
-        $users = User::where('id', '!=', Auth::id())
+        // Must be current holder or admin of the file's department
+        $this->authorize('transfer', $file);
+
+        $users = \App\Models\User::where('id', '!=', \Illuminate\Support\Facades\Auth::id())
             ->whereNotNull('department_id')
             ->with(['department', 'designation'])
             ->orderBy('name')

@@ -73,16 +73,33 @@
                 <td>@include('partials.status-badge', ['status' => $file->status])</td>
                 <td class="text-muted fs-sm">{{ $file->created_at->format('d M Y') }}</td>
                 <td>
-                    <div class="d-flex gap-1">
+                    <div class="d-flex gap-1 align-items-center">
                         <a href="{{ route('files.show', $file->uuid) }}"
                            class="btn btn-sm btn-outline-primary" title="View">
                             <i class="fa-solid fa-eye"></i>
                         </a>
-                        @if($file->status !== 'archived')
-                        <a href="{{ route('files.transfer.create', $file->uuid) }}"
-                           class="btn btn-sm btn-outline-secondary" title="Transfer">
-                            <i class="fa-solid fa-right-left"></i>
-                        </a>
+                        {{--
+                            Transfer button logic (Issues 2, 3, 4, 5):
+                            - PENDING: disable button, show "Awaiting Approval" badge — prevents 403 confusion
+                            - ACTIVE + user is current holder: show transfer button
+                            - Otherwise (archived, not the holder): no transfer button
+                        --}}
+                        @if($file->status === 'pending_transfer')
+                            {{-- File is already pending — never show transfer button --}}
+                            <span class="badge-status badge-pending" title="Transfer request is pending admin approval">
+                                <i class="fa-solid fa-clock me-1"></i>Awaiting Approval
+                            </span>
+                        @elseif($file->status !== 'archived' && (int)$file->current_user_id === auth()->id())
+                            {{-- Current holder can transfer --}}
+                            <a href="{{ route('files.transfer.create', $file->uuid) }}"
+                               class="btn btn-sm btn-outline-secondary" title="Transfer file">
+                                <i class="fa-solid fa-right-left me-1"></i>Transfer
+                            </a>
+                        @elseif($file->status !== 'archived' && (int)$file->created_by === auth()->id() && (int)$file->current_user_id !== auth()->id())
+                            {{-- Creator who no longer holds it — history only --}}
+                            <span class="badge-status badge-transferred" title="You previously transferred this file">
+                                <i class="fa-solid fa-history me-1"></i>Transferred
+                            </span>
                         @endif
                         @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
                         <a href="{{ route('admin.files.timeline', $file->uuid) }}"

@@ -46,12 +46,21 @@ class FileRecordPolicy
 
     /**
      * Transfer: must be current holder OR same-department admin.
+     * Files with pending_transfer status cannot be transferred again.
      */
     public function transfer(User $user, FileRecord $file): bool
     {
+        // Never allow transfer on a file already pending
+        if ($file->status === 'pending_transfer') {
+            return false;
+        }
+
+        // Same-department admin can initiate transfer
         if ($user->role === 'admin' && (int) $user->department_id === (int) $file->department_id) {
             return true;
         }
+
+        // Only current holder may transfer
         return (int) $file->current_user_id === $user->id;
     }
 
