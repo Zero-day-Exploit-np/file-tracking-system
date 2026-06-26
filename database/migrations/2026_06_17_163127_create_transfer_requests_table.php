@@ -15,15 +15,25 @@ return new class extends Migration
 
             $table->id();
 
-            $table->foreignId('file_id');
+            $table->foreignId('file_id')
+                ->constrained('file_records')
+                ->onDelete('cascade');
 
-            $table->foreignId('requested_by');
+            $table->foreignId('requested_by')
+                ->constrained('users')
+                ->onDelete('cascade');
 
-            $table->foreignId('from_department');
+            $table->foreignId('from_department')
+                ->constrained('departments')
+                ->onDelete('cascade');
 
-            $table->foreignId('to_department');
+            $table->foreignId('to_department')
+                ->constrained('departments')
+                ->onDelete('cascade');
 
-            $table->foreignId('target_user');
+            $table->foreignId('target_user')
+                ->constrained('users')
+                ->onDelete('cascade');
 
             $table->enum('status', [
                 'pending',

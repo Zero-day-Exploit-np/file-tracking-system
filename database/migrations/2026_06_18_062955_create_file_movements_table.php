@@ -13,13 +13,23 @@ return new class extends Migration
     {
         Schema::create('file_movements', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('file_id');
+            $table->foreignId('file_id')
+                ->constrained('file_records')
+                ->onDelete('cascade');
 
-            $table->unsignedBigInteger('from_user')->nullable();
-            $table->unsignedBigInteger('to_user')->nullable();
+            $table->foreignId('from_user')->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+            $table->foreignId('to_user')->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
-            $table->unsignedBigInteger('from_department')->nullable();
-            $table->unsignedBigInteger('to_department')->nullable();
+            $table->foreignId('from_department')->nullable()
+                ->constrained('departments')
+                ->nullOnDelete();
+            $table->foreignId('to_department')->nullable()
+                ->constrained('departments')
+                ->nullOnDelete();
 
             $table->string('action'); // created, transfer, approved, rejected
             $table->text('remarks')->nullable();
