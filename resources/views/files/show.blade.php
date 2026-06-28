@@ -12,7 +12,7 @@
         <h1 class="page-title">{{ $file->file_name }}</h1>
         <div class="page-subtitle">{{ $file->file_number }}</div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <a href="{{ route('files.index') }}" class="btn-portal-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
         @if($file->status !== 'archived')
         <a href="{{ route('files.transfer.create', $file->uuid) }}" class="btn-portal-primary"><i class="fa-solid fa-right-left"></i> Transfer</a>

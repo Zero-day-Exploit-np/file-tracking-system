@@ -25,11 +25,11 @@
 {{-- ── SEARCH / FILTER BAR ─────────────────────────────────── --}}
 <div class="portal-table-wrap mb-0">
     <form action="{{ route('files.index') }}" method="GET" class="table-toolbar">
-        <input type="text" name="search" class="form-control" style="max-width:220px;"
+        <input type="text" name="search" class="form-control" style="max-width:220px;min-width:180px;"
             placeholder="Search name or number..."
             value="{{ request('search', '') }}">
 
-        <select name="status" class="form-select" style="max-width:160px;">
+        <select name="status" class="form-select" style="max-width:160px;min-width:140px;">
             <option value="">All Statuses</option>
             <option value="active"           {{ request('status') === 'active'           ? 'selected' : '' }}>Active</option>
             <option value="pending_transfer" {{ request('status') === 'pending_transfer' ? 'selected' : '' }}>Pending Transfer</option>
