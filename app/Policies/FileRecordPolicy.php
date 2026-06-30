@@ -44,6 +44,11 @@ class FileRecordPolicy
         return $this->hasFileAccess($user, $file);
     }
 
+    public function update(User $user, FileRecord $file): bool
+    {
+        return $this->hasFileAccess($user, $file);
+    }
+
     /**
      * Transfer: must be current holder OR same-department admin.
      * Files with pending_transfer status cannot be transferred again.

@@ -9,6 +9,7 @@ use App\Models\FileRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class FileRecordController extends Controller
@@ -76,6 +77,7 @@ class FileRecordController extends Controller
             'department_id' => 'required|exists:departments,id',
             'file_name'     => 'required|string|max:255',
             'remarks'       => 'nullable|string|max:1000',
+            'attachment'    => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
         ]);
 
         $deptId = Auth::user()->role === 'super_admin'
@@ -91,6 +93,18 @@ class FileRecordController extends Controller
             'remarks'         => $request->string('remarks')->trim()->value() ?: null,
             'status'          => 'active',
         ]);
+
+        if ($request->hasFile('attachment')) {
+            $uploaded = $request->file('attachment');
+            $storedName = Str::uuid()->toString() . '.' . $uploaded->extension();
+            $path = $uploaded->storeAs('files/' . $file->uuid, $storedName, 'private');
+
+            $file->update([
+                'attachment_path' => $path,
+                'attachment_name' => $uploaded->getClientOriginalName(),
+                'attachment_mime' => $uploaded->getClientMimeType(),
+            ]);
+        }
 
         FileMovement::create([
             'file_id'         => $file->id,
@@ -109,6 +123,59 @@ class FileRecordController extends Controller
         ], 'File created by ' . Auth::user()->name);
 
         return redirect()->route('files.index')->with('success', 'File created successfully.');
+    }
+
+    public function edit(FileRecord $file)
+    {
+        $this->authorize('update', $file);
+
+        $departments = Department::orderBy('name')->get();
+        return view('files.edit', compact('file', 'departments'));
+    }
+
+    public function update(Request $request, FileRecord $file)
+    {
+        $this->authorize('update', $file);
+
+        $request->validate([
+            'department_id' => 'required|exists:departments,id',
+            'file_name'     => 'required|string|max:255',
+            'remarks'       => 'nullable|string|max:1000',
+            'attachment'    => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
+        ]);
+
+        $deptId = Auth::user()->role === 'super_admin'
+            ? (int) $request->department_id
+            : Auth::user()->department_id;
+
+        $file->update([
+            'department_id' => $deptId,
+            'file_name'     => $request->string('file_name')->trim()->value(),
+            'remarks'       => $request->string('remarks')->trim()->value() ?: null,
+        ]);
+
+        if ($request->hasFile('attachment')) {
+            if ($file->attachment_path && Storage::disk('private')->exists($file->attachment_path)) {
+                Storage::disk('private')->delete($file->attachment_path);
+            }
+
+            $uploaded = $request->file('attachment');
+            $storedName = Str::uuid()->toString() . '.' . $uploaded->extension();
+            $path = $uploaded->storeAs('files/' . $file->uuid, $storedName, 'private');
+
+            $file->update([
+                'attachment_path' => $path,
+                'attachment_name' => $uploaded->getClientOriginalName(),
+                'attachment_mime' => $uploaded->getClientMimeType(),
+            ]);
+        }
+
+        $this->recordAudit('file_updated', $file, [
+            'file_number' => $file->file_number,
+            'ip'          => $request->ip(),
+        ], 'File record updated by ' . Auth::user()->name);
+
+        return redirect()->route('files.show', $file->uuid)->with('success', 'File updated successfully.');
     }
 
     /**
@@ -131,38 +198,20 @@ class FileRecordController extends Controller
         return view('files.show', compact('file'));
     }
 
-    /**
-     * Download a file attachment — policy check via FileRecordPolicy::download().
-     * Logs every download to audit log.
-     */
     public function download(FileRecord $file)
     {
         $this->authorize('download', $file);
 
-        try {
-            // File records in this system don't have physical attachments
-            // (those are in PublicFile). This action logs the access.
-            AuditLog::create([
-                'user_id'        => Auth::id(),
-                'action'         => 'file_accessed',
-                'auditable_type' => FileRecord::class,
-                'auditable_id'   => $file->id,
-                'description'    => 'File record accessed: ' . $file->file_name,
-                'metadata'       => [
-                    'file_number' => $file->file_number,
-                    'ip'          => request()->ip(),
-                ],
-            ]);
-
+        if (!$file->attachment_path || !Storage::disk('private')->exists($file->attachment_path)) {
             return redirect()->route('files.show', $file->uuid)
-                ->with('info', 'File record viewed and access logged.');
-        } catch (\Throwable $e) {
-            Log::error('File access error', [
-                'file_id' => $file->id,
-                'user_id' => Auth::id(),
-                'error'   => $e->getMessage(),
-            ]);
-            abort(500, 'File access error. Please try again.');
+                ->with('error', 'Attachment not found.');
         }
+
+        $this->recordAudit('file_attachment_downloaded', $file, [
+            'file_number' => $file->file_number,
+            'ip'          => request()->ip(),
+        ], 'File attachment downloaded by ' . Auth::user()->name);
+
+        return Storage::disk('private')->download($file->attachment_path, $file->attachment_name ?: $file->file_name);
     }
 }

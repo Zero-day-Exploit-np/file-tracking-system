@@ -65,6 +65,9 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
     Route::get('/files',               [FileRecordController::class, 'index'])->name('files.index');
     Route::get('/files/create',        [FileRecordController::class, 'create'])->name('files.create');
     Route::post('/files',              [FileRecordController::class, 'store'])->name('files.store');
+    Route::get('/files/{file}/edit',   [FileRecordController::class, 'edit'])->name('files.edit');
+    Route::put('/files/{file}',        [FileRecordController::class, 'update'])->name('files.update');
+    Route::get('/files/{file}/download',[FileRecordController::class, 'download'])->name('files.download');
     Route::get('/files/{file}',        [FileRecordController::class, 'show'])->name('files.show');
 
     // Transfer uses UUID

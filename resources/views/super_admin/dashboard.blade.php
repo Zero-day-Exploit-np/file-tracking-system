@@ -110,7 +110,7 @@
                     <span class="badge bg-warning text-dark ms-2">{{ $pendingRequests->count() }}</span>
                     <span class="badge bg-secondary ms-1" title="Super admin can monitor only">Read-Only</span>
                 </span>
-                <a href="{{ route('admin.transfer.requests') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <a href="{{ route('admin.transfer.requests') }}" class="btn btn-sm btn-portal-outline">View All</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -161,7 +161,7 @@
         <div class="portal-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="fa-solid fa-right-left me-2 text-primary"></i>Recent Transfers</span>
-                <a href="{{ route('admin.audit.logs') }}" class="btn btn-sm btn-outline-primary">Audit Log</a>
+                <a href="{{ route('admin.audit.logs') }}" class="btn btn-sm btn-portal-outline">Audit Log</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
