@@ -2,7 +2,7 @@
 @section('title', 'Create File')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('files.index') }}">Files</a></li>
+<li class="breadcrumb-item"><a href="{{ route('files.index') }}">My Files</a></li>
 <li class="breadcrumb-item active">Create</li>
 @endsection
 
@@ -20,19 +20,12 @@
         @csrf
 
         <div class="mb-3">
-            <label class="form-label">Department <span class="required-star">*</span></label>
-            @if(auth()->user()->role === 'super_admin')
-            <select name="department_id" class="form-select @error('department_id') is-invalid @enderror" required>
-                <option value="">Select Department</option>
-                @foreach($departments as $dept)
-                <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
-                @endforeach
-            </select>
-            @else
-            <input type="text" class="form-control" value="{{ auth()->user()->department->name ?? 'N/A' }}" readonly>
-            <input type="hidden" name="department_id" value="{{ auth()->user()->department_id }}">
-            @endif
-            @error('department_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <label class="form-label">Department</label>
+            {{-- Users always use their own department -- no selection allowed --}}
+            <input type="text" class="form-control bg-light" value="{{ auth()->user()->department->name ?? 'N/A' }}" readonly>
+            <div class="form-text text-muted">
+                <i class="fa-solid fa-lock me-1"></i>Files are registered to your assigned department.
+            </div>
         </div>
 
         <div class="mb-3">

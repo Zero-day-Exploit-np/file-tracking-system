@@ -1,15 +1,16 @@
 @extends('layouts.app')
-@section('title', 'Create Admin User')
+@section('title', 'Create Admin Account')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('users.index') }}">Admin Users</a></li>
-<li class="breadcrumb-item active">Create</li>
+<li class="breadcrumb-item"><a href="{{ route('users.index') }}">Admin Management</a></li>
+<li class="breadcrumb-item active">Create Admin</li>
 @endsection
 
 @section('content')
 <div class="page-header">
     <div>
-        <h1 class="page-title">Create Admin User</h1>
+        <h1 class="page-title">Create Admin Account</h1>
+        <div class="page-subtitle">Admin accounts are created and managed by Super Admin only.</div>
     </div>
     <a href="{{ route('users.index') }}" class="btn-portal-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
 </div>
@@ -18,6 +19,12 @@
     <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data" class="portal-form">
         @csrf
         <div class="row g-3">
+            <div class="col-12">
+                <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>This form creates an <strong>Admin</strong> account. Admins can manage users within their department and approve file transfers.</span>
+                </div>
+            </div>
             <div class="col-md-6">
                 <label class="form-label">Full Name <span class="required-star">*</span></label>
                 <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
@@ -40,17 +47,11 @@
                 <input type="password" name="password_confirmation" class="form-control" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Role <span class="required-star">*</span></label>
-                <select name="role" class="form-select @error('role') is-invalid @enderror" required>
-                    <option value="">Select Role</option>
-                    {{-- Super Admin is system-reserved — never created via UI --}}
-                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                    <option value="user" {{ old('role') === 'user'  ? 'selected' : '' }}>User</option>
-                </select>
-                @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <label class="form-label">Role</label>
+                <input type="text" class="form-control bg-light" value="Admin" readonly>
                 <div class="form-text text-muted">
                     <i class="fa-solid fa-lock me-1"></i>
-                    Super Admin accounts can only be created via system command.
+                    Super Admin can only create Admin accounts via this form.
                 </div>
             </div>
             <div class="col-md-6">
@@ -81,15 +82,9 @@
                 <input type="file" name="photo" class="form-control @error('photo') is-invalid @enderror" accept="image/jpeg,image/png">
                 @error('photo')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-            <div class="col-12">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="can_create_file" value="1" id="canCreate">
-                    <label class="form-check-label" for="canCreate">Allow file creation</label>
-                </div>
-            </div>
         </div>
         <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn-portal-primary"><i class="fa-solid fa-floppy-disk"></i> Create User</button>
+            <button type="submit" class="btn-portal-primary"><i class="fa-solid fa-floppy-disk"></i> Create Admin</button>
             <a href="{{ route('users.index') }}" class="btn-portal-outline">Cancel</a>
         </div>
     </form>
@@ -105,21 +100,11 @@
         function syncDesignations() {
             var departmentId = departmentSelect.value;
             Array.from(designationSelect.options).forEach(function(opt) {
-                var isDefault = opt.value === '';
-                if (isDefault) {
-                    opt.hidden = false;
-                    return;
-                }
-                var optionDept = opt.dataset.departmentId;
-                opt.hidden = departmentId && optionDept !== departmentId;
+                if (opt.value === '') { opt.hidden = false; return; }
+                opt.hidden = departmentId && opt.dataset.departmentId !== departmentId;
             });
-
-            // If current selection is hidden, reset it
-            if (designationSelect.selectedOptions.length > 0) {
-                var selected = designationSelect.selectedOptions[0];
-                if (selected.hidden) {
-                    designationSelect.value = '';
-                }
+            if (designationSelect.selectedOptions[0] && designationSelect.selectedOptions[0].hidden) {
+                designationSelect.value = '';
             }
         }
 

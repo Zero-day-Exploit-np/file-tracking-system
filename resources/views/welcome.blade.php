@@ -30,7 +30,11 @@
                         <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#features">Features</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#workflow">Workflow</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#stats">Statistics</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#upload">Public Upload</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('public.file.search') }}">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i>File Search
+                            </a>
+                        </li>
                         <li class="nav-item ms-lg-2">
                             <a href="{{ route('login') }}" class="btn btn-primary btn-sm px-3">Login</a>
                         </li>
@@ -49,8 +53,12 @@
                         <h1>Track Every File.<br><span>Monitor Every Movement.</span></h1>
                         <p class="hero-text">A secure, transparent, and efficient system for managing official records, departmental transfers, approvals, and document accountability.</p>
                         <div class="d-flex gap-3 flex-wrap">
-                            <a href="#upload" class="btn btn-primary btn-lg"> <i class="fa-solid fa-cloud-arrow-up me-2"></i> Upload File</a>
-                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg"> <i class="fa-solid fa-right-to-bracket me-2"></i> Login</a>
+                            <a href="{{ route('public.file.search') }}" class="btn btn-primary btn-lg">
+                                <i class="fa-solid fa-magnifying-glass me-2"></i> Search File
+                            </a>
+                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fa-solid fa-right-to-bracket me-2"></i> Login
+                            </a>
                         </div>
                         <div class="hero-highlights mt-4">
                             <span><i class="fa-solid fa-circle-check"></i> Department-wise records</span>
@@ -61,7 +69,7 @@
                     <div class="col-lg-5">
                         <div class="hero-card">
                             <div class="hero-card-head">
-                                <span>Today’s Overview</span>
+                                <span>Today's Overview</span>
                                 <span class="badge bg-success-subtle text-success">Live</span>
                             </div>
                             <div class="hero-card-body">
@@ -133,7 +141,7 @@
                     ['icon' => 'fa-user-gear', 'title' => 'User Management', 'text' => 'Assign roles, maintain records, and control access levels securely.'],
                     ['icon' => 'fa-check-to-slot', 'title' => 'Transfer Approval', 'text' => 'Approve or reject transfer requests with full audit history.'],
                     ['icon' => 'fa-timeline', 'title' => 'Timeline Tracking', 'text' => 'See every event in the file lifecycle from creation to delivery.'],
-                    ['icon' => 'fa-magnifying-glass', 'title' => 'Search & Filters', 'text' => 'Locate records quickly with advanced search, status, and date filters.']
+                    ['icon' => 'fa-magnifying-glass', 'title' => 'Public File Search', 'text' => 'Anyone can search for a file using its File Number — no login required.']
                     ])
                     @foreach($featureCards as $card)
                     <div class="col-md-6 col-lg-4">
@@ -193,13 +201,13 @@
                     <div class="col-md-4">
                         <div class="role-card">
                             <h5>Super Admin</h5>
-                            <p>Full system oversight, department control, and advanced administrative access.</p>
+                            <p>Full system oversight, department control, and creates/manages Admin accounts.</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="role-card">
                             <h5>Admin</h5>
-                            <p>Handles transfers, approvals, user coordination, and file monitoring.</p>
+                            <p>Handles transfers, approvals, manages users within their department.</p>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -243,51 +251,35 @@
             </div>
         </section>
 
-        <section class="section-padding bg-soft" id="upload">
+        {{-- PUBLIC FILE SEARCH SECTION --}}
+        <section class="section-padding bg-soft" id="file-search">
             <div class="container">
                 <div class="row g-5 align-items-center">
                     <div class="col-lg-6">
-                        <span class="eyebrow">Public File Submission</span>
-                        <h2 class="section-title">Submit a file without logging in</h2>
-                        <p class="section-text">Applicants and visitors can submit documents directly for review. Uploaded files are stored securely for later admin access.</p>
+                        <span class="eyebrow">Public File Search</span>
+                        <h2 class="section-title">Check your file status instantly</h2>
+                        <p class="section-text">Search for any registered file using its File Number. No login required. Only safe, public information is displayed.</p>
+                        <ul class="feature-list">
+                            <li><i class="fa-solid fa-square-check"></i> Search by File Number</li>
+                            <li><i class="fa-solid fa-square-check"></i> View current status</li>
+                            <li><i class="fa-solid fa-square-check"></i> No account required</li>
+                        </ul>
                     </div>
                     <div class="col-lg-6">
                         <div class="upload-card">
-                            @if(session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                            @endif
-                            @if($errors->any())
-                            <div class="alert alert-danger">
-                                <ul class="mb-0">
-                                    @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            @endif
-                            <form action="{{ route('public-files.store') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <input type="text" name="applicant_name" value="{{ old('applicant_name') }}" class="form-control" placeholder="Applicant Name" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <input type="email" name="email" value="{{ old('email') }}" class="form-control" placeholder="Email" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <input type="text" name="contact_number" value="{{ old('contact_number') }}" class="form-control" placeholder="Contact Number" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <input type="text" name="subject" value="{{ old('subject') }}" class="form-control" placeholder="Subject" required>
-                                    </div>
-                                    <div class="col-12">
-                                        <input type="file" name="attachment" class="form-control" required>
-                                    </div>
-                                    <div class="col-12">
-                                        <textarea name="remarks" class="form-control" rows="4" placeholder="Remarks">{{ old('remarks') }}</textarea>
-                                    </div>
-                                    <div class="col-12"><button type="submit" class="btn btn-primary w-100">Submit File</button></div>
+                            <form action="{{ route('public.file.search.result') }}" method="GET">
+                                <h5 class="fw-700 mb-3"><i class="fa-solid fa-magnifying-glass me-2 text-primary"></i>Public File Search</h5>
+                                <div class="mb-3">
+                                    <label class="form-label fw-600">File Number</label>
+                                    <input type="text" name="file_number" class="form-control" placeholder="Enter File Number (e.g. FILE-ABCD1234XY)" required autocomplete="off">
                                 </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa-solid fa-search me-1"></i> Search
+                                </button>
+                                <p class="text-muted mt-2 mb-0" style="font-size:.82rem;">
+                                    <i class="fa-solid fa-shield-halved me-1"></i>
+                                    Only public information is shown. No internal data is exposed.
+                                </p>
                             </form>
                         </div>
                     </div>
@@ -342,7 +334,12 @@
             <div class="container text-center">
                 <h2 class="section-title text-white">Ready to manage your records securely?</h2>
                 <p class="text-white-50 mb-4">Access the complete dashboard to handle files, approvals, and departmental workflows.</p>
-                <a href="{{ route('login') }}" class="btn btn-primary btn-lg">Login to Continue</a>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{{ route('login') }}" class="btn btn-primary btn-lg">Login to Continue</a>
+                    <a href="{{ route('public.file.search') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fa-solid fa-magnifying-glass me-2"></i>Search a File
+                    </a>
+                </div>
             </div>
         </section>
     </main>

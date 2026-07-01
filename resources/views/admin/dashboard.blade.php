@@ -17,13 +17,9 @@
             <i class="fa-solid fa-right-left me-1"></i>Transfer Requests
             @if($pendingRequests > 0)<span class="badge bg-warning text-dark ms-1">{{ $pendingRequests }}</span>@endif
         </a>
-        @can('create', App\Models\FileRecord::class)
-        <a href="{{ route('files.create') }}" class="btn-portal-primary">
-            <i class="fa-solid fa-plus me-1"></i>New File
+        <a href="{{ route('public.file.search') }}" class="btn-portal-outline">
+            <i class="fa-solid fa-magnifying-glass me-1"></i>File Search
         </a>
-        @else
-        <span class="badge-status badge-pending align-self-center">File creation permission not granted</span>
-        @endcan
     </div>
 </div>
 

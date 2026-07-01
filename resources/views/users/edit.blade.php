@@ -1,15 +1,15 @@
 @extends('layouts.app')
-@section('title', 'Edit User')
+@section('title', 'Edit Admin Account')
 
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('users.index') }}">Admin Users</a></li>
+<li class="breadcrumb-item"><a href="{{ route('users.index') }}">Admin Management</a></li>
 <li class="breadcrumb-item active">Edit</li>
 @endsection
 
 @section('content')
 <div class="page-header">
     <div>
-        <h1 class="page-title">Edit User</h1>
+        <h1 class="page-title">Edit Admin Account</h1>
         <div class="page-subtitle">Update details for {{ $user->name }}</div>
     </div>
     <a href="{{ route('users.index') }}" class="btn-portal-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
@@ -19,14 +19,14 @@
     <form method="POST" action="{{ route('users.update', $user->uuid) }}" enctype="multipart/form-data" class="portal-form">
         @csrf @method('PUT')
         <div class="row g-3">
+            @if($user->photo_url)
             <div class="col-12">
-                @if($user->photo_url)
                 <div class="mb-3 d-flex align-items-center gap-3">
                     <img src="{{ $user->photo_url }}" alt="{{ $user->name }}" class="rounded-circle" style="width:72px;height:72px;object-fit:cover;">
                     <div class="text-muted">Current profile photo for {{ $user->name }}</div>
                 </div>
-                @endif
             </div>
+            @endif
             <div class="col-md-6">
                 <label class="form-label">Full Name <span class="required-star">*</span></label>
                 <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
@@ -49,11 +49,8 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label">Role</label>
-                <select name="role" class="form-select">
-                    <option value="super_admin" {{ $user->role === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                    <option value="admin" {{ $user->role === 'admin'       ? 'selected' : '' }}>Admin</option>
-                    <option value="user" {{ $user->role === 'user'        ? 'selected' : '' }}>User</option>
-                </select>
+                <input type="text" class="form-control bg-light" value="Admin" readonly>
+                <div class="form-text text-muted"><i class="fa-solid fa-lock me-1"></i>Role cannot be changed here.</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Department</label>
@@ -78,9 +75,14 @@
                 <label class="form-label">Contact Number</label>
                 <input type="text" name="contact_number" class="form-control" value="{{ old('contact_number', $user->contact_number) }}">
             </div>
+            <div class="col-md-6">
+                <label class="form-label">Profile Photo</label>
+                <input type="file" name="photo" class="form-control @error('photo') is-invalid @enderror" accept="image/jpeg,image/png">
+                @error('photo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
         </div>
         <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn-portal-primary"><i class="fa-solid fa-floppy-disk"></i> Update User</button>
+            <button type="submit" class="btn-portal-primary"><i class="fa-solid fa-floppy-disk"></i> Update Admin</button>
             <a href="{{ route('users.index') }}" class="btn-portal-outline">Cancel</a>
         </div>
     </form>
@@ -94,25 +96,14 @@
         var designationSelect = document.getElementById('designationSelect');
 
         function syncDesignations() {
-            if (!departmentSelect || !designationSelect) {
-                return;
-            }
+            if (!departmentSelect || !designationSelect) return;
             var departmentId = departmentSelect.value;
             Array.from(designationSelect.options).forEach(function(opt) {
-                var isDefault = opt.value === '';
-                if (isDefault) {
-                    opt.hidden = false;
-                    return;
-                }
-                var optionDept = opt.dataset.departmentId;
-                opt.hidden = departmentId && optionDept !== departmentId;
+                if (opt.value === '') { opt.hidden = false; return; }
+                opt.hidden = departmentId && opt.dataset.departmentId !== departmentId;
             });
-
-            if (designationSelect.selectedOptions.length > 0) {
-                var selected = designationSelect.selectedOptions[0];
-                if (selected.hidden) {
-                    designationSelect.value = '';
-                }
+            if (designationSelect.selectedOptions[0] && designationSelect.selectedOptions[0].hidden) {
+                designationSelect.value = '';
             }
         }
 

@@ -11,11 +11,19 @@ use App\Models\User;
 use App\Models\Department;
 use App\Models\Designation;
 
+/**
+ * UserController — Super Admin only.
+ * Manages ADMIN accounts exclusively.
+ * Super Admin cannot create regular users (only admins).
+ */
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with(['department', 'designation'])->latest();
+        // Super Admin sees only admins (not users, not other super_admins)
+        $query = User::with(['department', 'designation'])
+            ->where('role', 'admin')
+            ->latest();
 
         if ($request->filled('search')) {
             $search = $request->string('search')->trim()->value();
@@ -23,10 +31,6 @@ class UserController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             });
-        }
-
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
         }
 
         if ($request->filled('department_id')) {
@@ -52,22 +56,17 @@ class UserController extends Controller
             'name'           => 'required|string|max:255',
             'email'          => 'required|email:rfc,dns|max:255|unique:users,email',
             'password'       => 'required|min:8|confirmed',
-            'role'           => 'required|in:admin,user', // super_admin never via UI
             'department_id'  => 'nullable|exists:departments,id',
             'designation_id' => 'nullable|exists:designations,id',
             'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
             'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'can_create_file' => 'nullable|boolean',
         ]);
 
-        // Extra server-side guard — super_admin is system-reserved
-        if ($request->role === 'super_admin') {
-            abort(403, 'Super Admin accounts cannot be created via the web interface.');
-        }
-
-        $data = $request->only(['name', 'email', 'role', 'department_id', 'designation_id', 'contact_number']);
+        // Super Admin can ONLY create Admin accounts — no privilege escalation
+        $data = $request->only(['name', 'email', 'department_id', 'designation_id', 'contact_number']);
         $data['password']        = Hash::make($request->password);
-        $data['can_create_file'] = $request->boolean('can_create_file');
+        $data['role']            = 'admin'; // always admin — hard-coded
+        $data['can_create_file'] = false;   // admins never create files
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->storePhoto($request);
@@ -78,21 +77,29 @@ class UserController extends Controller
         $this->recordAudit('user_created', $user, [
             'name'  => $user->name,
             'email' => $user->email,
-            'role'  => $user->role,
+            'role'  => 'admin',
             'ip'    => $request->ip(),
-        ], 'Admin user created by ' . Auth::user()->name);
+        ], 'Admin account created by Super Admin: ' . Auth::user()->name);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        return redirect()->route('users.index')->with('success', 'Admin account created successfully.');
     }
 
     public function show(User $user)
     {
+        // Only show admins
+        if ($user->role !== 'admin') {
+            abort(403, 'Access denied.');
+        }
         $user->load(['department', 'designation']);
         return view('users.show', compact('user'));
     }
 
     public function edit(User $user)
     {
+        // Only edit admins
+        if ($user->role !== 'admin') {
+            abort(403, 'Access denied.');
+        }
         $departments  = Department::orderBy('name')->get();
         $designations = Designation::with('department')->orderBy('name')->get();
         return view('users.edit', compact('user', 'departments', 'designations'));
@@ -100,25 +107,23 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        // Only update admins
+        if ($user->role !== 'admin') {
+            abort(403, 'Access denied.');
+        }
+
         $request->validate([
             'name'           => 'required|string|max:255',
             'email'          => 'required|email:rfc,dns|max:255|unique:users,email,' . $user->id,
-            'role'           => 'required|in:admin,user', // super_admin never via UI
             'department_id'  => 'nullable|exists:departments,id',
             'designation_id' => 'nullable|exists:designations,id',
             'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
             'password'       => 'nullable|min:8|confirmed',
             'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'can_create_file' => 'nullable|boolean',
         ]);
 
-        if ($request->role === 'super_admin' && $user->role !== 'super_admin') {
-            abort(403, 'Super Admin role cannot be assigned via the web interface.');
-        }
-
-        // Only allow updating safe fields (not id, remember_token, etc.)
-        $data = $request->only(['name', 'email', 'role', 'department_id', 'designation_id', 'contact_number']);
-        $data['can_create_file'] = $request->boolean('can_create_file');
+        // role stays 'admin' — cannot be changed via this form
+        $data = $request->only(['name', 'email', 'department_id', 'designation_id', 'contact_number']);
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -133,11 +138,16 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect()->route('users.index')->with('success', 'Admin updated successfully.');
     }
 
     public function destroy(User $user)
     {
+        // Only delete admins
+        if ($user->role !== 'admin') {
+            abort(403, 'Access denied.');
+        }
+
         if ($user->id === Auth::id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
@@ -147,19 +157,13 @@ class UserController extends Controller
             'email' => $user->email,
             'role'  => $user->role,
             'ip'    => request()->ip(),
-        ], 'User deleted by ' . Auth::user()->name);
+        ], 'Admin deleted by Super Admin: ' . Auth::user()->name);
 
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        return redirect()->route('users.index')->with('success', 'Admin deleted successfully.');
     }
 
-    /**
-     * Store a profile photo securely.
-     * - Uses random filename (never trusts user-provided name)
-     * - Stores in storage/app/public/uploads/users (not public_path)
-     * - Returns stored path
-     */
     private function storePhoto(Request $request): string
     {
         $file      = $request->file('photo');

@@ -9,18 +9,26 @@ use App\Models\User;
 class FileRecordPolicy
 {
     /**
-     * Super Admin: can view/download/transfer but CANNOT create files.
+     * Super Admin and Admin: can view files but CANNOT create files.
+     * Only role === 'user' may create files (with can_create_file flag).
      */
     public function before(User $user, string $ability): ?bool
     {
+        // Super Admin: can view/download but NOT create
         if ($user->role === 'super_admin') {
-            // Block create/store
             if (in_array($ability, ['create', 'store'], true)) {
                 return false;
             }
-            // Allow all other abilities
             return true;
         }
+
+        // Admin: can view dept files but NOT create
+        if ($user->role === 'admin') {
+            if (in_array($ability, ['create', 'store'], true)) {
+                return false;
+            }
+        }
+
         return null;
     }
 
@@ -45,19 +53,20 @@ class FileRecordPolicy
     }
 
     /**
-     * Transfer: must be current holder OR same-department admin.
+     * Transfer: must be current holder.
      * Files with pending_transfer status cannot be transferred again.
+     * Only users may transfer (admins and super_admins cannot).
      */
     public function transfer(User $user, FileRecord $file): bool
     {
-        // Never allow transfer on a file already pending
-        if ($file->status === 'pending_transfer') {
+        // Only users can transfer files
+        if ($user->role !== 'user') {
             return false;
         }
 
-        // Same-department admin can initiate transfer
-        if ($user->role === 'admin' && (int) $user->department_id === (int) $file->department_id) {
-            return true;
+        // Never allow transfer on a file already pending
+        if ($file->status === 'pending_transfer') {
+            return false;
         }
 
         // Only current holder may transfer
@@ -65,12 +74,12 @@ class FileRecordPolicy
     }
 
     /**
-     * Create: admins and users granted can_create_file.
-     * Super Admin is explicitly BLOCKED via before().
+     * Create: ONLY role === 'user' with can_create_file flag.
+     * Admin and Super Admin are BLOCKED via before().
      */
     public function create(User $user): bool
     {
-        return $user->role === 'admin' || (bool) $user->can_create_file;
+        return $user->role === 'user' && (bool) $user->can_create_file;
     }
 
     // ──────────────────────────────────────────────────────────
@@ -81,7 +90,7 @@ class FileRecordPolicy
      * A user has access if they are:
      * 1. The creator
      * 2. The current holder
-     * 3. A same-department admin
+     * 3. A same-department admin (read-only)
      * 4. Previously involved as sender OR receiver in file_transfers
      */
     private function hasFileAccess(User $user, FileRecord $file): bool
@@ -92,7 +101,7 @@ class FileRecordPolicy
         // 2. Current holder
         if ((int) $file->current_user_id === $user->id) return true;
 
-        // 3. Same-department admin
+        // 3. Same-department admin (read-only view)
         if ($user->role === 'admin' && (int) $user->department_id === (int) $file->department_id) {
             return true;
         }

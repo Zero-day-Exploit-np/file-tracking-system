@@ -1,24 +1,19 @@
 <?php
 
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+/**
+ * Public File Upload has been removed from this system.
+ * Public users can now search files using the Public File Search feature.
+ *
+ * @see PublicFileSearchController
+ * @see /public/file-search
+ */
 
-it('stores a public file submission successfully', function () {
-    Storage::fake('public');
+it('public file search page loads successfully', function () {
+    $response = $this->get(route('public.file.search'));
+    $response->assertStatus(200);
+});
 
-    $response = $this->post(route('public-files.store'), [
-        'applicant_name' => 'Aarav Sharma',
-        'email' => 'aarav@example.com',
-        'contact_number' => '9876543210',
-        'subject' => 'Request for document review',
-        'remarks' => 'Please review the attached file.',
-        'attachment' => UploadedFile::fake()->create('sample.pdf', 120, 'application/pdf'),
-    ]);
-
-    $response->assertRedirect();
-    $response->assertSessionHas('success');
-    $this->assertDatabaseHas('public_files', [
-        'email' => 'aarav@example.com',
-        'subject' => 'Request for document review',
-    ]);
+it('returns no result for nonexistent file number', function () {
+    $response = $this->get(route('public.file.search.result', ['file_number' => 'INVALID-00000']));
+    $response->assertSessionHas('search_error');
 });

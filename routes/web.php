@@ -9,7 +9,7 @@ use App\Http\Controllers\FileRecordController;
 use App\Http\Controllers\FileTransferController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LandingPageController;
-use App\Http\Controllers\PublicFileController;
+use App\Http\Controllers\PublicFileSearchController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserDashboardController;
 
@@ -30,14 +30,13 @@ use App\Http\Controllers\Admin\BackupController;
 Route::get('/', [LandingPageController::class, 'index'])->name('welcome');
 Route::get('/about',           fn() => redirect('/#about'))->name('about');
 Route::get('/features',        fn() => redirect('/#features'))->name('features');
-Route::get('/public-upload',   fn() => redirect('/#upload'))->name('public-upload');
 Route::get('/privacy-policy',  fn() => view('pages.privacy'))->name('privacy');
 Route::get('/terms',           fn() => view('pages.terms'))->name('terms');
 Route::get('/help',            fn() => view('pages.help'))->name('help');
 
-Route::post('/public-files', [PublicFileController::class, 'store'])
-    ->middleware('throttle:public-upload')
-    ->name('public-files.store');
+// Public File Search — accessible by anyone without login
+Route::get('/public/file-search', [PublicFileSearchController::class, 'index'])->name('public.file.search');
+Route::get('/public/file-search/result', [PublicFileSearchController::class, 'search'])->name('public.file.search.result');
 
 /*
 |--------------------------------------------------------------------------
@@ -61,15 +60,18 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
     Route::put('/profile/password',[ProfileController::class, 'changePassword'])->name('profile.password.update');
     Route::delete('/profile',      [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Files — UUID-based route model binding (FileRecord::getRouteKeyName = 'uuid')
-    Route::get('/files',               [FileRecordController::class, 'index'])->name('files.index');
-    Route::get('/files/create',        [FileRecordController::class, 'create'])->name('files.create');
-    Route::post('/files',              [FileRecordController::class, 'store'])->name('files.store');
-    Route::get('/files/{file}',        [FileRecordController::class, 'show'])->name('files.show');
+    // Files — only role:user may create/store; view/show is broader (policy handles it)
+    Route::get('/files',        [FileRecordController::class, 'index'])->name('files.index');
+    Route::get('/files/{file}', [FileRecordController::class, 'show'])->name('files.show');
 
-    // Transfer uses UUID
-    Route::get('/files/{file}/transfer', [FileTransferController::class, 'create'])->name('files.transfer.create');
-    Route::post('/files/transfer',       [FileTransferController::class, 'store'])->name('files.transfer.store');
+    // File creation — USER ONLY via route + policy
+    Route::middleware('role:user')->group(function () {
+        Route::get('/files/create',  [FileRecordController::class, 'create'])->name('files.create');
+        Route::post('/files',        [FileRecordController::class, 'store'])->name('files.store');
+        // Transfer — user only initiates
+        Route::get('/files/{file}/transfer', [FileTransferController::class, 'create'])->name('files.transfer.create');
+        Route::post('/files/transfer',       [FileTransferController::class, 'store'])->name('files.transfer.store');
+    });
 
     // Notifications
     Route::get('/notifications',             [NotificationController::class, 'index'])->name('notifications.index');
@@ -83,26 +85,21 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
 | USER DASHBOARD — role:user only
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
-    Route::get('/user/dashboard', function () {
-        // If a non-user somehow hits this, redirect to their dashboard
-        $role = auth()->user()->role;
-        if ($role !== 'user') {
-            return redirect()->route($role === 'super_admin' ? 'super_admin.dashboard' : 'admin.dashboard');
-        }
-        return app(\App\Http\Controllers\UserDashboardController::class)->index();
-    })->name('user.dashboard');
+Route::middleware(['auth', 'verified', 'no.cache', 'role:user'])->group(function () {
+    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 });
 
 /*
 |--------------------------------------------------------------------------
-| SUPER ADMIN
+| SUPER ADMIN — can create/manage admins, departments, designations
+| CANNOT: create files, create users (only admins)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:super_admin', 'no.cache'])->group(function () {
-    // UUID-based route binding via Department/User model getRouteKeyName
     Route::resource('departments', DepartmentController::class);
-    Route::resource('users',       UserController::class);
+
+    // Super Admin manages ADMINS only (not users)
+    Route::resource('users', UserController::class);
 
     Route::get('/super-admin/dashboard', [AdminDashboardController::class, 'index'])
         ->name('super_admin.dashboard');
@@ -119,7 +116,7 @@ Route::middleware(['auth', 'role:super_admin,admin', 'no.cache'])->group(functio
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN PANEL
+| ADMIN PANEL — admin + super_admin can view; some actions are role-scoped
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')
@@ -130,16 +127,16 @@ Route::prefix('admin')
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/poll', [AdminDashboardController::class, 'poll'])->name('dashboard.poll');
 
-        // Users & designations (UUID binding)
+        // Admin manages USERS only (not admins) — scoped to own department
         Route::resource('users',        AdminUserController::class);
         Route::resource('designations', AdminDesignationController::class);
 
-        // Files — UUID-based timeline (no numeric ID in URL)
+        // Files (read-only for admin/super_admin — users create)
         Route::get('/files',                    [AdminFileController::class, 'index'])->name('files');
         Route::get('/files/{uuid}/timeline',    [FileTimelineController::class, 'show'])->name('files.timeline');
         Route::get('/files/{uuid}',             [FileTimelineController::class, 'fileDetails'])->name('files.show');
 
-        // Transfer requests
+        // Transfer requests — approve/reject is admin-only
         Route::get('/transfer-requests', [TransferApprovalController::class, 'index'])->name('transfer.requests');
 
         Route::post('/transfer-requests/{uuid}/approve', [TransferApprovalController::class, 'approve'])
@@ -150,14 +147,10 @@ Route::prefix('admin')
             ->middleware('role:admin')
             ->name('transfer.reject');
 
-        // Public files — private storage, auth-protected download
-        Route::get('/public-files',                [PublicFileController::class, 'index'])->name('public-files.index');
-        Route::get('/public-files/{uuid}/download', [PublicFileController::class, 'download'])->name('public-files.download');
-
         // Audit logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
-        // Backup — super_admin only (route-level enforcement; Laravel 12 removed controller middleware)
+        // Backup — super_admin only
         Route::middleware('role:super_admin')->group(function () {
             Route::get('/backup',                     [BackupController::class, 'index'])->name('backup.index');
             Route::post('/backup',                    [BackupController::class, 'create'])->name('backup.create');

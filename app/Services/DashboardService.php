@@ -7,7 +7,6 @@ use App\Models\Designation;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
 use App\Models\FileTransfer;
-use App\Models\PublicFile;
 use App\Models\TransferRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -27,7 +26,7 @@ class DashboardService
             'total_departments'  => Department::count(),
             'total_users'        => User::count(),
             'pending_transfers'  => TransferRequest::where('status', 'pending')->count(),
-            'public_submissions' => PublicFile::count(),
+            'total_admins'       => User::where('role', 'admin')->count(),
         ]);
     }
 

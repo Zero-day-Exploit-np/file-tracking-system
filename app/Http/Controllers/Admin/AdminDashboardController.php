@@ -27,7 +27,7 @@ class AdminDashboardController extends Controller
                 'totalDepartments'     => $stats['total_departments'],
                 'totalUsers'           => $stats['total_users'],
                 'pendingTransfers'     => $stats['pending_transfers'],
-                'publicSubmissions'    => $stats['public_submissions'],
+                'totalAdmins'          => $stats['total_admins'],
                 'auditStats'           => $audit,
                 'departmentFileCounts' => $depts,
                 'recentTransfers'      => $recent['recentTransfers'],

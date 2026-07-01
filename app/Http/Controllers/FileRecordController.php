@@ -63,6 +63,11 @@ class FileRecordController extends Controller
 
     public function create()
     {
+        // Only role:user can create files — enforced at route + policy level
+        // If an admin/super_admin somehow hits this, abort 403
+        if (Auth::user()->role !== 'user') {
+            abort(403, 'Only users can create files.');
+        }
         $this->authorize('create', FileRecord::class);
         $departments = Department::orderBy('name')->get();
         return view('files.create', compact('departments'));
@@ -70,17 +75,19 @@ class FileRecordController extends Controller
 
     public function store(Request $request)
     {
+        // Only role:user can store files
+        if (Auth::user()->role !== 'user') {
+            abort(403, 'Only users can create files.');
+        }
         $this->authorize('create', FileRecord::class);
 
         $request->validate([
-            'department_id' => 'required|exists:departments,id',
-            'file_name'     => 'required|string|max:255',
-            'remarks'       => 'nullable|string|max:1000',
+            'file_name' => 'required|string|max:255',
+            'remarks'   => 'nullable|string|max:1000',
         ]);
 
-        $deptId = Auth::user()->role === 'super_admin'
-            ? (int) $request->department_id
-            : Auth::user()->department_id;
+        // User always uses their own department
+        $deptId = Auth::user()->department_id;
 
         $file = FileRecord::create([
             'created_by'      => Auth::id(),
@@ -140,8 +147,8 @@ class FileRecordController extends Controller
         $this->authorize('download', $file);
 
         try {
-            // File records in this system don't have physical attachments
-            // (those are in PublicFile). This action logs the access.
+            // File records in this system are tracked documents without physical attachments.
+            // This action logs the access.
             AuditLog::create([
                 'user_id'        => Auth::id(),
                 'action'         => 'file_accessed',

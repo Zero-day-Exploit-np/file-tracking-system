@@ -11,9 +11,7 @@
         <h1 class="page-title">Department Files</h1>
         <div class="page-subtitle">View and manage all files in your department</div>
     </div>
-    @can('create', App\Models\FileRecord::class)
-    <a href="{{ route('files.create') }}" class="btn-portal-primary"><i class="fa-solid fa-plus"></i> New File</a>
-    @endcan
+    {{-- Admins and Super Admins cannot create files — only Users can --}}
     <form action="{{ route('admin.files') }}" method="GET" class="d-flex flex-wrap gap-2 align-items-center mb-4">
         <input type="text" name="search" class="form-control" style="max-width:220px;"
             placeholder="File name or number..." value="{{ request('search') }}">

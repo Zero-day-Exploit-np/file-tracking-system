@@ -12,7 +12,8 @@
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="{{ route('departments.create') }}" class="btn-portal-outline"><i class="fa-solid fa-plus me-1"></i>Department</a>
-        <a href="{{ route('users.create') }}"       class="btn-portal-primary"><i class="fa-solid fa-user-plus me-1"></i>Admin User</a>
+        <a href="{{ route('users.create') }}"       class="btn-portal-primary"><i class="fa-solid fa-user-shield me-1"></i>Create Admin</a>
+        <a href="{{ route('public.file.search') }}" class="btn-portal-outline"><i class="fa-solid fa-magnifying-glass me-1"></i>File Search</a>
     </div>
 </div>
 
@@ -44,8 +45,8 @@
     </div>
     <div class="col-6 col-md-4 col-xl-2">
         <div class="stat-kpi">
-            <div class="stat-kpi-icon red"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-            <div><div class="stat-kpi-label">Public Uploads</div><div class="stat-kpi-value">{{ $publicSubmissions }}</div></div>
+            <div class="stat-kpi-icon blue"><i class="fa-solid fa-user-shield"></i></div>
+            <div><div class="stat-kpi-label">Admin Accounts</div><div class="stat-kpi-value">{{ $totalAdmins }}</div></div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-xl-2">

@@ -13,13 +13,13 @@
             &mdash; {{ auth()->user()->designation->name ?? '' }}
         </div>
     </div>
-    @can('create', App\Models\FileRecord::class)
+    @if(auth()->user()->role === 'user' && auth()->user()->can_create_file)
     <a href="{{ route('files.create') }}" class="btn-portal-primary">
         <i class="fa-solid fa-plus me-1"></i>New File
     </a>
-    @else
+    @elseif(auth()->user()->role === 'user')
     <span class="badge-status badge-pending">File creation permission not granted</span>
-    @endcan
+    @endif
 </div>
 
 {{-- KPI ROW --}}

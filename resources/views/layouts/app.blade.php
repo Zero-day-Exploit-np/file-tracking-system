@@ -97,19 +97,17 @@
                 <i class="fa-solid fa-folder-open"></i><span>All Files</span>
             </a>
 
+            {{-- Admin: User Management (dept users only) --}}
+            @if($isAdmin)
             <a href="{{ route('admin.users.index') }}"
                 class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-users"></i><span>Users</span>
+                <i class="fa-solid fa-users"></i><span>User Management</span>
             </a>
+            @endif
 
             <a href="{{ route('admin.designations.index') }}"
                 class="sidebar-link {{ request()->routeIs('admin.designations.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-id-badge"></i><span>Designations</span>
-            </a>
-
-            <a href="{{ route('admin.public-files.index') }}"
-                class="sidebar-link {{ request()->routeIs('admin.public-files.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-cloud-arrow-up"></i><span>Public Uploads</span>
             </a>
 
             <a href="{{ route('admin.audit.logs') }}"
@@ -136,9 +134,11 @@
 
             <a href="{{ route('users.index') }}"
                 class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-user-shield"></i><span>Admin Users</span>
+                <i class="fa-solid fa-user-shield"></i><span>Admin Management</span>
             </a>
             @endif
+
+         
 
             {{-- ── ACCOUNT ─────────────────────────────────────── --}}
             <div class="nav-section-label mt-2">Account</div>

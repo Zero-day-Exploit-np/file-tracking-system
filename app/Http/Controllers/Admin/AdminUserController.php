@@ -56,7 +56,7 @@ class AdminUserController extends Controller
             'password'        => Hash::make($request->password),
             'designation_id'  => $request->designation_id,
             'department_id'   => Auth::user()->department_id,
-            'role'            => 'user',
+            'role'            => 'user',  // Admin can ONLY create users — hard-coded
             'contact_number'  => $request->contact_number,
             'can_create_file' => $request->boolean('can_create_file'),
         ];
