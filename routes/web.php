@@ -60,18 +60,15 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
     Route::put('/profile/password',[ProfileController::class, 'changePassword'])->name('profile.password.update');
     Route::delete('/profile',      [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Files — only role:user may create/store; view/show is broader (policy handles it)
-    Route::get('/files',        [FileRecordController::class, 'index'])->name('files.index');
-    Route::get('/files/{file}', [FileRecordController::class, 'show'])->name('files.show');
+    // Files — UUID-based route model binding (FileRecord::getRouteKeyName = 'uuid')
+    Route::get('/files',               [FileRecordController::class, 'index'])->name('files.index');
+    Route::get('/files/create',        [FileRecordController::class, 'create'])->name('files.create');
+    Route::post('/files',              [FileRecordController::class, 'store'])->name('files.store');
+    Route::get('/files/{file}',        [FileRecordController::class, 'show'])->name('files.show');
 
-    // File creation — USER ONLY via route + policy
-    Route::middleware('role:user')->group(function () {
-        Route::get('/files/create',  [FileRecordController::class, 'create'])->name('files.create');
-        Route::post('/files',        [FileRecordController::class, 'store'])->name('files.store');
-        // Transfer — user only initiates
-        Route::get('/files/{file}/transfer', [FileTransferController::class, 'create'])->name('files.transfer.create');
-        Route::post('/files/transfer',       [FileTransferController::class, 'store'])->name('files.transfer.store');
-    });
+    // Transfer uses UUID
+    Route::get('/files/{file}/transfer', [FileTransferController::class, 'create'])->name('files.transfer.create');
+    Route::post('/files/transfer',       [FileTransferController::class, 'store'])->name('files.transfer.store');
 
     // Notifications
     Route::get('/notifications',             [NotificationController::class, 'index'])->name('notifications.index');

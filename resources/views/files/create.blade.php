@@ -16,7 +16,7 @@
 </div>
 
 <div class="portal-form-card">
-    <form action="{{ route('files.store') }}" method="POST" class="portal-form">
+    <form action="{{ route('files.store') }}" method="POST" enctype="multipart/form-data" class="portal-form">
         @csrf
 
         <div class="mb-3">
@@ -40,6 +40,13 @@
             <textarea name="remarks" class="form-control @error('remarks') is-invalid @enderror"
                 rows="3" placeholder="Optional remarks or notes">{{ old('remarks') }}</textarea>
             @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Upload Document</label>
+            <input type="file" name="attachment" class="form-control @error('attachment') is-invalid @enderror"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png">
+            @error('attachment')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
 
         <div class="d-flex gap-2">

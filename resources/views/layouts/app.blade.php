@@ -159,6 +159,8 @@
     </div>
     {{-- END SIDEBAR --}}
 
+    <div class="mobile-backdrop" id="sidebarBackdrop"></div>
+
     <!-- ================================================================
      MAIN AREA
 ================================================================ -->
@@ -170,7 +172,11 @@
                 <button class="sidebar-toggle-btn" id="sidebarToggle" title="Toggle Sidebar">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                <div class="topbar-context d-none d-sm-flex">
+                    <span class="topbar-context-label">Government File Tracking</span>
+                    <span class="topbar-context-sub">Official workflow portal</span>
+                </div>
+                <nav aria-label="breadcrumb" class="d-none d-lg-block">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
                             <a href="{{ route($dashRoute) }}">Home</a>
@@ -316,17 +322,61 @@
         const sidebar = document.getElementById('portalSidebar');
         const mainArea = document.getElementById('portalMain');
         const toggleBtn = document.getElementById('sidebarToggle');
+        const backdrop = document.getElementById('sidebarBackdrop');
+
+        function isMobileView() {
+            return window.matchMedia('(max-width: 991px)').matches;
+        }
+
+        function syncSidebar() {
+            if (!sidebar || !mainArea || !toggleBtn) return;
+
+            if (isMobileView()) {
+                sidebar.classList.remove('collapsed');
+                mainArea.classList.remove('expanded');
+                sidebar.classList.remove('mobile-open');
+                if (backdrop) {
+                    backdrop.classList.remove('show');
+                }
+                document.body.classList.remove('sidebar-open');
+            } else {
+                const shouldCollapse = localStorage.getItem('sidebarCollapsed') === 'true';
+                sidebar.classList.toggle('collapsed', shouldCollapse);
+                mainArea.classList.toggle('expanded', shouldCollapse);
+                sidebar.classList.remove('mobile-open');
+                if (backdrop) {
+                    backdrop.classList.remove('show');
+                }
+                document.body.classList.remove('sidebar-open');
+            }
+        }
 
         if (sidebar && mainArea && toggleBtn) {
-            if (localStorage.getItem('sidebarCollapsed') === 'true') {
-                sidebar.classList.add('collapsed');
-                mainArea.classList.add('expanded');
-            }
             toggleBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                mainArea.classList.toggle('expanded');
-                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                if (isMobileView()) {
+                    sidebar.classList.toggle('mobile-open');
+                    const isOpen = sidebar.classList.contains('mobile-open');
+                    if (backdrop) {
+                        backdrop.classList.toggle('show', isOpen);
+                    }
+                    document.body.classList.toggle('sidebar-open', isOpen);
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                    mainArea.classList.toggle('expanded');
+                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                }
             });
+
+            if (backdrop) {
+                backdrop.addEventListener('click', () => {
+                    sidebar.classList.remove('mobile-open');
+                    backdrop.classList.remove('show');
+                    document.body.classList.remove('sidebar-open');
+                });
+            }
+
+            window.addEventListener('resize', syncSidebar);
+            syncSidebar();
         }
 
         // ── Notification polling — Page Visibility aware ─────────────────

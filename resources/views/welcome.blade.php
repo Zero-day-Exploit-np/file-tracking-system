@@ -51,6 +51,10 @@
                     <div class="col-lg-7">
                         <span class="eyebrow">Government File Tracking</span>
                         <h1>Track Every File.<br><span>Monitor Every Movement.</span></h1>
+                        <div class="hero-badges">
+                            <span class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Secure portal</span>
+                            <span class="hero-badge"><i class="fa-solid fa-clock-rotate-left"></i> Full audit trail</span>
+                        </div>
                         <p class="hero-text">A secure, transparent, and efficient system for managing official records, departmental transfers, approvals, and document accountability.</p>
                         <div class="d-flex gap-3 flex-wrap">
                             <a href="{{ route('public.file.search') }}" class="btn btn-primary btn-lg">
@@ -86,6 +90,7 @@
                                     <h3>{{ $stats['users'] }}</h3>
                                 </div>
                             </div>
+                            <p class="hero-card-note">Daily records, approvals, and transfers monitored from a single dashboard.</p>
                         </div>
                     </div>
                 </div>
@@ -343,6 +348,29 @@
             </div>
         </section>
     </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-6">
+                    <div class="footer-brand">
+                        <span class="brand-icon"><i class="fa-solid fa-folder-tree"></i></span>
+                        <div>
+                            <h5>FileTrack Office</h5>
+                            <p>Government-grade file tracking and departmental workflow management.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="footer-links">
+                        <a href="{{ route('welcome') }}#about">About</a>
+                        <a href="{{ route('welcome') }}#features">Features</a>
+                        <a href="{{ route('welcome') }}#upload">Public Upload</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

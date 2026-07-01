@@ -12,8 +12,14 @@
         <h1 class="page-title">{{ $file->file_name }}</h1>
         <div class="page-subtitle">{{ $file->file_number }}</div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <a href="{{ route('files.index') }}" class="btn-portal-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
+        @can('update', $file)
+        <a href="{{ route('files.edit', $file->uuid) }}" class="btn btn-secondary"><i class="fa-solid fa-pencil"></i> Edit</a>
+        @endcan
+        @if($file->attachment_path)
+        <a href="{{ route('files.download', $file->uuid) }}" class="btn btn-success"><i class="fa-solid fa-download"></i> Download Document</a>
+        @endif
         @if($file->status !== 'archived')
         <a href="{{ route('files.transfer.create', $file->uuid) }}" class="btn-portal-primary"><i class="fa-solid fa-right-left"></i> Transfer</a>
         @endif
@@ -61,6 +67,12 @@
                         <div class="text-muted fs-sm mb-1">Created At</div>
                         <div>{{ $file->created_at->format('d M Y, h:i A') }}</div>
                     </div>
+                    @if($file->attachment_name)
+                    <div class="col-12">
+                        <div class="text-muted fs-sm mb-1">Attached Document</div>
+                        <div>{{ $file->attachment_name }}</div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

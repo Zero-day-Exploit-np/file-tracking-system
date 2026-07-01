@@ -76,7 +76,7 @@
                         {{ $pendingApprovals->count() }}
                     </span>
                 </span>
-                <a href="{{ route('admin.transfer.requests') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <a href="{{ route('admin.transfer.requests') }}" class="btn btn-sm btn-portal-outline">View All</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -132,7 +132,7 @@
         <div class="portal-card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="fa-solid fa-users me-2 text-primary"></i>Users in {{ $deptName }}</span>
-                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-primary">Manage</a>
+                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-portal-outline">Manage</a>
             </div>
             <div class="card-body p-0">
                 @forelse($recentUsers as $u)
@@ -161,7 +161,7 @@
         <div class="portal-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="fa-solid fa-file-lines me-2 text-primary"></i>Recent Department Files</span>
-                <a href="{{ route('admin.files') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <a href="{{ route('admin.files') }}" class="btn btn-sm btn-portal-outline">View All</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -182,7 +182,7 @@
                                 <td class="fw-700">{{ $f->file_name }}</td>
                                 <td class="text-muted">{{ $f->currentHolder->name ?? 'N/A' }}</td>
                                 <td>@include('partials.status-badge', ['status' => $f->status])</td>
-                                <td><a href="{{ route('admin.files.timeline', $f->uuid) }}" class="btn btn-sm btn-outline-secondary">Timeline</a></td>
+                                <td><a href="{{ route('admin.files.timeline', $f->uuid) }}" class="btn btn-sm btn-portal-outline">Timeline</a></td>
                             </tr>
                             @empty
                             <tr>
@@ -201,7 +201,7 @@
         <div class="portal-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="fa-solid fa-list-check me-2 text-primary"></i>Recent Activity</span>
-                <a href="{{ route('admin.audit.logs') }}" class="btn btn-sm btn-outline-primary">Full Log</a>
+                <a href="{{ route('admin.audit.logs') }}" class="btn btn-sm btn-portal-outline">Full Log</a>
             </div>
             <div class="card-body p-0">
                 <div class="timeline-wrapper p-3">
