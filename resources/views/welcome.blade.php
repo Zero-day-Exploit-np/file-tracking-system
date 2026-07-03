@@ -144,7 +144,7 @@
                     ['icon' => 'fa-file-circle-plus', 'title' => 'File Management', 'text' => 'Create, edit, review, and archive official documents with clear ownership.'],
                     ['icon' => 'fa-building-user', 'title' => 'Department Management', 'text' => 'Organize team structure, departments, and office responsibilities with ease.'],
                     ['icon' => 'fa-user-gear', 'title' => 'User Management', 'text' => 'Assign roles, maintain records, and control access levels securely.'],
-                    ['icon' => 'fa-check-to-slot', 'title' => 'Transfer Approval', 'text' => 'Approve or reject transfer requests with full audit history.'],
+                    ['icon' => 'fa-right-left', 'title' => 'Instant File Transfer', 'text' => 'Transfer files instantly to any user or department — no approval waiting.'],
                     ['icon' => 'fa-timeline', 'title' => 'Timeline Tracking', 'text' => 'See every event in the file lifecycle from creation to delivery.'],
                     ['icon' => 'fa-magnifying-glass', 'title' => 'Public File Search', 'text' => 'Anyone can search for a file using its File Number — no login required.']
                     ])
@@ -180,16 +180,11 @@
                     <div class="workflow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                     <div class="workflow-step">
                         <span>3</span>
-                        <h6>Approval Request</h6>
+                        <h6>Instantly Delivered</h6>
                     </div>
                     <div class="workflow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                     <div class="workflow-step">
                         <span>4</span>
-                        <h6>Admin Approval</h6>
-                    </div>
-                    <div class="workflow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                    <div class="workflow-step">
-                        <span>5</span>
                         <h6>Timeline Updated</h6>
                     </div>
                 </div>
@@ -212,7 +207,7 @@
                     <div class="col-md-4">
                         <div class="role-card">
                             <h5>Admin</h5>
-                            <p>Handles transfers, approvals, manages users within their department.</p>
+                            <p>Views department files and movements, manages users within their department.</p>
                         </div>
                     </div>
                     <div class="col-md-4">

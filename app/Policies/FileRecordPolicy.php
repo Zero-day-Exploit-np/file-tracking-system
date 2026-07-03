@@ -58,23 +58,20 @@ class FileRecordPolicy
     }
 
     /**
-     * Transfer: must be current holder.
-     * Files with pending_transfer status cannot be transferred again.
-     * Only users may transfer (admins and super_admins cannot).
+     * Transfer: must be the current holder.
+     * Only role:user may transfer (admins/super_admins cannot).
+     * Archived files cannot be transferred.
      */
     public function transfer(User $user, FileRecord $file): bool
     {
-        // Only users can transfer files
         if ($user->role !== 'user') {
             return false;
         }
 
-        // Never allow transfer on a file already pending
-        if ($file->status === 'pending_transfer') {
+        if ($file->status === 'archived') {
             return false;
         }
 
-        // Only current holder may transfer
         return (int) $file->current_user_id === $user->id;
     }
 

@@ -67,12 +67,6 @@ class AdminUserController extends Controller
 
         $user = User::create($data);
 
-        $this->recordAudit('user_created', $user, [
-            'name'  => $user->name,
-            'email' => $user->email,
-            'ip'    => $request->ip(),
-        ], 'User created by admin: ' . Auth::user()->name);
-
         return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully.');
     }
@@ -137,12 +131,6 @@ class AdminUserController extends Controller
         if ($userModel->id === Auth::id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
-
-        $this->recordAudit('user_deleted', $userModel, [
-            'name'  => $userModel->name,
-            'email' => $userModel->email,
-            'ip'    => request()->ip(),
-        ], 'User deleted by admin: ' . Auth::user()->name);
 
         $userModel->delete();
 

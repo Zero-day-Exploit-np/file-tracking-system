@@ -2,9 +2,7 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -21,12 +19,17 @@ class FileTransferred implements ShouldBroadcast
         $this->transfer = $transfer;
     }
 
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('user.' . $this->transfer->receiver_id);
+        // Only broadcast when there is a real receiver
+        if (!$this->transfer->receiver_id) {
+            return [];
+        }
+
+        return [new PrivateChannel('user.' . $this->transfer->receiver_id)];
     }
 
-    public function broadcastAs()
+    public function broadcastAs(): string
     {
         return 'file.transferred';
     }

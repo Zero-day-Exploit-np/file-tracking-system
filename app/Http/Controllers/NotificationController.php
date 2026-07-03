@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TransferRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,26 +20,17 @@ class NotificationController extends Controller
     }
 
     /**
-     * Unified polling endpoint — returns unread notifications AND
-     * pending transfer counts. Polled every 15 s by the frontend.
+     * Polling endpoint — returns unread notification count.
+     * Polled every 15 s by the frontend layout.
      */
     public function poll()
     {
         $user   = Auth::user();
         $unread = $user->unreadNotifications;
 
-        // Pending transfer count for admin (from their dept)
-        $pendingTransfers = 0;
-        if ($user->role === 'admin' && $user->department_id) {
-            $pendingTransfers = TransferRequest::where('status', 'pending')
-                ->where('from_department', $user->department_id)
-                ->count();
-        }
-
         return response()->json([
-            'unread_count'      => $unread->count(),
-            'pending_transfers' => $pendingTransfers,
-            'notifications'     => $unread->take(5)->map(fn($n) => [
+            'unread_count'   => $unread->count(),
+            'notifications'  => $unread->take(5)->map(fn($n) => [
                 'id'      => $n->id,
                 'message' => $n->data['message'] ?? 'New notification',
                 'type'    => $n->data['type']    ?? 'info',

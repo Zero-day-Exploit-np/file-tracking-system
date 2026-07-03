@@ -21,22 +21,7 @@
     $isSuper = $role === 'super_admin';
     $isAdmin = $role === 'admin';
     $isUser = $role === 'user';
-    $deptId = auth()->user()->department_id;
-
-    // Dashboard route per role
     $dashRoute = $isSuper ? 'super_admin.dashboard' : ($isAdmin ? 'admin.dashboard' : 'user.dashboard');
-
-    // Pending badge (only for admin — they can act on it; cached per request)
-    $pendingCount = 0;
-    if ($isAdmin) {
-    $pendingCount = \Illuminate\Support\Facades\Cache::remember(
-    "pending_from_{$deptId}",
-    60, // 1 minute cache
-    fn() => \App\Models\TransferRequest::where('status', 'pending')
-    ->where('from_department', $deptId)->count()
-    );
-    }
-
     $unreadCount = auth()->user()->unreadNotifications->count();
     @endphp
 
@@ -82,16 +67,6 @@
             @if($isAdmin || $isSuper)
             <div class="nav-section-label mt-2">Administration</div>
 
-            <a href="{{ route('admin.transfer.requests') }}"
-                class="sidebar-link {{ request()->routeIs('admin.transfer.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-right-left"></i><span>Transfer Requests</span>
-                @if($pendingCount > 0)
-                <span class="sidebar-badge" id="sb-transfer-count">{{ $pendingCount }}</span>
-                @else
-                <span class="sidebar-badge d-none" id="sb-transfer-count"></span>
-                @endif
-            </a>
-
             <a href="{{ route('admin.files') }}"
                 class="sidebar-link {{ request()->routeIs('admin.files*') ? 'active' : '' }}">
                 <i class="fa-solid fa-folder-open"></i><span>All Files</span>
@@ -108,11 +83,6 @@
             <a href="{{ route('admin.designations.index') }}"
                 class="sidebar-link {{ request()->routeIs('admin.designations.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-id-badge"></i><span>Designations</span>
-            </a>
-
-            <a href="{{ route('admin.audit.logs') }}"
-                class="sidebar-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-list-check"></i><span>Audit Logs</span>
             </a>
 
             @if($isSuper)
@@ -435,12 +405,6 @@
                         lastCount = n;
                         setBadge(topBadge, n);
                         setBadge(sbCount, n);
-
-                        // Also update the transfer request badge for admins
-                        var transferBadge = document.getElementById('sb-transfer-count');
-                        if (transferBadge !== null && data.pending_transfers !== undefined) {
-                            setBadge(transferBadge, data.pending_transfers);
-                        }
                     })
                     .catch(function() {});
             }

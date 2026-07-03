@@ -3,11 +3,9 @@
 namespace App\Services;
 
 use App\Models\Department;
-use App\Models\Designation;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
 use App\Models\FileTransfer;
-use App\Models\TransferRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
@@ -22,18 +20,18 @@ class DashboardService
     public function superAdminStats(): array
     {
         return Cache::remember('sa_stats', self::TTL, fn() => [
-            'total_files'        => FileRecord::count(),
-            'total_departments'  => Department::count(),
-            'total_users'        => User::count(),
-            'pending_transfers'  => TransferRequest::where('status', 'pending')->count(),
-            'total_admins'       => User::where('role', 'admin')->count(),
+            'total_files'       => FileRecord::count(),
+            'total_departments' => Department::count(),
+            'total_users'       => User::count(),
+            'total_transfers'   => FileTransfer::count(),
+            'total_admins'      => User::where('role', 'admin')->count(),
         ]);
     }
 
-    public function superAdminAuditStats(): array
+    public function superAdminMovementStats(): array
     {
-        return Cache::remember('sa_audit_stats', self::TTL, function () {
-            $actions = ['created', 'requested', 'approved', 'rejected', 'transferred'];
+        return Cache::remember('sa_movement_stats', self::TTL, function () {
+            $actions = ['created', 'transferred'];
             $result  = [];
             foreach ($actions as $action) {
                 $result[$action] = FileMovement::where('action', $action)->count();
@@ -47,21 +45,17 @@ class DashboardService
         return Cache::remember(
             'dept_file_counts',
             self::TTL,
-            fn() =>
-            Department::withCount('files')->orderByDesc('files_count')->get()
+            fn() => Department::withCount('files')->orderByDesc('files_count')->get()
         );
     }
 
     public function superAdminRecentData(): array
     {
-        // Recent data is NOT cached (must be fresh) but uses eager loading
         return [
             'recentTransfers' => FileTransfer::with(['sender', 'receiver', 'file.department'])
-                ->latest()->take(8)->get(),
-            'recentAudit'     => FileMovement::with(['file', 'fromUser', 'toUser', 'fromDept', 'toDept'])
-                ->latest()->take(8)->get(),
-            'pendingRequests' => TransferRequest::with(['file', 'sender', 'receiver', 'fromDept', 'toDept'])
-                ->where('status', 'pending')->latest()->get(),
+                ->latest()->take(10)->get(),
+            'recentMovements' => FileMovement::with(['file', 'fromUser', 'toUser', 'fromDept', 'toDept'])
+                ->latest()->take(10)->get(),
         ];
     }
 
@@ -73,22 +67,23 @@ class DashboardService
         return Cache::remember("admin_stats_{$deptId}", self::TTL, fn() => [
             'dept_files'          => FileRecord::where('department_id', $deptId)->count(),
             'dept_users'          => User::where('department_id', $deptId)->count(),
-            'pending_requests'    => TransferRequest::where('status', 'pending')->where('from_department', $deptId)->count(),
-            'completed_transfers' => TransferRequest::where('status', 'approved')->where('from_department', $deptId)->count(),
+            'total_transfers'     => FileMovement::where('from_department', $deptId)
+                ->orWhere('to_department', $deptId)
+                ->where('action', 'transferred')
+                ->count(),
         ]);
     }
 
     public function adminRecentData(int $deptId): array
     {
         return [
-            'recentFiles'      => FileRecord::with(['currentHolder', 'creator'])
+            'recentFiles'    => FileRecord::with(['currentHolder', 'creator'])
                 ->where('department_id', $deptId)->latest()->take(7)->get(),
-            'recentActivity'   => FileMovement::with(['file', 'fromUser', 'toUser'])
+            'recentActivity' => FileMovement::with(['file', 'fromUser', 'toUser', 'fromDept', 'toDept'])
                 ->where(fn($q) => $q->where('from_department', $deptId)->orWhere('to_department', $deptId))
-                ->latest()->take(7)->get(),
-            'pendingApprovals' => TransferRequest::with(['file', 'sender', 'receiver', 'fromDept'])
-                ->where('status', 'pending')->where('to_department', $deptId)->latest()->get(),
-            'recentUsers'      => User::with('designation')->where('department_id', $deptId)->latest()->take(5)->get(),
+                ->latest()->take(8)->get(),
+            'recentUsers'    => User::with('designation')
+                ->where('department_id', $deptId)->latest()->take(5)->get(),
         ];
     }
 
@@ -98,11 +93,10 @@ class DashboardService
     public function userStats(int $userId): array
     {
         return Cache::remember("user_stats_{$userId}", self::TTL, fn() => [
-            'total_my_files'    => FileRecord::where(fn($q) =>
-            $q->where('created_by', $userId)->orWhere('current_user_id', $userId))->count(),
-            'sent_files'        => FileMovement::where('from_user', $userId)->where('action', 'transferred')->count(),
-            'received_files'    => FileMovement::where('to_user', $userId)->whereIn('action', ['transferred', 'approved'])->count(),
-            'pending_transfers' => TransferRequest::where('requested_by', $userId)->where('status', 'pending')->count(),
+            'total_my_files'  => FileRecord::where(fn($q) =>
+                $q->where('created_by', $userId)->orWhere('current_user_id', $userId))->count(),
+            'sent_files'      => FileMovement::where('from_user', $userId)->where('action', 'transferred')->count(),
+            'received_files'  => FileMovement::where('to_user', $userId)->where('action', 'transferred')->count(),
         ]);
     }
 
@@ -112,7 +106,7 @@ class DashboardService
     public static function clearSuperAdminCache(): void
     {
         Cache::forget('sa_stats');
-        Cache::forget('sa_audit_stats');
+        Cache::forget('sa_movement_stats');
         Cache::forget('dept_file_counts');
     }
 

@@ -34,9 +34,8 @@ class AdminFileController extends Controller
                 ->orWhere('file_name',   'like', "%{$search}%"));
         }
 
-        // Whitelisted status
         if ($request->filled('status')) {
-            $allowed = ['active', 'pending_transfer', 'archived', 'draft'];
+            $allowed = ['active', 'archived', 'draft'];
             if (in_array($request->status, $allowed, true)) {
                 $query->where('status', $request->status);
             }

@@ -10,7 +10,9 @@
         <h1 class="page-title">My Dashboard</h1>
         <div class="page-subtitle">
             {{ auth()->user()->department->name ?? 'No Department' }}
-            &mdash; {{ auth()->user()->designation->name ?? '' }}
+            @if(auth()->user()->designation->name !== '—')
+            &mdash; {{ auth()->user()->designation->name }}
+            @endif
         </div>
     </div>
     @if(auth()->user()->role === 'user' && auth()->user()->can_create_file)
@@ -18,13 +20,15 @@
         <i class="fa-solid fa-plus me-1"></i>New File
     </a>
     @elseif(auth()->user()->role === 'user')
-    <span class="badge-status badge-pending">File creation permission not granted</span>
+    <span class="badge-status badge-pending" title="Contact your admin to enable file creation">
+        <i class="fa-solid fa-lock me-1"></i>File creation restricted
+    </span>
     @endif
 </div>
 
 {{-- KPI ROW --}}
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
         <div class="stat-kpi">
             <div class="stat-kpi-icon green"><i class="fa-solid fa-file-lines"></i></div>
             <div>
@@ -33,81 +37,162 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
         <div class="stat-kpi">
             <div class="stat-kpi-icon blue"><i class="fa-solid fa-paper-plane"></i></div>
             <div>
                 <div class="stat-kpi-label">Sent Files</div>
-                <div class="stat-kpi-value">{{ $sentFiles }}</div>
+                <div class="stat-kpi-value">{{ $totalSentFiles }}</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
         <div class="stat-kpi">
             <div class="stat-kpi-icon teal"><i class="fa-solid fa-inbox"></i></div>
             <div>
                 <div class="stat-kpi-label">Received Files</div>
-                <div class="stat-kpi-value">{{ $receivedFiles }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="stat-kpi">
-            <div class="stat-kpi-icon orange"><i class="fa-solid fa-clock"></i></div>
-            <div>
-                <div class="stat-kpi-label">Pending Transfers</div>
-                <div class="stat-kpi-value">{{ $pendingTransfers }}</div>
+                <div class="stat-kpi-value">{{ $totalReceivedFiles }}</div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row g-3">
-    {{-- My Files --}}
+
+    {{-- File Tabs --}}
     <div class="col-lg-8">
         <div class="portal-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="fa-solid fa-file-lines me-2 text-primary"></i>My Files</span>
+                <ul class="nav nav-tabs card-header-tabs" id="fileTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-my">
+                            <i class="fa-solid fa-file-lines me-1"></i>My Files
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-received">
+                            <i class="fa-solid fa-inbox me-1"></i>Received
+                            @if($receivedFiles->count() > 0)
+                            <span class="badge bg-primary ms-1">{{ $receivedFiles->count() }}</span>
+                            @endif
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sent">
+                            <i class="fa-solid fa-paper-plane me-1"></i>Sent
+                        </button>
+                    </li>
+                </ul>
                 <a href="{{ route('files.index') }}" class="btn btn-sm btn-portal-outline">View All</a>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="portal-table">
-                        <thead>
-                            <tr>
-                                <th>File Number</th>
-                                <th>File Name</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($myFiles as $file)
-                            <tr>
-                                <td class="text-muted fs-sm fw-700">{{ $file->file_number }}</td>
-                                <td>{{ $file->file_name }}</td>
-                                <td>@include('partials.status-badge', ['status' => $file->status])</td>
-                                <td class="text-muted fs-sm">{{ $file->created_at->format('d M Y') }}</td>
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        <a href="{{ route('files.show', $file->uuid) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fa-solid fa-eye"></i></a>
-                                        @if($file->status !== 'archived')
-                                        <a href="{{ route('files.transfer.create', $file->uuid) }}" class="btn btn-sm btn-outline-secondary" title="Transfer"><i class="fa-solid fa-right-left"></i></a>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5">
-                                    <div class="empty-state"><i class="fa-solid fa-file-circle-question"></i>No files yet. <a href="{{ route('files.create') }}">Create one</a>.</div>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+
+            <div class="tab-content">
+
+                {{-- My Files Tab --}}
+                <div class="tab-pane fade show active" id="tab-my">
+                    <div class="table-responsive">
+                        <table class="portal-table">
+                            <thead>
+                                <tr>
+                                    <th>File Number</th>
+                                    <th>File Name</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($myFiles as $file)
+                                <tr>
+                                    <td class="text-muted fs-sm fw-700">{{ $file->file_number }}</td>
+                                    <td>{{ $file->file_name }}</td>
+                                    <td>@include('partials.status-badge', ['status' => $file->status])</td>
+                                    <td class="text-muted fs-sm">{{ $file->created_at->format('d M Y') }}</td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ route('files.show', $file->uuid) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fa-solid fa-eye"></i></a>
+                                            @if($file->status !== 'archived' && (int)$file->current_user_id === auth()->id())
+                                            <a href="{{ route('files.transfer.create', $file->uuid) }}" class="btn btn-sm btn-outline-secondary" title="Transfer"><i class="fa-solid fa-right-left"></i></a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="5"><div class="empty-state"><i class="fa-solid fa-file-circle-question"></i>No files yet.</div></td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
+                {{-- Received Tab --}}
+                <div class="tab-pane fade" id="tab-received">
+                    <div class="table-responsive">
+                        <table class="portal-table">
+                            <thead>
+                                <tr>
+                                    <th>File</th>
+                                    <th>Sent By</th>
+                                    <th>Department</th>
+                                    <th>Date</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($receivedFiles as $t)
+                                <tr>
+                                    <td>
+                                        <div class="fw-700">{{ $t->file->file_name ?? 'N/A' }}</div>
+                                        <div class="text-muted fs-sm">{{ $t->file->file_number ?? '' }}</div>
+                                    </td>
+                                    <td>{{ $t->sender->name ?? 'System' }}</td>
+                                    <td class="text-muted">{{ $t->file->department->name ?? '—' }}</td>
+                                    <td class="text-muted fs-sm">{{ $t->created_at->format('d M Y') }}</td>
+                                    <td>
+                                        @if($t->file)
+                                        <a href="{{ route('files.show', $t->file->uuid) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fa-solid fa-eye"></i></a>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="5"><div class="empty-state"><i class="fa-solid fa-inbox"></i>No files received yet.</div></td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Sent Tab --}}
+                <div class="tab-pane fade" id="tab-sent">
+                    <div class="table-responsive">
+                        <table class="portal-table">
+                            <thead>
+                                <tr>
+                                    <th>File</th>
+                                    <th>Sent To</th>
+                                    <th>Remarks</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($sentFiles as $t)
+                                <tr>
+                                    <td>
+                                        <div class="fw-700">{{ $t->file->file_name ?? 'N/A' }}</div>
+                                        <div class="text-muted fs-sm">{{ $t->file->file_number ?? '' }}</div>
+                                    </td>
+                                    <td>{{ $t->receiver->name ?? 'Department' }}</td>
+                                    <td class="text-muted fs-sm">{{ $t->remarks ?? '—' }}</td>
+                                    <td class="text-muted fs-sm">{{ $t->created_at->format('d M Y') }}</td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="4"><div class="empty-state"><i class="fa-solid fa-paper-plane"></i>No files sent yet.</div></td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

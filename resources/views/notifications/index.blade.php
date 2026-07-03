@@ -9,7 +9,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Notifications</h1>
-        <div class="page-subtitle">Your latest alerts and system updates</div>
+        <div class="page-subtitle">Your latest alerts and updates</div>
     </div>
     @php $unread = $notifications->whereNull('read_at')->count(); @endphp
     @if($unread > 0)
@@ -27,15 +27,13 @@
     <div class="card-body p-0">
         @forelse($notifications as $n)
         @php
-            $type    = $n->data['type'] ?? 'info';
+            $type     = $n->data['type'] ?? 'info';
             $isUnread = !$n->read_at;
 
             $iconMap = [
-                'transfer_requested' => ['fa-paper-plane',   '#fff3cd', '#856404'],
-                'transfer_approved'  => ['fa-check-circle',  '#d1e7dd', '#0f5132'],
-                'transfer_rejected'  => ['fa-times-circle',  '#f8d7da', '#842029'],
-                'file_transferred'   => ['fa-right-left',    '#cfe2ff', '#084298'],
-                'info'               => ['fa-bell',           '#f8fafc', '#64748b'],
+                'file_received'    => ['fa-inbox',     '#cfe2ff', '#084298'],
+                'file_transferred' => ['fa-right-left','#cfe2ff', '#084298'],
+                'info'             => ['fa-bell',       '#f8fafc', '#64748b'],
             ];
             $iconData = $iconMap[$type] ?? $iconMap['info'];
         @endphp
@@ -63,10 +61,9 @@
                 </div>
                 @endif
 
-                @if(!empty($n->data['from_dept']) && !empty($n->data['to_dept']))
+                @if(!empty($n->data['sender']))
                 <div class="text-muted fs-sm">
-                    <i class="fa-solid fa-arrow-right me-1"></i>
-                    {{ $n->data['from_dept'] }} &rarr; {{ $n->data['to_dept'] }}
+                    <i class="fa-solid fa-user me-1"></i>From: {{ $n->data['sender'] }}
                 </div>
                 @endif
 
@@ -76,17 +73,10 @@
             {{-- Status badge --}}
             <div class="flex-shrink-0">
                 @if($isUnread)
-                <span class="badge-status badge-approved">New</span>
+                <span class="badge-status badge-active">New</span>
                 @endif
-
-                @if($type === 'transfer_approved')
-                <span class="badge-status badge-active"><i class="fa-solid fa-check me-1"></i>Approved</span>
-                @elseif($type === 'transfer_rejected')
-                <span class="badge-status badge-rejected"><i class="fa-solid fa-xmark me-1"></i>Rejected</span>
-                @elseif($type === 'transfer_requested')
-                <span class="badge-status badge-pending"><i class="fa-solid fa-clock me-1"></i>Pending</span>
-                @elseif($type === 'file_transferred')
-                <span class="badge-status badge-transferred"><i class="fa-solid fa-right-left me-1"></i>Received</span>
+                @if(in_array($type, ['file_received', 'file_transferred']))
+                <span class="badge-status badge-transferred"><i class="fa-solid fa-inbox me-1"></i>Received</span>
                 @endif
             </div>
         </div>

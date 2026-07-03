@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Models\Department;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -20,7 +18,7 @@ class FileRecordController extends Controller
         $query = FileRecord::with(['department', 'creator', 'currentHolder']);
 
         if ($user->role === 'user') {
-            // Show files the user: created, currently holds, or was involved in via transfer history
+            // Show files the user created, currently holds, or was involved in via transfer
             $involvedFileIds = \App\Models\FileTransfer::where(fn($q) => $q
                 ->where('sender_id',   $user->id)
                 ->orWhere('receiver_id', $user->id))
@@ -35,7 +33,7 @@ class FileRecordController extends Controller
         } elseif ($user->role === 'admin') {
             $query->where('department_id', $user->department_id);
         }
-        // super_admin sees all — no additional scope
+        // super_admin sees all
 
         if ($request->filled('search')) {
             $s = $request->string('search')->trim()->value();
@@ -45,7 +43,7 @@ class FileRecordController extends Controller
         }
 
         if ($request->filled('status')) {
-            $allowed = ['active', 'pending_transfer', 'archived', 'draft'];
+            $allowed = ['active', 'archived', 'draft'];
             if (in_array($request->status, $allowed, true)) {
                 $query->where('status', $request->status);
             }
@@ -64,37 +62,26 @@ class FileRecordController extends Controller
 
     public function create()
     {
-        // Only role:user can create files — enforced at route + policy level
-        // If an admin/super_admin somehow hits this, abort 403
         if (Auth::user()->role !== 'user') {
             abort(403, 'Only users can create files.');
         }
         $this->authorize('create', FileRecord::class);
-        $departments = Department::orderBy('name')->get();
-        return view('files.create', compact('departments'));
+        return view('files.create');
     }
 
     public function store(Request $request)
     {
-        // Only role:user can store files
         if (Auth::user()->role !== 'user') {
             abort(403, 'Only users can create files.');
         }
         $this->authorize('create', FileRecord::class);
 
         $request->validate([
-<<<<<<< HEAD
-            'file_name' => 'required|string|max:255',
-            'remarks'   => 'nullable|string|max:1000',
-=======
-            'department_id' => 'required|exists:departments,id',
-            'file_name'     => 'required|string|max:255',
-            'remarks'       => 'nullable|string|max:1000',
-            'attachment'    => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
->>>>>>> 725abe8728dc5f0d1b7dd9ad1d87ec2c54a23534
+            'file_name'  => 'required|string|max:255',
+            'remarks'    => 'nullable|string|max:1000',
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
         ]);
 
-        // User always uses their own department
         $deptId = Auth::user()->department_id;
 
         $file = FileRecord::create([
@@ -108,9 +95,9 @@ class FileRecordController extends Controller
         ]);
 
         if ($request->hasFile('attachment')) {
-            $uploaded = $request->file('attachment');
+            $uploaded   = $request->file('attachment');
             $storedName = Str::uuid()->toString() . '.' . $uploaded->extension();
-            $path = $uploaded->storeAs('files/' . $file->uuid, $storedName, 'private');
+            $path       = $uploaded->storeAs('files/' . $file->uuid, $storedName, 'private');
 
             $file->update([
                 'attachment_path' => $path,
@@ -126,14 +113,8 @@ class FileRecordController extends Controller
             'from_department' => $deptId,
             'to_department'   => $deptId,
             'action'          => 'created',
-            'remarks'         => 'File created',
+            'remarks'         => 'File created by ' . Auth::user()->name,
         ]);
-
-        $this->recordAudit('file_created', $file, [
-            'file_number' => $file->file_number,
-            'department'  => $deptId,
-            'ip'          => $request->ip(),
-        ], 'File created by ' . Auth::user()->name);
 
         return redirect()->route('files.index')->with('success', 'File created successfully.');
     }
@@ -141,9 +122,7 @@ class FileRecordController extends Controller
     public function edit(FileRecord $file)
     {
         $this->authorize('update', $file);
-
-        $departments = Department::orderBy('name')->get();
-        return view('files.edit', compact('file', 'departments'));
+        return view('files.edit', compact('file'));
     }
 
     public function update(Request $request, FileRecord $file)
@@ -151,20 +130,14 @@ class FileRecordController extends Controller
         $this->authorize('update', $file);
 
         $request->validate([
-            'department_id' => 'required|exists:departments,id',
-            'file_name'     => 'required|string|max:255',
-            'remarks'       => 'nullable|string|max:1000',
-            'attachment'    => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png',
+            'file_name'  => 'required|string|max:255',
+            'remarks'    => 'nullable|string|max:1000',
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
         ]);
 
-        $deptId = Auth::user()->role === 'super_admin'
-            ? (int) $request->department_id
-            : Auth::user()->department_id;
-
         $file->update([
-            'department_id' => $deptId,
-            'file_name'     => $request->string('file_name')->trim()->value(),
-            'remarks'       => $request->string('remarks')->trim()->value() ?: null,
+            'file_name' => $request->string('file_name')->trim()->value(),
+            'remarks'   => $request->string('remarks')->trim()->value() ?: null,
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -172,9 +145,9 @@ class FileRecordController extends Controller
                 Storage::disk('private')->delete($file->attachment_path);
             }
 
-            $uploaded = $request->file('attachment');
+            $uploaded   = $request->file('attachment');
             $storedName = Str::uuid()->toString() . '.' . $uploaded->extension();
-            $path = $uploaded->storeAs('files/' . $file->uuid, $storedName, 'private');
+            $path       = $uploaded->storeAs('files/' . $file->uuid, $storedName, 'private');
 
             $file->update([
                 'attachment_path' => $path,
@@ -183,17 +156,9 @@ class FileRecordController extends Controller
             ]);
         }
 
-        $this->recordAudit('file_updated', $file, [
-            'file_number' => $file->file_number,
-            'ip'          => $request->ip(),
-        ], 'File record updated by ' . Auth::user()->name);
-
         return redirect()->route('files.show', $file->uuid)->with('success', 'File updated successfully.');
     }
 
-    /**
-     * Show file details — policy check via FileRecordPolicy::view().
-     */
     public function show(FileRecord $file)
     {
         $this->authorize('view', $file);
@@ -215,34 +180,14 @@ class FileRecordController extends Controller
     {
         $this->authorize('download', $file);
 
-<<<<<<< HEAD
-        try {
-            // File records in this system are tracked documents without physical attachments.
-            // This action logs the access.
-            AuditLog::create([
-                'user_id'        => Auth::id(),
-                'action'         => 'file_accessed',
-                'auditable_type' => FileRecord::class,
-                'auditable_id'   => $file->id,
-                'description'    => 'File record accessed: ' . $file->file_name,
-                'metadata'       => [
-                    'file_number' => $file->file_number,
-                    'ip'          => request()->ip(),
-                ],
-            ]);
-
-=======
         if (!$file->attachment_path || !Storage::disk('private')->exists($file->attachment_path)) {
->>>>>>> 725abe8728dc5f0d1b7dd9ad1d87ec2c54a23534
             return redirect()->route('files.show', $file->uuid)
                 ->with('error', 'Attachment not found.');
         }
 
-        $this->recordAudit('file_attachment_downloaded', $file, [
-            'file_number' => $file->file_number,
-            'ip'          => request()->ip(),
-        ], 'File attachment downloaded by ' . Auth::user()->name);
-
-        return Storage::disk('private')->download($file->attachment_path, $file->attachment_name ?: $file->file_name);
+        return Storage::disk('private')->download(
+            $file->attachment_path,
+            $file->attachment_name ?: $file->file_name
+        );
     }
 }

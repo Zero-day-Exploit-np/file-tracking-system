@@ -25,9 +25,8 @@
         @endif
         <select name="status" class="form-select" style="max-width:160px;">
             <option value="">All Statuses</option>
-            <option value="active" {{ request('status') === 'active'           ? 'selected' : '' }}>Active</option>
-            <option value="pending_transfer" {{ request('status') === 'pending_transfer' ? 'selected' : '' }}>Pending Transfer</option>
-            <option value="archived" {{ request('status') === 'archived'         ? 'selected' : '' }}>Archived</option>
+            <option value="active"   {{ request('status') === 'active'   ? 'selected' : '' }}>Active</option>
+            <option value="archived" {{ request('status') === 'archived' ? 'selected' : '' }}>Archived</option>
         </select>
         <input type="date" name="from_date" class="form-control" style="max-width:140px;" value="{{ request('from_date') }}">
         <input type="date" name="to_date" class="form-control" style="max-width:140px;" value="{{ request('to_date') }}">

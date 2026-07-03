@@ -1,12 +1,9 @@
 @php
 $map = [
-    'created'     => 'badge-created',
-    'requested'   => 'badge-pending',
-    'approved'    => 'badge-approved',
-    'rejected'    => 'badge-rejected',
-    'transferred' => 'badge-transferred',
-    'delivered'   => 'badge-delivered',
+    'created'     => ['badge-created',     'Created'],
+    'transferred' => ['badge-transferred', 'Transferred'],
+    'delivered'   => ['badge-delivered',   'Delivered'],
 ];
-$cls = $map[$action ?? ''] ?? 'badge-draft';
+$entry = $map[$action ?? ''] ?? ['badge-draft', ucfirst($action ?? 'Unknown')];
 @endphp
-<span class="badge-status {{ $cls }}">{{ ucfirst($action ?? 'Unknown') }}</span>
+<span class="badge-status {{ $entry[0] }}">{{ $entry[1] }}</span>

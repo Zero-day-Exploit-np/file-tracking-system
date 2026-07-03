@@ -31,9 +31,8 @@
 
         <select name="status" class="form-select" style="max-width:160px;min-width:140px;">
             <option value="">All Statuses</option>
-            <option value="active"           {{ request('status') === 'active'           ? 'selected' : '' }}>Active</option>
-            <option value="pending_transfer" {{ request('status') === 'pending_transfer' ? 'selected' : '' }}>Pending Transfer</option>
-            <option value="archived"         {{ request('status') === 'archived'         ? 'selected' : '' }}>Archived</option>
+            <option value="active"   {{ request('status') === 'active'   ? 'selected' : '' }}>Active</option>
+            <option value="archived" {{ request('status') === 'archived' ? 'selected' : '' }}>Archived</option>
         </select>
 
         <input type="date" name="from_date" class="form-control" style="max-width:145px;"
@@ -79,24 +78,16 @@
                             <i class="fa-solid fa-eye"></i>
                         </a>
                         {{--
-                            Transfer button logic (Issues 2, 3, 4, 5):
-                            - PENDING: disable button, show "Awaiting Approval" badge — prevents 403 confusion
+                            Transfer button logic:
                             - ACTIVE + user is current holder: show transfer button
-                            - Otherwise (archived, not the holder): no transfer button
+                            - Otherwise (archived, not the holder): show status indicator
                         --}}
-                        @if($file->status === 'pending_transfer')
-                            {{-- File is already pending — never show transfer button --}}
-                            <span class="badge-status badge-pending" title="Transfer request is pending admin approval">
-                                <i class="fa-solid fa-clock me-1"></i>Awaiting Approval
-                            </span>
-                        @elseif($file->status !== 'archived' && (int)$file->current_user_id === auth()->id())
-                            {{-- Current holder can transfer --}}
+                        @if($file->status !== 'archived' && (int)$file->current_user_id === auth()->id())
                             <a href="{{ route('files.transfer.create', $file->uuid) }}"
                                class="btn btn-sm btn-outline-secondary" title="Transfer file">
                                 <i class="fa-solid fa-right-left me-1"></i>Transfer
                             </a>
                         @elseif($file->status !== 'archived' && (int)$file->created_by === auth()->id() && (int)$file->current_user_id !== auth()->id())
-                            {{-- Creator who no longer holds it — history only --}}
                             <span class="badge-status badge-transferred" title="You previously transferred this file">
                                 <i class="fa-solid fa-history me-1"></i>Transferred
                             </span>

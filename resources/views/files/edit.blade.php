@@ -21,19 +21,9 @@
         @method('PUT')
 
         <div class="mb-3">
-            <label class="form-label">Department <span class="required-star">*</span></label>
-            @if(auth()->user()->role === 'super_admin')
-            <select name="department_id" class="form-select @error('department_id') is-invalid @enderror" required>
-                <option value="">Select Department</option>
-                @foreach($departments as $dept)
-                <option value="{{ $dept->id }}" {{ old('department_id', $file->department_id) == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
-                @endforeach
-            </select>
-            @else
-            <input type="text" class="form-control" value="{{ auth()->user()->department->name ?? 'N/A' }}" readonly>
-            <input type="hidden" name="department_id" value="{{ auth()->user()->department_id }}">
-            @endif
-            @error('department_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <label class="form-label">Department</label>
+            <input type="text" class="form-control bg-light" value="{{ $file->department->name ?? 'N/A' }}" readonly>
+            <div class="form-text text-muted"><i class="fa-solid fa-lock me-1"></i>Department is set during file creation.</div>
         </div>
 
         <div class="mb-3">
@@ -57,7 +47,7 @@
             @error('attachment')<div class="invalid-feedback">{{ $message }}</div>@enderror
             @if($file->attachment_path)
             <div class="form-text mt-2">
-                Current attachment: <strong>{{ $file->attachment_name }}</strong>
+                Current: <strong>{{ $file->attachment_name }}</strong>
             </div>
             @endif
         </div>

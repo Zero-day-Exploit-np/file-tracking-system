@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,17 +12,11 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Show the full profile page.
-     */
     public function edit(Request $request): View
     {
         return view('profile.edit', ['user' => $request->user()]);
     }
 
-    /**
-     * Update basic profile info: name, email, phone, contact_number.
-     */
     public function update(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -34,13 +27,6 @@ class ProfileController extends Controller
             'phone'          => 'nullable|string|max:20',
             'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
         ]);
-
-        $changed = [];
-
-        if ($user->name !== $request->name)                 $changed[] = 'name';
-        if ($user->email !== $request->email)               $changed[] = 'email';
-        if ($user->phone !== $request->phone)               $changed[] = 'phone';
-        if ($user->contact_number !== $request->contact_number) $changed[] = 'contact_number';
 
         $user->fill([
             'name'           => $request->string('name')->trim()->value(),
@@ -55,19 +41,9 @@ class ProfileController extends Controller
 
         $user->save();
 
-        if (!empty($changed)) {
-            $this->recordAudit('profile_updated', $user, [
-                'changed_fields' => $changed,
-                'ip'             => $request->ip(),
-            ], 'Profile updated by ' . $user->name);
-        }
-
         return redirect()->route('profile.edit')->with('status', 'profile-updated');
     }
 
-    /**
-     * Upload or replace the profile photo.
-     */
     public function uploadPhoto(Request $request): RedirectResponse
     {
         $request->validate([
@@ -76,7 +52,6 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        // Delete old photo if exists
         if ($user->photo && Storage::disk('public')->exists($user->photo)) {
             Storage::disk('public')->delete($user->photo);
         }
@@ -87,14 +62,9 @@ class ProfileController extends Controller
 
         $user->update(['photo' => $filename]);
 
-        $this->recordAudit('photo_updated', $user, ['ip' => $request->ip()], 'Profile photo updated');
-
         return back()->with('status', 'photo-updated');
     }
 
-    /**
-     * Delete the profile photo.
-     */
     public function deletePhoto(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -105,14 +75,9 @@ class ProfileController extends Controller
 
         $user->update(['photo' => null]);
 
-        $this->recordAudit('photo_deleted', $user, ['ip' => $request->ip()], 'Profile photo removed');
-
         return back()->with('status', 'photo-deleted');
     }
 
-    /**
-     * Change password (requires current password verification).
-     */
     public function changePassword(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -125,14 +90,9 @@ class ProfileController extends Controller
 
         $user->update(['password' => Hash::make($request->password)]);
 
-        $this->recordAudit('password_changed', $user, ['ip' => $request->ip()], 'Password changed');
-
         return back()->with('status', 'password-updated');
     }
 
-    /**
-     * Delete account (requires password).
-     */
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
