@@ -58,20 +58,27 @@ class FileRecordPolicy
     }
 
     /**
-     * Transfer: must be the current holder.
-     * Only role:user may transfer (admins/super_admins cannot).
-     * Archived files cannot be transferred.
+     * Transfer: ownership-based, not role-based.
+     *
+     * The authenticated user may transfer a file if ALL of:
+     *   1. They are the current holder (file.current_user_id === user.id)
+     *   2. The file is not archived
+     *
+     * Role is irrelevant — whoever holds the file can move it.
+     * This covers: regular users, department admins who received a
+     * cross-department transfer, and any future role that may hold files.
+     *
+     * Super Admins are handled by before() which returns true for all
+     * non-create abilities, so they are covered automatically.
      */
     public function transfer(User $user, FileRecord $file): bool
     {
-        if ($user->role !== 'user') {
-            return false;
-        }
-
+        // Archived files can never be transferred
         if ($file->status === 'archived') {
             return false;
         }
 
+        // Only the current holder may transfer — no role restriction
         return (int) $file->current_user_id === $user->id;
     }
 

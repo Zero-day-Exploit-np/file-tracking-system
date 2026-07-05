@@ -16,7 +16,7 @@ class FileTransferController extends Controller
 {
     /**
      * Show the transfer form for a file.
-     * Only the current holder (role:user) may transfer.
+     * Any user who is the current holder may transfer — ownership-based, not role-based.
      */
     public function create(FileRecord $file)
     {
@@ -24,7 +24,7 @@ class FileTransferController extends Controller
 
         $currentUser = Auth::user();
 
-        // Users in the same department (for "Same Department" transfer)
+        // All active users in the same department (excluding self)
         $sameDeptUsers = User::where('department_id', $currentUser->department_id)
             ->where('id', '!=', $currentUser->id)
             ->where('is_active', true)
@@ -54,10 +54,10 @@ class FileTransferController extends Controller
         $file        = FileRecord::where('uuid', $request->file_record_uuid)->firstOrFail();
         $currentUser = Auth::user();
 
-        // Auth check — policy enforces current holder + role:user
+        // Auth check — policy enforces current holder (ownership-based, not role-based)
         $this->authorize('transfer', $file);
 
-        // ── SECURITY: re-verify file still belongs to this user (race condition guard) ──
+        // SECURITY: re-verify ownership hasn't changed since the form was loaded (race condition guard)
         if ((int) $file->current_user_id !== $currentUser->id) {
             return back()->with('error', 'You no longer hold this file.');
         }
