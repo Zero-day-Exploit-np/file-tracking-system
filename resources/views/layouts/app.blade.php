@@ -360,52 +360,69 @@
 
         // ── Notification polling — Page Visibility aware ─────────────────
         (function() {
-            const sound = document.getElementById('notif-sound');
-            const topBadge = document.getElementById('topbar-notif-badge');
-            const sbCount = document.getElementById('sb-notif-count');
-            const bellBtn = document.getElementById('topbar-bell-btn');
+            const topBadge    = document.getElementById('topbar-notif-badge');
+            const sbCount     = document.getElementById('sb-notif-count');
+            const bellBtn     = document.getElementById('topbar-bell-btn');
             const dropdownBody = document.getElementById('notif-dropdown-body');
-            const POLL_MS = 10000;
-            const FIRST_MS = 1500;
+
+            const POLL_MS  = 10000; // poll every 10 s
+            const FIRST_MS = 1500;  // first poll 1.5 s after load
             const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
-            let lastCount = parseInt(topBadge ? topBadge.textContent : '0', 10) || 0;
-            let soundUnlocked = false;
+
+            // Seed lastCount from server-rendered badge so we don't play sound on page load
+            let lastCount = parseInt(topBadge ? (topBadge.textContent || '0') : '0', 10) || 0;
             let pollTimer = null;
             let latestNotifications = @json($latestNotifications->values());
 
-            ['click', 'keydown', 'touchstart'].forEach(function(ev) {
-                document.addEventListener(ev, function() {
-                    soundUnlocked = true;
-                }, {
-                    once: true
-                });
+            // ── Sound ─────────────────────────────────────────────────────
+            // Use Audio() object — not the hidden <audio> element.
+            // Browser autoplay policy: we must wait for a user gesture before playing.
+            var notifSound = null;
+            var soundReady = false;
+
+            function initSound() {
+                if (notifSound) return; // already created
+                notifSound = new Audio('{{ asset('sounds/notification.mp3') }}');
+                notifSound.preload = 'auto';
+                soundReady = true;
+            }
+
+            // Unlock audio on first real user interaction
+            ['click', 'keydown', 'touchstart', 'pointerdown'].forEach(function(ev) {
+                document.addEventListener(ev, function handler() {
+                    initSound();
+                    document.removeEventListener(ev, handler);
+                }, { once: true, passive: true });
             });
 
             function playSound() {
-                if (sound && soundUnlocked) {
-                    sound.currentTime = 0;
-                    sound.play().catch(function() {});
-                }
+                if (!soundReady || !notifSound) return;
+                notifSound.currentTime = 0;
+                notifSound.play().catch(function() {});
             }
 
+            // ── Badge ─────────────────────────────────────────────────────
             function setBadge(el, n) {
                 if (!el) return;
-                el.textContent = n > 0 ? n : '';
                 if (n > 0) {
+                    el.textContent = n;
                     el.classList.remove('d-none');
                     el.classList.add('badge-bounce');
                     setTimeout(function() { el.classList.remove('badge-bounce'); }, 650);
                 } else {
+                    el.textContent = '';
                     el.classList.add('d-none');
                 }
             }
 
+            // ── HTML escaping ─────────────────────────────────────────────
             function escapeHtml(value) {
                 var div = document.createElement('div');
-                div.textContent = value == null ? '' : String(value);
+                div.textContent = (value == null) ? '' : String(value);
                 return div.innerHTML;
             }
 
+            // ── Render dropdown list ──────────────────────────────────────
             function renderNotifications(items) {
                 if (!dropdownBody) return;
                 latestNotifications = items || [];
@@ -416,41 +433,50 @@
                 }
 
                 dropdownBody.innerHTML = latestNotifications.map(function(item) {
-                    return '<a href="' + escapeHtml(item.url || '#') + '" class="notif-item ' + (item.is_unread ? 'notif-unread' : '') + '"' +
-                        ' data-notification-id="' + escapeHtml(item.id) + '" data-unread="' + (item.is_unread ? '1' : '0') + '">' +
-                        '<span class="notif-icon notif-color-' + escapeHtml(item.color || 'gray') + '"><i class="fa-solid fa-' + escapeHtml(item.icon || 'bell') + '"></i></span>' +
+                    return '<a href="' + escapeHtml(item.url || '#') +
+                        '" class="notif-item' + (item.is_unread ? ' notif-unread' : '') + '"' +
+                        ' data-notification-id="' + escapeHtml(item.id) + '"' +
+                        ' data-unread="' + (item.is_unread ? '1' : '0') + '">' +
+                        '<span class="notif-icon notif-color-' + escapeHtml(item.color || 'gray') + '">' +
+                        '<i class="fa-solid fa-' + escapeHtml(item.icon || 'bell') + '"></i></span>' +
                         '<span class="notif-content">' +
                         '<span class="notif-title">' + escapeHtml(item.title || 'Notification') + '</span>' +
-                        '<span class="notif-msg">' + escapeHtml(item.message || 'New notification') + '</span>' +
+                        '<span class="notif-msg">' + escapeHtml(item.message || '') + '</span>' +
                         '<small class="text-muted">' + escapeHtml(item.relative_time || '') + '</small>' +
-                        '</span>' +
-                        '</a>';
+                        '</span></a>';
                 }).join('');
             }
 
+            // ── Get IDs of currently visible unread items ─────────────────
             function unreadVisibleIds() {
                 if (!dropdownBody) return [];
-                return Array.from(dropdownBody.querySelectorAll('[data-notification-id][data-unread="1"]'))
-                    .slice(0, 15)
-                    .map(function(el) { return el.dataset.notificationId; });
+                return Array.from(
+                    dropdownBody.querySelectorAll('[data-notification-id][data-unread="1"]')
+                ).slice(0, 15).map(function(el) { return el.dataset.notificationId; });
             }
 
+            // ── Mark visible items read (called when dropdown opens) ──────
             function markVisibleAsRead() {
                 var ids = unreadVisibleIds();
                 if (!ids.length) return;
 
+                // Optimistic UI update — update local state + re-render immediately
                 latestNotifications = latestNotifications.map(function(item) {
                     if (ids.indexOf(item.id) !== -1) {
                         item.is_unread = false;
-                        item.read_at = new Date().toISOString();
+                        item.read_at   = new Date().toISOString();
                     }
                     return item;
                 });
                 renderNotifications(latestNotifications);
-                lastCount = Math.max(0, lastCount - ids.length);
-                setBadge(topBadge, lastCount);
-                setBadge(sbCount, lastCount);
 
+                // Update badge from local estimate first
+                var localUnread = latestNotifications.filter(function(n) { return n.is_unread; }).length;
+                lastCount = localUnread;
+                setBadge(topBadge, localUnread);
+                setBadge(sbCount,  localUnread);
+
+                // Persist to server; use server response to sync exact count
                 fetch('{{ route("notifications.readVisible") }}', {
                     method: 'POST',
                     headers: {
@@ -462,40 +488,51 @@
                     credentials: 'same-origin',
                     body: JSON.stringify({ ids: ids })
                 })
-                    .then(function(r) { return r.ok ? r.json() : null; })
-                    .then(function(data) {
-                        if (!data) return;
-                        lastCount = data.unread_count || 0;
-                        setBadge(topBadge, lastCount);
-                        setBadge(sbCount, lastCount);
-                    })
-                    .catch(function() {});
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (!data) return;
+                    // Sync badge with authoritative server count
+                    lastCount = data.unread_count || 0;
+                    setBadge(topBadge, lastCount);
+                    setBadge(sbCount,  lastCount);
+                })
+                .catch(function() {});
             }
+
+            // ── Poll for new notifications ────────────────────────────────
+            function poll() {
                 if (document.hidden) return;
+
                 fetch('{{ route("notifications.poll") }}', {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': csrf
-                        },
-                        credentials: 'same-origin'
-                    })
-                    .then(function(r) {
-                        return r.ok ? r.json() : null;
-                    })
-                    .then(function(data) {
-                        if (!data) return;
-                        var n = data.unread_count || 0;
-                        if (n > lastCount) { playSound(); }
-                        lastCount = n;
-                        setBadge(topBadge, n);
-                        setBadge(sbCount, n);
-                        renderNotifications(data.notifications || []);
-                        if (bellBtn && bellBtn.getAttribute('aria-expanded') === 'true') {
-                            markVisibleAsRead();
-                        }
-                    })
-                    .catch(function() {});
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrf
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (!data) return;
+
+                    var newCount = data.unread_count || 0;
+
+                    // Play sound ONLY when unread count genuinely increased
+                    if (newCount > lastCount) {
+                        playSound();
+                    }
+
+                    lastCount = newCount;
+                    setBadge(topBadge, newCount);
+                    setBadge(sbCount,  newCount);
+                    renderNotifications(data.notifications || []);
+
+                    // If dropdown is currently open, auto-mark newly arrived items
+                    if (bellBtn && bellBtn.getAttribute('aria-expanded') === 'true') {
+                        markVisibleAsRead();
+                    }
+                })
+                .catch(function() {});
             }
 
             function startPolling() {
@@ -507,6 +544,7 @@
                 pollTimer = null;
             }
 
+            // ── Page visibility: pause polling when tab is hidden ─────────
             document.addEventListener('visibilitychange', function() {
                 if (document.hidden) {
                     stopPolling();
@@ -516,26 +554,33 @@
                 }
             });
 
+            // ── Bell button: mark visible as read when dropdown opens ─────
             if (bellBtn) {
-                bellBtn.addEventListener('shown.bs.dropdown', markVisibleAsRead);
+                bellBtn.addEventListener('shown.bs.dropdown', function() {
+                    markVisibleAsRead();
+                });
             }
 
-            // ── Single notification click: mark read, then navigate ───────
+            // ── Notification item click: mark single item read, navigate ──
             if (dropdownBody) {
                 dropdownBody.addEventListener('click', function(e) {
                     var link = e.target.closest('a[data-notification-id]');
                     if (!link) return;
-                    if (link.dataset.unread !== '1') return; // already read — let <a> navigate normally
-                    e.preventDefault();
-                    var id  = link.dataset.notificationId;
-                    var url = link.getAttribute('href');
 
-                    // Optimistically update UI
+                    var url      = link.getAttribute('href');
+                    var isUnread = link.dataset.unread === '1';
+                    var id       = link.dataset.notificationId;
+
+                    if (!isUnread) return; // already read — normal <a> navigation
+
+                    e.preventDefault();
+
+                    // Optimistic update
                     link.dataset.unread = '0';
                     link.classList.remove('notif-unread');
                     lastCount = Math.max(0, lastCount - 1);
                     setBadge(topBadge, lastCount);
-                    setBadge(sbCount, lastCount);
+                    setBadge(sbCount,  lastCount);
 
                     fetch('{{ route("notifications.readVisible") }}', {
                         method: 'POST',
@@ -553,18 +598,22 @@
                         if (data) {
                             lastCount = data.unread_count || 0;
                             setBadge(topBadge, lastCount);
-                            setBadge(sbCount, lastCount);
+                            setBadge(sbCount,  lastCount);
                         }
                     })
                     .catch(function() {})
-                    .finally(function() { if (url && url !== '#') window.location.href = url; });
+                    .finally(function() {
+                        if (url && url !== '#') window.location.href = url;
+                    });
                 });
             }
 
+            // ── Initial poll after short delay ────────────────────────────
             setTimeout(function() {
                 poll();
                 startPolling();
             }, FIRST_MS);
+
         })();
     </script>
     @stack('scripts')
