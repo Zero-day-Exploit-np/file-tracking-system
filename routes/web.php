@@ -77,9 +77,8 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
 
     // Notifications
     Route::get('/notifications',            [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/read-all',  [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
     Route::get('/notifications/poll',       [NotificationController::class, 'poll'])->name('notifications.poll');
+    Route::post('/notifications/read-visible', [NotificationController::class, 'markVisibleAsRead'])->name('notifications.readVisible');
 });
 
 /*

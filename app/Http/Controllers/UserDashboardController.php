@@ -39,7 +39,11 @@ class UserDashboardController extends Controller
             ->where(fn($q) => $q->where('from_user', $userId)->orWhere('to_user', $userId))
             ->latest()->take(8)->get();
 
-        $unreadNotifications = $user->unreadNotifications->take(5);
+        $unreadNotifications = $user->notifications()
+            ->whereNull('read_at')
+            ->latest()
+            ->limit(5)
+            ->get();
 
         return view('user.dashboard', [
             'myFiles'             => $myFiles,

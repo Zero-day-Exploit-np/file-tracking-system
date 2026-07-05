@@ -25,9 +25,14 @@ class TransferRequestNotification extends Notification
     {
         return [
             'type'          => 'transfer_requested',
+            'title'         => 'Transfer Requested',
             'message'       => 'New transfer request from ' . ($this->transferReq->sender->name ?? 'Unknown'),
+            'icon'          => 'paper-plane',
+            'color'         => 'green',
+            'url'           => route('admin.transfers', [], false),
             'file_title'    => $this->transferReq->file->file_name ?? 'Unknown File',
             'file_number'   => $this->transferReq->file->file_number ?? '',
+            'file_uuid'     => $this->transferReq->file->uuid ?? null,
             'from_dept'     => $this->transferReq->fromDept->name ?? '',
             'to_dept'       => $this->transferReq->toDept->name ?? '',
             'target_user'   => $this->transferReq->receiver->name ?? '',

@@ -14,6 +14,10 @@ class FileRecordPolicy
      */
     public function before(User $user, string $ability): ?bool
     {
+        if ($ability === 'transfer') {
+            return null;
+        }
+
         // Super Admin: can view/download but NOT create
         if ($user->role === 'super_admin') {
             if (in_array($ability, ['create', 'store'], true)) {

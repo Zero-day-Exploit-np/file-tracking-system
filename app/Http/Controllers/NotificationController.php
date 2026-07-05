@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\NotificationPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -9,50 +10,47 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $notifications = Auth::user()->notifications()->latest()->get();
+        $notifications = Auth::user()
+            ->notifications()
+            ->latest()
+            ->paginate(15);
+
         return view('notifications.index', compact('notifications'));
     }
 
-    public function markAllAsRead()
-    {
-        Auth::user()->unreadNotifications->markAsRead();
-        return back()->with('success', 'All notifications marked as read.');
-    }
-
-    /**
-     * Polling endpoint — returns unread notification count.
-     * Polled every 15 s by the frontend layout.
-     */
     public function poll()
     {
-        $user   = Auth::user();
-        $unread = $user->unreadNotifications;
+        $user = Auth::user();
+        $latest = $user->notifications()
+            ->latest()
+            ->limit(15)
+            ->get();
 
         return response()->json([
-            'unread_count'   => $unread->count(),
-            'notifications'  => $unread->take(5)->map(fn($n) => [
-                'id'      => $n->id,
-                'message' => $n->data['message'] ?? 'New notification',
-                'type'    => $n->data['type']    ?? 'info',
-                'time'    => $n->created_at->diffForHumans(),
-            ]),
+            'unread_count' => $user->notifications()->whereNull('read_at')->count(),
+            'notifications' => $latest
+                ->map(fn($notification) => NotificationPresenter::present($notification))
+                ->values(),
         ]);
     }
 
-    /**
-     * Mark a single notification as read.
-     */
-    public function markRead(string $id)
+    public function markVisibleAsRead(Request $request)
     {
-        $notification = Auth::user()
-            ->notifications()
-            ->where('id', $id)
-            ->first();
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'max:15'],
+            'ids.*' => ['required', 'uuid'],
+        ]);
 
-        if ($notification) {
-            $notification->markAsRead();
-        }
+        $user = Auth::user();
 
-        return response()->json(['success' => true]);
+        $user->notifications()
+            ->whereIn('id', $data['ids'])
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'unread_count' => $user->notifications()->whereNull('read_at')->count(),
+        ]);
     }
 }

@@ -34,6 +34,8 @@ it('shows the notifications page for an authenticated user', function () {
 
     $file = FileRecord::create([
         'department_id' => $department->id,
+        'created_by' => $sender->id,
+        'current_user_id' => $sender->id,
         'file_name' => 'Policy Document',
         'file_number' => 'DOC-001',
         'status' => 'active',
@@ -52,10 +54,11 @@ it('shows the notifications page for an authenticated user', function () {
     $response = $this->actingAs($recipient)->get(route('notifications.index'));
 
     $response->assertOk();
-    $response->assertSee('A file has been transferred');
+    $response->assertSee('File Transferred');
+    $response->assertSee('transferred DOC-001');
 });
 
-it('marks all notifications as read when the action is posted', function () {
+it('marks visible notifications as read when the dropdown opens', function () {
     /** @var \Tests\TestCase $this */
     $department = Department::create([
         'name' => 'Operations',
@@ -77,6 +80,8 @@ it('marks all notifications as read when the action is posted', function () {
 
     $file = FileRecord::create([
         'department_id' => $department->id,
+        'created_by' => $sender->id,
+        'current_user_id' => $sender->id,
         'file_name' => 'Policy Document',
         'file_number' => 'DOC-002',
         'status' => 'active',
@@ -94,10 +99,14 @@ it('marks all notifications as read when the action is posted', function () {
 
     expect($recipient->unreadNotifications)->toHaveCount(1);
 
-    $response = $this->actingAs($recipient)->post(route('notifications.readAll'));
+    $notificationId = $recipient->fresh()->unreadNotifications()->first()->id;
 
-    $response->assertRedirect();
-    $response->assertSessionHas('success');
+    $response = $this->actingAs($recipient)->postJson(route('notifications.readVisible'), [
+        'ids' => [$notificationId],
+    ]);
 
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('unread_count', 0);
     $this->assertSame(0, $recipient->fresh()->unreadNotifications->count());
 });

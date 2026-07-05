@@ -22,7 +22,9 @@
     $isAdmin = $role === 'admin';
     $isUser = $role === 'user';
     $dashRoute = $isSuper ? 'super_admin.dashboard' : ($isAdmin ? 'admin.dashboard' : 'user.dashboard');
-    $unreadCount = auth()->user()->unreadNotifications->count();
+    $unreadCount = auth()->user()->notifications()->whereNull('read_at')->count();
+    $latestNotifications = auth()->user()->notifications()->latest()->limit(15)->get()
+        ->map(fn($notification) => \App\Support\NotificationPresenter::present($notification));
     @endphp
 
     <!-- ================================================================
@@ -164,7 +166,7 @@
             <div class="topbar-right">
                 {{-- Notification Bell --}}
                 <div class="dropdown me-2">
-                    <button class="topbar-icon-btn" data-bs-toggle="dropdown" id="topbar-bell-btn">
+                    <button class="topbar-icon-btn" data-bs-toggle="dropdown" id="topbar-bell-btn" aria-label="Notifications">
                         <i class="fa-solid fa-bell"></i>
                         @if($unreadCount > 0)
                         <span class="topbar-badge" id="topbar-notif-badge">{{ $unreadCount }}</span>
@@ -172,22 +174,21 @@
                         <span class="topbar-badge d-none" id="topbar-notif-badge"></span>
                         @endif
                     </button>
-                    <div class="dropdown-menu dropdown-menu-end notif-dropdown p-0">
-                        <div class="notif-header d-flex justify-content-between align-items-center px-3 py-2">
+                    <div class="dropdown-menu dropdown-menu-end notif-dropdown p-0" id="notif-dropdown-menu">
+                        <div class="notif-header d-flex align-items-center gap-2 px-3 py-2">
+                            <i class="fa-solid fa-bell text-primary"></i>
                             <strong>Notifications</strong>
-                            @if($unreadCount > 0)
-                            <form method="POST" action="{{ route('notifications.readAll') }}">
-                                @csrf
-                                <button type="submit" class="btn btn-link btn-sm p-0">Mark all read</button>
-                            </form>
-                            @endif
                         </div>
                         <div class="notif-body" id="notif-dropdown-body">
-                            @forelse(auth()->user()->notifications()->latest()->take(5)->get() as $n)
-                            <div class="notif-item {{ $n->read_at ? '' : 'notif-unread' }}">
-                                <div class="notif-msg">{{ $n->data['message'] ?? 'Notification' }}</div>
-                                <small class="text-muted">{{ $n->created_at->diffForHumans() }}</small>
-                            </div>
+                            @forelse($latestNotifications as $n)
+                            <a href="{{ $n['url'] }}" class="notif-item {{ $n['is_unread'] ? 'notif-unread' : '' }}" data-notification-id="{{ $n['id'] }}" data-unread="{{ $n['is_unread'] ? '1' : '0' }}">
+                                <span class="notif-icon notif-color-{{ $n['color'] }}"><i class="fa-solid fa-{{ $n['icon'] }}"></i></span>
+                                <span class="notif-content">
+                                    <span class="notif-title">{{ $n['title'] }}</span>
+                                    <span class="notif-msg">{{ $n['message'] }}</span>
+                                    <small class="text-muted">{{ $n['relative_time'] }}</small>
+                                </span>
+                            </a>
                             @empty
                             <div class="notif-item text-muted text-center">No notifications</div>
                             @endforelse
@@ -206,13 +207,16 @@
                         <img
                             src="{{ auth()->user()->photo_url }}"
                             alt="Profile"
-                            class="topbar-avatar-img">
+                            class="topbar-avatar-img"
+                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="topbar-avatar" style="display:none;">
+                            {{ auth()->user()->initials }}
+                        </div>
                         @else
                         <div class="topbar-avatar">
                             {{ auth()->user()->initials }}
                         </div>
                         @endif
-                        <!-- <div class="topbar-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div> -->
 
 
 
@@ -359,11 +363,15 @@
             const sound = document.getElementById('notif-sound');
             const topBadge = document.getElementById('topbar-notif-badge');
             const sbCount = document.getElementById('sb-notif-count');
-            const POLL_MS = 15000; // 15-second polling
-            const FIRST_MS = 5000;  // first poll after 5s
+            const bellBtn = document.getElementById('topbar-bell-btn');
+            const dropdownBody = document.getElementById('notif-dropdown-body');
+            const POLL_MS = 10000;
+            const FIRST_MS = 1500;
+            const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
             let lastCount = parseInt(topBadge ? topBadge.textContent : '0', 10) || 0;
             let soundUnlocked = false;
             let pollTimer = null;
+            let latestNotifications = @json($latestNotifications->values());
 
             ['click', 'keydown', 'touchstart'].forEach(function(ev) {
                 document.addEventListener(ev, function() {
@@ -385,18 +393,90 @@
                 el.textContent = n > 0 ? n : '';
                 if (n > 0) {
                     el.classList.remove('d-none');
+                    el.classList.add('badge-bounce');
+                    setTimeout(function() { el.classList.remove('badge-bounce'); }, 650);
                 } else {
                     el.classList.add('d-none');
                 }
             }
 
-            function poll() {
+            function escapeHtml(value) {
+                var div = document.createElement('div');
+                div.textContent = value == null ? '' : String(value);
+                return div.innerHTML;
+            }
+
+            function renderNotifications(items) {
+                if (!dropdownBody) return;
+                latestNotifications = items || [];
+
+                if (!latestNotifications.length) {
+                    dropdownBody.innerHTML = '<div class="notif-item text-muted text-center">No notifications</div>';
+                    return;
+                }
+
+                dropdownBody.innerHTML = latestNotifications.map(function(item) {
+                    return '<a href="' + escapeHtml(item.url || '#') + '" class="notif-item ' + (item.is_unread ? 'notif-unread' : '') + '"' +
+                        ' data-notification-id="' + escapeHtml(item.id) + '" data-unread="' + (item.is_unread ? '1' : '0') + '">' +
+                        '<span class="notif-icon notif-color-' + escapeHtml(item.color || 'gray') + '"><i class="fa-solid fa-' + escapeHtml(item.icon || 'bell') + '"></i></span>' +
+                        '<span class="notif-content">' +
+                        '<span class="notif-title">' + escapeHtml(item.title || 'Notification') + '</span>' +
+                        '<span class="notif-msg">' + escapeHtml(item.message || 'New notification') + '</span>' +
+                        '<small class="text-muted">' + escapeHtml(item.relative_time || '') + '</small>' +
+                        '</span>' +
+                        '</a>';
+                }).join('');
+            }
+
+            function unreadVisibleIds() {
+                if (!dropdownBody) return [];
+                return Array.from(dropdownBody.querySelectorAll('[data-notification-id][data-unread="1"]'))
+                    .slice(0, 15)
+                    .map(function(el) { return el.dataset.notificationId; });
+            }
+
+            function markVisibleAsRead() {
+                var ids = unreadVisibleIds();
+                if (!ids.length) return;
+
+                latestNotifications = latestNotifications.map(function(item) {
+                    if (ids.indexOf(item.id) !== -1) {
+                        item.is_unread = false;
+                        item.read_at = new Date().toISOString();
+                    }
+                    return item;
+                });
+                renderNotifications(latestNotifications);
+                lastCount = Math.max(0, lastCount - ids.length);
+                setBadge(topBadge, lastCount);
+                setBadge(sbCount, lastCount);
+
+                fetch('{{ route("notifications.readVisible") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrf
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ ids: ids })
+                })
+                    .then(function(r) { return r.ok ? r.json() : null; })
+                    .then(function(data) {
+                        if (!data) return;
+                        lastCount = data.unread_count || 0;
+                        setBadge(topBadge, lastCount);
+                        setBadge(sbCount, lastCount);
+                    })
+                    .catch(function() {});
+            }
                 if (document.hidden) return;
                 fetch('{{ route("notifications.poll") }}', {
                         headers: {
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+                            'X-CSRF-TOKEN': csrf
                         },
                         credentials: 'same-origin'
                     })
@@ -410,6 +490,10 @@
                         lastCount = n;
                         setBadge(topBadge, n);
                         setBadge(sbCount, n);
+                        renderNotifications(data.notifications || []);
+                        if (bellBtn && bellBtn.getAttribute('aria-expanded') === 'true') {
+                            markVisibleAsRead();
+                        }
                     })
                     .catch(function() {});
             }
@@ -432,6 +516,51 @@
                 }
             });
 
+            if (bellBtn) {
+                bellBtn.addEventListener('shown.bs.dropdown', markVisibleAsRead);
+            }
+
+            // ── Single notification click: mark read, then navigate ───────
+            if (dropdownBody) {
+                dropdownBody.addEventListener('click', function(e) {
+                    var link = e.target.closest('a[data-notification-id]');
+                    if (!link) return;
+                    if (link.dataset.unread !== '1') return; // already read — let <a> navigate normally
+                    e.preventDefault();
+                    var id  = link.dataset.notificationId;
+                    var url = link.getAttribute('href');
+
+                    // Optimistically update UI
+                    link.dataset.unread = '0';
+                    link.classList.remove('notif-unread');
+                    lastCount = Math.max(0, lastCount - 1);
+                    setBadge(topBadge, lastCount);
+                    setBadge(sbCount, lastCount);
+
+                    fetch('{{ route("notifications.readVisible") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrf
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ ids: [id] })
+                    })
+                    .then(function(r) { return r.ok ? r.json() : null; })
+                    .then(function(data) {
+                        if (data) {
+                            lastCount = data.unread_count || 0;
+                            setBadge(topBadge, lastCount);
+                            setBadge(sbCount, lastCount);
+                        }
+                    })
+                    .catch(function() {})
+                    .finally(function() { if (url && url !== '#') window.location.href = url; });
+                });
+            }
+
             setTimeout(function() {
                 poll();
                 startPolling();
@@ -442,5 +571,3 @@
 </body>
 
 </html>
-
-

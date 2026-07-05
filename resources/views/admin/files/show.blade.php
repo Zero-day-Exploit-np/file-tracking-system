@@ -304,7 +304,9 @@
 
                     {{-- Avatar --}}
                     @if($person && $person->photo_url)
-                        <img src="{{ $person->photo_url }}" alt="{{ $person->name }}" class="htl-avatar">
+                        <img src="{{ $person->photo_url }}" alt="{{ $person->name }}" class="htl-avatar"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="htl-avatar-initials {{ $avatarBg }}" style="display:none;">{{ $person->initials }}</div>
                     @elseif($person)
                         <div class="htl-avatar-initials {{ $avatarBg }}">{{ $person->initials }}</div>
                     @else
