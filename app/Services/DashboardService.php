@@ -65,12 +65,12 @@ class DashboardService
     public function adminStats(int $deptId): array
     {
         return Cache::remember("admin_stats_{$deptId}", self::TTL, fn() => [
-            'dept_files'          => FileRecord::where('department_id', $deptId)->count(),
-            'dept_users'          => User::where('department_id', $deptId)->count(),
-            'total_transfers'     => FileMovement::where('from_department', $deptId)
-                ->orWhere('to_department', $deptId)
-                ->where('action', 'transferred')
-                ->count(),
+            'dept_files'      => FileRecord::where('department_id', $deptId)->count(),
+            'dept_users'      => User::where('department_id', $deptId)->count(),
+            'total_transfers' => FileMovement::where(function ($q) use ($deptId) {
+                $q->where('from_department', $deptId)
+                  ->orWhere('to_department', $deptId);
+            })->where('action', 'transferred')->count(),
         ]);
     }
 

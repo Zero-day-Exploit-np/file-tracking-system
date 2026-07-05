@@ -72,6 +72,11 @@
                 <i class="fa-solid fa-folder-open"></i><span>All Files</span>
             </a>
 
+            <a href="{{ route('admin.transfers') }}"
+                class="sidebar-link {{ request()->routeIs('admin.transfers') ? 'active' : '' }}">
+                <i class="fa-solid fa-right-left"></i><span>Transfer History</span>
+            </a>
+
             {{-- Admin: User Management (dept users only) --}}
             @if($isAdmin)
             <a href="{{ route('admin.users.index') }}"

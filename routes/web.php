@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminFileController;
 use App\Http\Controllers\Admin\AdminDesignationController;
+use App\Http\Controllers\Admin\AdminTransferController;
 use App\Http\Controllers\Admin\FileTimelineController;
 use App\Http\Controllers\Admin\BackupController;
 
@@ -132,6 +133,9 @@ Route::prefix('admin')
         Route::get('/files',                    [AdminFileController::class, 'index'])->name('files');
         Route::get('/files/{uuid}/timeline',    [FileTimelineController::class, 'show'])->name('files.timeline');
         Route::get('/files/{uuid}',             [FileTimelineController::class, 'fileDetails'])->name('files.show');
+
+        // Transfer history — read-only monitoring
+        Route::get('/transfers', [AdminTransferController::class, 'index'])->name('transfers');
 
         // Backup — super_admin only
         Route::middleware('role:super_admin')->group(function () {

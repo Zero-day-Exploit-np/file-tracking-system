@@ -6,46 +6,58 @@ use App\Http\Controllers\Controller;
 use App\Models\FileRecord;
 use App\Models\FileMovement;
 
+/**
+ * Shows file details + linked-list timeline for admin/super_admin.
+ * Both /admin/files/{uuid} and /admin/files/{uuid}/timeline
+ * use the same view (admin.files.show) with the same data.
+ */
 class FileTimelineController extends Controller
 {
     /**
-     * Show file timeline using UUID route binding.
-     * Route: GET /admin/files/{uuid}/timeline
+     * GET /admin/files/{uuid}/timeline
+     * Same view as fileDetails — both show full info + journey.
      */
     public function show(string $uuid)
     {
-        $file = FileRecord::with(['currentUser', 'department'])
-            ->where('uuid', $uuid)
-            ->firstOrFail();
-
+        $file = $this->loadFile($uuid);
         $this->authorizeFile($file);
 
+        // Chronological order for the linked-list display
         $timeline = FileMovement::with(['fromUser', 'toUser', 'fromDept', 'toDept'])
             ->where('file_id', $file->id)
-            ->orderByDesc('created_at')
+            ->orderBy('created_at')
             ->get();
 
         return view('admin.files.show', compact('file', 'timeline'));
     }
 
     /**
-     * Show file details using UUID.
-     * Route: GET /admin/files/{uuid}
+     * GET /admin/files/{uuid}
+     * File detail page — identical layout, movements loaded via relationship.
      */
     public function fileDetails(string $uuid)
     {
-        $file = FileRecord::with([
-            'currentUser',
+        $file = $this->loadFile($uuid);
+        $this->authorizeFile($file);
+
+        // No separate $timeline — view falls back to $file->movements
+        return view('admin.files.show', compact('file'));
+    }
+
+    // ── helpers ──────────────────────────────────────────────
+
+    private function loadFile(string $uuid): FileRecord
+    {
+        return FileRecord::with([
             'department',
+            'creator',
+            'currentHolder',
+            'currentUser',
             'movements.fromUser',
             'movements.toUser',
             'movements.fromDept',
             'movements.toDept',
         ])->where('uuid', $uuid)->firstOrFail();
-
-        $this->authorizeFile($file);
-
-        return view('admin.files.show', compact('file'));
     }
 
     private function authorizeFile(FileRecord $file): void

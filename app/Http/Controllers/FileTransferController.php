@@ -54,13 +54,30 @@ class FileTransferController extends Controller
         $file        = FileRecord::where('uuid', $request->file_record_uuid)->firstOrFail();
         $currentUser = Auth::user();
 
-        // Auth check
+        // Auth check — policy enforces current holder + role:user
         $this->authorize('transfer', $file);
+
+        // ── SECURITY: re-verify file still belongs to this user (race condition guard) ──
+        if ((int) $file->current_user_id !== $currentUser->id) {
+            return back()->with('error', 'You no longer hold this file.');
+        }
 
         $remarks = $request->string('remarks')->trim()->value() ?: null;
 
         if ($request->destination_type === 'same') {
-            return $this->transferToUser($file, $currentUser, (int) $request->to_user_id, $remarks);
+            $toUserId = (int) $request->to_user_id;
+
+            // ── SECURITY: verify target user is actually in the same department ──
+            $targetUser = User::where('id', $toUserId)
+                ->where('department_id', $currentUser->department_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$targetUser) {
+                return back()->with('error', 'Invalid recipient. The selected user must be in your department.');
+            }
+
+            return $this->transferToUser($file, $currentUser, $targetUser, $remarks);
         }
 
         return $this->transferToDepartment($file, $currentUser, (int) $request->department_id, $remarks);
@@ -90,17 +107,10 @@ class FileTransferController extends Controller
     // PRIVATE HELPERS
     // ─────────────────────────────────────────────────────────────
 
-    private function transferToUser(FileRecord $file, User $currentUser, int $toUserId, ?string $remarks): \Illuminate\Http\RedirectResponse
+    private function transferToUser(FileRecord $file, User $currentUser, User $targetUser, ?string $remarks): \Illuminate\Http\RedirectResponse
     {
-        $targetUser = User::findOrFail($toUserId);
-
         if ($targetUser->id === $currentUser->id) {
             return back()->with('error', 'You cannot transfer a file to yourself.');
-        }
-
-        // Must be same department
-        if ((int) $targetUser->department_id !== (int) $currentUser->department_id) {
-            return back()->with('error', 'Selected user is not in your department. Use "Other Department" for cross-department transfers.');
         }
 
         $transfer = null;
@@ -146,12 +156,14 @@ class FileTransferController extends Controller
     {
         $targetDept = Department::findOrFail($deptId);
 
+        // Cannot transfer to own department via "other dept" path
         if ((int) $targetDept->id === (int) $currentUser->department_id) {
             return back()->with('error', 'That is your own department. Use "Same Department" instead.');
         }
 
-        // Find the best receiving user in the target department.
-        // Preference: admin of that dept → any active user in that dept → null (dept has no users yet)
+        // Find best receiver: prefer the dept admin, then any active user in that dept.
+        // Per spec: cross-dept transfer owner = Department Admin.
+        // If no admin AND no active user — block the transfer with a clear error.
         $receiver = User::where('department_id', $targetDept->id)
             ->where('role', 'admin')
             ->where('is_active', true)
@@ -160,16 +172,21 @@ class FileTransferController extends Controller
                 ->where('is_active', true)
                 ->first();
 
-        $receiverId = $receiver?->id; // may be null if dept has no users
+        // RULE: Never save current_holder = null. If no one in target dept, block transfer.
+        if (!$receiver) {
+            return back()->with('error',
+                'Cannot transfer to "' . $targetDept->name . '" — that department has no active users. ' .
+                'Ask a Super Admin to assign users to that department first.'
+            );
+        }
 
         $transfer = null;
 
-        DB::transaction(function () use ($file, $currentUser, $targetDept, $receiver, $receiverId, $remarks, &$transfer) {
-            // receiver_id is now nullable in file_transfers
+        DB::transaction(function () use ($file, $currentUser, $targetDept, $receiver, $remarks, &$transfer) {
             $transfer = FileTransfer::create([
                 'file_id'        => $file->id,
                 'sender_id'      => $currentUser->id,
-                'receiver_id'    => $receiverId,
+                'receiver_id'    => $receiver->id,
                 'remarks'        => $remarks,
                 'transferred_at' => now(),
             ]);
@@ -177,7 +194,7 @@ class FileTransferController extends Controller
             FileMovement::create([
                 'file_id'         => $file->id,
                 'from_user'       => $currentUser->id,
-                'to_user'         => $receiverId,  // nullable — dept-only transfer
+                'to_user'         => $receiver->id,
                 'from_department' => $currentUser->department_id,
                 'to_department'   => $targetDept->id,
                 'action'          => 'transferred',
@@ -185,31 +202,38 @@ class FileTransferController extends Controller
             ]);
 
             $file->update([
-                'current_user_id' => $receiverId,  // nullable — assigned later when dept user picks it up
+                'current_user_id' => $receiver->id,
                 'department_id'   => $targetDept->id,
                 'status'          => 'active',
             ]);
         });
 
-        // Only notify and fire event if there is an actual receiver user
-        if ($transfer && $receiver) {
+        if ($transfer) {
+            // Notify the direct receiver
             $receiver->notify(new FileTransferredNotification($transfer));
-            // Only broadcast if receiver_id is set (event channel needs a real user id)
+
+            // Also notify the dept admin if the receiver is not already the admin
+            if ($receiver->role !== 'admin') {
+                $deptAdmin = User::where('department_id', $targetDept->id)
+                    ->where('role', 'admin')
+                    ->where('is_active', true)
+                    ->first();
+                if ($deptAdmin && $deptAdmin->id !== $receiver->id) {
+                    $deptAdmin->notify(new FileTransferredNotification($transfer));
+                }
+            }
+
+            // Only broadcast when receiver_id is set (already guaranteed above)
             event(new \App\Events\FileTransferred($transfer));
         }
 
         \App\Services\DashboardService::clearUserCache($currentUser->id);
-        if ($receiver) {
-            \App\Services\DashboardService::clearUserCache($receiver->id);
-        }
+        \App\Services\DashboardService::clearUserCache($receiver->id);
         \App\Services\DashboardService::clearAdminCache($currentUser->department_id);
         \App\Services\DashboardService::clearAdminCache($targetDept->id);
         \App\Services\DashboardService::clearSuperAdminCache();
 
-        $successMsg = $receiver
-            ? 'File transferred to ' . $receiver->name . ' (' . $targetDept->name . ').'
-            : 'File transferred to ' . $targetDept->name . '. No users assigned yet — file is held by the department.';
-
-        return redirect()->route('files.index')->with('success', $successMsg);
+        return redirect()->route('files.index')
+            ->with('success', 'File transferred to ' . $receiver->name . ' (' . $targetDept->name . ').');
     }
 }
