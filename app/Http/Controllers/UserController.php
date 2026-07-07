@@ -55,18 +55,19 @@ class UserController extends Controller
         $request->validate([
             'name'           => 'required|string|max:255',
             'email'          => 'required|email:rfc,dns|max:255|unique:users,email',
-            'password'       => 'required|min:8|confirmed',
             'department_id'  => 'nullable|exists:departments,id',
             'designation_id' => 'nullable|exists:designations,id',
             'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
             'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        // Super Admin can ONLY create Admin accounts — no privilege escalation
+        // Super Admin can ONLY create Admin accounts — no privilege escalation.
+        // Default password is Password@123, user must change on first login.
         $data = $request->only(['name', 'email', 'department_id', 'designation_id', 'contact_number']);
-        $data['password']        = Hash::make($request->password);
-        $data['role']            = 'admin'; // always admin — hard-coded
-        $data['can_create_file'] = false;   // admins never create files
+        $data['password']             = Hash::make('Password@123');
+        $data['role']                 = 'admin';
+        $data['can_create_file']      = false;
+        $data['must_change_password'] = true;
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->storePhoto($request);
@@ -74,7 +75,7 @@ class UserController extends Controller
 
         $user = User::create($data);
 
-        return redirect()->route('users.index')->with('success', 'Admin account created successfully.');
+        return redirect()->route('users.index')->with('success', 'Admin account created. Default password is Password@123 — they will be prompted to change it on first login.');
     }
 
     public function show(User $user)

@@ -20,6 +20,12 @@
         @csrf
 
         <div class="row g-3">
+            <div class="col-12">
+                <div class="alert alert-info d-flex align-items-center gap-2 mb-2">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Default password is <code>Password@123</code>. The user will be prompted to change it on first login.</span>
+                </div>
+            </div>
             <div class="col-md-6">
                 <label class="form-label">Full Name <span class="required-star">*</span></label>
                 <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
@@ -36,12 +42,6 @@
                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
                     value="{{ old('email') }}" placeholder="user@example.com" required>
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Password <span class="required-star">*</span></label>
-                <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                    placeholder="Minimum 6 characters" required>
-                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6">
                 <label class="form-label">Designation <span class="required-star">*</span></label>

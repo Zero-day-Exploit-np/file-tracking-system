@@ -69,6 +69,15 @@
                             <a href="{{ route('users.edit', $user->uuid) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </a>
+                            {{-- Impersonate (super admin can impersonate any admin) --}}
+                            @if(!session('impersonator_id') && auth()->user()->canImpersonate($user))
+                            <form method="POST" action="{{ route('impersonation.start', $user->uuid) }}" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Impersonate {{ $user->name }}">
+                                    <i class="fa-solid fa-user-secret"></i>
+                                </button>
+                            </form>
+                            @endif
                             @if($user->id !== auth()->id())
                             <form action="{{ route('users.destroy', $user->uuid) }}" method="POST" class="d-inline">
                                 @csrf @method('DELETE')

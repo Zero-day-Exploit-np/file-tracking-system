@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'contact_number',
         'photo',
         'can_create_file',
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -37,10 +38,11 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
-        'can_create_file'   => 'boolean',
-        'is_active'         => 'boolean',
+        'email_verified_at'    => 'datetime',
+        'password'             => 'hashed',
+        'can_create_file'      => 'boolean',
+        'is_active'            => 'boolean',
+        'must_change_password' => 'boolean',
     ];
 
     protected static function boot(): void
@@ -89,5 +91,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function designation(): BelongsTo
     {
         return $this->belongsTo(Designation::class)->withDefault(['name' => '—']);
+    }
+
+    /**
+     * Impersonation authorization hierarchy:
+     *   Super Admin  → can impersonate any admin or user (not another super_admin)
+     *   Admin        → can impersonate users in their own department only
+     *   User         → cannot impersonate anyone
+     */
+    public function canImpersonate(User $target): bool
+    {
+        // Cannot impersonate yourself
+        if ($this->id === $target->id) {
+            return false;
+        }
+
+        if ($this->role === 'super_admin') {
+            // Super admin can impersonate admins and users, never another super_admin
+            return in_array($target->role, ['admin', 'user'], true);
+        }
+
+        if ($this->role === 'admin') {
+            // Admin can only impersonate users in the same department
+            return $target->role === 'user'
+                && (int) $target->department_id === (int) $this->department_id;
+        }
+
+        return false;
     }
 }

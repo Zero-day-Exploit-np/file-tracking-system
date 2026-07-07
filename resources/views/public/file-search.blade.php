@@ -168,6 +168,10 @@
                         <span class="result-value">{{ $result['department'] }}</span>
                     </div>
                     <div class="result-row">
+                        <span class="result-label"><i class="fa-solid fa-user-check me-2 text-primary"></i>Current Holder</span>
+                        <span class="result-value">{{ $result['current_holder'] }}</span>
+                    </div>
+                    <div class="result-row">
                         <span class="result-label"><i class="fa-solid fa-circle-dot me-2 text-primary"></i>Current Status</span>
                         <span class="result-value">
                             @php

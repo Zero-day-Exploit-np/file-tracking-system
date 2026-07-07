@@ -41,24 +41,24 @@ class AdminUserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'email'          => 'required|email:rfc|max:255|unique:users,email',
-            'password'       => 'required|min:8',
-            'designation_id' => 'required|exists:designations,id',
-            'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
-            'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'name'            => 'required|string|max:255',
+            'email'           => 'required|email:rfc|max:255|unique:users,email',
+            'designation_id'  => 'required|exists:designations,id',
+            'contact_number'  => ['nullable', 'regex:/^[0-9]{10}$/'],
+            'photo'           => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'can_create_file' => 'nullable|boolean',
         ]);
 
         $data = [
-            'name'            => $request->name,
-            'email'           => $request->email,
-            'password'        => Hash::make($request->password),
-            'designation_id'  => $request->designation_id,
-            'department_id'   => Auth::user()->department_id,
-            'role'            => 'user',  // Admin can ONLY create users — hard-coded
-            'contact_number'  => $request->contact_number,
-            'can_create_file' => $request->boolean('can_create_file'),
+            'name'                => $request->name,
+            'email'               => $request->email,
+            'password'            => Hash::make('Password@123'),
+            'designation_id'      => $request->designation_id,
+            'department_id'       => Auth::user()->department_id,
+            'role'                => 'user',
+            'contact_number'      => $request->contact_number,
+            'can_create_file'     => $request->boolean('can_create_file'),
+            'must_change_password' => true,
         ];
 
         if ($request->hasFile('photo')) {
@@ -68,7 +68,7 @@ class AdminUserController extends Controller
         $user = User::create($data);
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'User created successfully.');
+            ->with('success', 'User created. Default password is Password@123 — they will be prompted to change it on first login.');
     }
 
     public function show(string $user)

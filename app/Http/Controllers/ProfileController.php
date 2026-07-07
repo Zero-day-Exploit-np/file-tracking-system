@@ -90,6 +90,11 @@ class ProfileController extends Controller
 
         $user->update(['password' => Hash::make($request->password)]);
 
+        // Clear must_change_password flag once the user sets their own password
+        if ($user->must_change_password) {
+            $user->update(['must_change_password' => false]);
+        }
+
         return back()->with('status', 'password-updated');
     }
 

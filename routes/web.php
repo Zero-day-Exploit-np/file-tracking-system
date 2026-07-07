@@ -12,6 +12,7 @@ use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PublicFileSearchController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\ImpersonationController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -79,6 +80,9 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
     Route::get('/notifications',            [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/poll',       [NotificationController::class, 'poll'])->name('notifications.poll');
     Route::post('/notifications/read-visible', [NotificationController::class, 'markVisibleAsRead'])->name('notifications.readVisible');
+
+    Route::post('/impersonate/{user}', [ImpersonationController::class, 'start'])->name('impersonation.start');
+    Route::post('/impersonation/stop', [ImpersonationController::class, 'stop'])->name('impersonation.stop');
 });
 
 /*

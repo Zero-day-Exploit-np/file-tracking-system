@@ -22,7 +22,7 @@
             <div class="col-12">
                 <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
                     <i class="fa-solid fa-user-shield"></i>
-                    <span>This form creates an <strong>Admin</strong> account. Admins can manage users within their department and approve file transfers.</span>
+                    <span>This form creates an <strong>Admin</strong> account. The default password is <code>Password@123</code>. The user will be prompted to change it on first login.</span>
                 </div>
             </div>
             <div class="col-md-6">
@@ -36,15 +36,6 @@
                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
                     value="{{ old('email') }}" required>
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Password <span class="required-star">*</span></label>
-                <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
-                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Confirm Password <span class="required-star">*</span></label>
-                <input type="password" name="password_confirmation" class="form-control" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Role</label>

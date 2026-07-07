@@ -28,7 +28,7 @@ class PublicFileSearchController extends Controller
         $fileNumber = trim($request->string('file_number')->value());
 
         $file = FileRecord::where('file_number', $fileNumber)
-            ->with('department')
+            ->with(['department', 'currentHolder'])
             ->first();
 
         if (!$file) {
@@ -37,13 +37,17 @@ class PublicFileSearchController extends Controller
                 ->with('search_error', 'No file found with this File Number.');
         }
 
+        $holder = $file->currentHolder;
+        $holderName = $holder ? $holder->name : 'N/A';
+
         // Only expose safe public fields — no internal data
         $result = [
-            'file_number'  => $file->file_number,
-            'file_name'    => $file->file_name,
-            'department'   => $file->department->name ?? 'N/A',
-            'status'       => ucwords(str_replace('_', ' ', $file->status)),
-            'created_date' => $file->created_at->format('d M Y'),
+            'file_number'    => $file->file_number,
+            'file_name'      => $file->file_name,
+            'department'     => $file->department->name ?? 'N/A',
+            'current_holder' => $holderName,
+            'status'         => ucwords(str_replace('_', ' ', $file->status)),
+            'created_date'   => $file->created_at->format('d M Y'),
         ];
 
         return view('public.file-search', compact('result'))->with('searched', true);

@@ -14,16 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // ── Named middleware aliases ─────────────────────────────
         $middleware->alias([
-            'super_admin'      => \App\Http\Middleware\SuperAdminMiddleware::class,
-            'admin'            => \App\Http\Middleware\AdminMiddleware::class,
-            'role'             => \App\Http\Middleware\RoleMiddleware::class,
-            'no.cache'         => \App\Http\Middleware\NoCacheMiddleware::class,
-            'security.headers' => \App\Http\Middleware\SecurityHeadersMiddleware::class,
+            'super_admin'         => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'admin'               => \App\Http\Middleware\AdminMiddleware::class,
+            'role'                => \App\Http\Middleware\RoleMiddleware::class,
+            'no.cache'            => \App\Http\Middleware\NoCacheMiddleware::class,
+            'security.headers'    => \App\Http\Middleware\SecurityHeadersMiddleware::class,
+            'force.pwd.change'    => \App\Http\Middleware\ForcePasswordChangeMiddleware::class,
         ]);
 
-        // ── Append security headers to every web response ────────
+        // ── Append security headers + force-password-change to every auth web response ─
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeadersMiddleware::class,
+            \App\Http\Middleware\ForcePasswordChangeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

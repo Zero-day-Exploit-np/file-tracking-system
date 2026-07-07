@@ -18,16 +18,13 @@ class FileRecordController extends Controller
         $query = FileRecord::with(['department', 'creator', 'currentHolder']);
 
         if ($user->role === 'user') {
-            // Show files the user created, currently holds, or was involved in via transfer
             $involvedFileIds = \App\Models\FileTransfer::where(fn($q) => $q
                 ->where('sender_id',   $user->id)
                 ->orWhere('receiver_id', $user->id))
-                ->pluck('file_id')
-                ->unique()
-                ->values();
+                ->pluck('file_id')->unique()->values();
 
             $query->where(fn($q) => $q
-                ->where('created_by',       $user->id)
+                ->where('created_by',        $user->id)
                 ->orWhere('current_user_id', $user->id)
                 ->orWhereIn('id',            $involvedFileIds));
         } elseif ($user->role === 'admin') {
@@ -62,34 +59,41 @@ class FileRecordController extends Controller
 
     public function create()
     {
-        if (Auth::user()->role !== 'user') {
-            abort(403, 'Only users can create files.');
-        }
+        // Any authenticated user with can_create_file permission may create
         $this->authorize('create', FileRecord::class);
-        return view('files.create');
+        $departments = Department::where('is_active', true)->orderBy('name')->get();
+        return view('files.create', compact('departments'));
     }
 
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'user') {
-            abort(403, 'Only users can create files.');
-        }
         $this->authorize('create', FileRecord::class);
 
         $request->validate([
-            'file_name'  => 'required|string|max:255',
-            'remarks'    => 'nullable|string|max:1000',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
+            'file_number' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z0-9\-\/\._ ]+$/',
+                'unique:file_records,file_number',
+            ],
+            'file_name'   => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
+            'remarks'     => 'nullable|string|max:1000',
+            'attachment'  => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
+        ], [
+            'file_number.unique' => 'This File Number already exists. Please use a different government file number.',
+            'file_number.regex'  => 'File number may only contain letters, numbers, hyphens, slashes, dots and spaces.',
         ]);
 
-        $deptId = Auth::user()->department_id;
+        $deptId = (int) $request->department_id;
 
         $file = FileRecord::create([
             'created_by'      => Auth::id(),
             'current_user_id' => Auth::id(),
             'department_id'   => $deptId,
             'file_name'       => $request->string('file_name')->trim()->value(),
-            'file_number'     => 'FILE-' . strtoupper(Str::random(10)),
+            'file_number'     => strtoupper(trim($request->file_number)),
             'remarks'         => $request->string('remarks')->trim()->value() ?: null,
             'status'          => 'active',
         ]);
@@ -116,7 +120,7 @@ class FileRecordController extends Controller
             'remarks'         => 'File created by ' . Auth::user()->name,
         ]);
 
-        return redirect()->route('files.index')->with('success', 'File created successfully.');
+        return redirect()->route('files.index')->with('success', 'File "' . $file->file_number . '" created successfully.');
     }
 
     public function edit(FileRecord $file)
