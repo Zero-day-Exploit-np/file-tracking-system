@@ -272,4 +272,4 @@ git merge upstream/main
 
 ---
 
-&copy; {{ date('Y') }} FileTrack Office Portal — Government File Tracking System
+&copy; FileTrack Office Portal — Government File Tracking System
