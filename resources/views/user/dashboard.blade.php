@@ -223,26 +223,55 @@
 
         {{-- Recent Activity --}}
         <div class="portal-card">
-            <div class="card-header"><i class="fa-solid fa-timeline me-2 text-primary"></i>Recent Activity</div>
+            <div class="card-header"><i class="fa-solid fa-route me-2 text-primary"></i>Recent Activity</div>
             <div class="card-body p-0">
-                <div class="timeline-wrapper p-3">
-                    @forelse($recentActivity as $item)
-                    <div class="timeline-entry">
-                        <div class="timeline-card">
-                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
-                                @include('partials.action-badge', ['action' => $item->action])
-                                <small class="text-muted">{{ $item->created_at->diffForHumans() }}</small>
-                            </div>
-                            <div class="text-muted fs-sm mt-1">
-                                {{ $item->file->file_number ?? 'N/A' }}
-                                @if($item->toDept) &rarr; {{ $item->toDept->name }} @endif
-                            </div>
+                @forelse($recentActivity as $item)
+                @php
+                    $fileUuid = $item->file?->uuid;
+                    $cardUrl  = $fileUuid ? route('files.show', $fileUuid) : '#';
+                    $isDept   = $item->fromDept && $item->toDept
+                                && (int)$item->fromDept->id !== (int)$item->toDept->id;
+                @endphp
+                <a href="{{ $cardUrl }}" class="rfm-card {{ $isDept ? 'rfm-card-dept' : '' }}"
+                   style="text-decoration:none;color:inherit;">
+                    <div class="rfm-left">
+                        <div class="rfm-icon rfm-icon-{{ $item->action }}">
+                            @if($item->action === 'created')       <i class="fa-solid fa-file-circle-plus"></i>
+                            @elseif($item->action === 'transferred')<i class="fa-solid fa-paper-plane"></i>
+                            @else                                   <i class="fa-solid fa-circle-dot"></i>
+                            @endif
                         </div>
                     </div>
-                    @empty
-                    <div class="empty-state"><i class="fa-solid fa-inbox"></i>No activity yet.</div>
-                    @endforelse
-                </div>
+                    <div class="rfm-body">
+                        <div class="rfm-file">
+                            <span class="rfm-file-num">{{ $item->file?->file_number ?? 'N/A' }}</span>
+                            <span class="rfm-file-name">{{ Str::limit($item->file?->file_name ?? '', 30) }}</span>
+                        </div>
+                        <div class="rfm-flow">
+                            <span class="rfm-person">
+                                <i class="fa-solid fa-user fa-xs me-1"></i>{{ $item->fromUser?->name ?? 'System' }}
+                            </span>
+                            <span class="rfm-arrow"><i class="fa-solid fa-arrow-right fa-xs"></i></span>
+                            <span class="rfm-person {{ $isDept ? 'rfm-dept-node' : '' }}">
+                                @if($isDept)
+                                <i class="fa-solid fa-building-columns fa-xs me-1"></i>{{ $item->toDept?->name ?? '—' }}
+                                @else
+                                <i class="fa-solid fa-user fa-xs me-1"></i>{{ $item->toUser?->name ?? '—' }}
+                                @endif
+                            </span>
+                        </div>
+                        @if($item->remarks)
+                        <div class="rfm-remarks">{{ Str::limit($item->remarks, 50) }}</div>
+                        @endif
+                    </div>
+                    <div class="rfm-right">
+                        @include('partials.action-badge', ['action' => $item->action])
+                        <div class="rfm-time">{{ $item->created_at->diffForHumans() }}</div>
+                    </div>
+                </a>
+                @empty
+                <div class="empty-state py-4"><i class="fa-solid fa-inbox"></i>No activity yet.</div>
+                @endforelse
             </div>
         </div>
 

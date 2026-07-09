@@ -153,7 +153,11 @@
         <i class="fa-solid fa-route me-2 text-primary"></i>File Journey
     </div>
     <div class="card-body">
-        <x-file-timeline :movements="$file->movements" :current-user-id="$file->current_user_id" />
+        <x-file-timeline
+            :movements="$file->movements"
+            :current-user-id="$file->current_user_id"
+            :viewer-dept-id="auth()->user()->department_id"
+            :is-super-admin="auth()->user()->role === 'super_admin'" />
     </div>
 </div>
 @endsection

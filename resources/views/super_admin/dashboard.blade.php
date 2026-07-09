@@ -139,28 +139,62 @@
     {{-- Recent File Movements --}}
     <div class="col-lg-6">
         <div class="portal-card">
-            <div class="card-header"><i class="fa-solid fa-timeline me-2 text-primary"></i>Recent File Movements</div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-route me-2 text-primary"></i>Recent File Movements</span>
+                <a href="{{ route('admin.transfers') }}" class="btn btn-sm btn-portal-outline">View All</a>
+            </div>
             <div class="card-body p-0">
-                <div class="timeline-wrapper p-3">
-                    @forelse($recentMovements as $item)
-                    <div class="timeline-entry">
-                        <div class="timeline-card">
-                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
-                                @include('partials.action-badge', ['action' => $item->action])
-                                <small class="text-muted">{{ $item->created_at->diffForHumans() }}</small>
-                            </div>
-                            <div class="text-muted fs-sm mt-1">
-                                {{ $item->file->file_number ?? 'N/A' }} &mdash;
-                                {{ $item->fromUser->name ?? 'System' }}
-                                @if($item->toUser) &rarr; {{ $item->toUser->name }} @endif
-                                @if($item->toDept) <span class="text-muted">({{ $item->toDept->name }})</span> @endif
-                            </div>
+                @forelse($recentMovements as $item)
+                @php
+                    $fileUuid = $item->file?->uuid;
+                    $cardUrl  = $fileUuid ? route('admin.files.timeline', $fileUuid) : '#';
+                    $isDept   = $item->fromDept && $item->toDept
+                                && (int)$item->fromDept->id !== (int)$item->toDept->id;
+                @endphp
+                <a href="{{ $cardUrl }}" class="rfm-card {{ $isDept ? 'rfm-card-dept' : '' }}"
+                   style="text-decoration:none;color:inherit;">
+                    <div class="rfm-left">
+                        <div class="rfm-icon rfm-icon-{{ $item->action }}">
+                            @if($item->action === 'created')       <i class="fa-solid fa-file-circle-plus"></i>
+                            @elseif($item->action === 'transferred')<i class="fa-solid fa-paper-plane"></i>
+                            @else                                   <i class="fa-solid fa-circle-dot"></i>
+                            @endif
                         </div>
                     </div>
-                    @empty
-                    <div class="empty-state"><i class="fa-solid fa-inbox"></i>No activity yet.</div>
-                    @endforelse
-                </div>
+                    <div class="rfm-body">
+                        <div class="rfm-file">
+                            <span class="rfm-file-num">{{ $item->file?->file_number ?? 'N/A' }}</span>
+                            <span class="rfm-file-name text-truncate">{{ $item->file?->file_name ?? '' }}</span>
+                        </div>
+                        <div class="rfm-flow">
+                            <span class="rfm-person">
+                                <i class="fa-solid fa-user fa-xs me-1"></i>{{ $item->fromUser?->name ?? 'System' }}
+                                <span class="rfm-dept-badge">{{ $item->fromDept?->name ?? '' }}</span>
+                            </span>
+                            <span class="rfm-arrow"><i class="fa-solid fa-arrow-right fa-xs"></i></span>
+                            <span class="rfm-person {{ $isDept ? 'rfm-dept-node' : '' }}">
+                                @if($isDept)
+                                <i class="fa-solid fa-building-columns fa-xs me-1"></i>{{ $item->toDept?->name ?? '—' }}
+                                @else
+                                <i class="fa-solid fa-user fa-xs me-1"></i>{{ $item->toUser?->name ?? '—' }}
+                                <span class="rfm-dept-badge">{{ $item->toDept?->name ?? '' }}</span>
+                                @endif
+                            </span>
+                        </div>
+                        @if($item->remarks)
+                        <div class="rfm-remarks">
+                            <i class="fa-solid fa-quote-left fa-xs me-1"></i>{{ Str::limit($item->remarks, 60) }}
+                        </div>
+                        @endif
+                    </div>
+                    <div class="rfm-right">
+                        @include('partials.action-badge', ['action' => $item->action])
+                        <div class="rfm-time">{{ $item->created_at->diffForHumans() }}</div>
+                    </div>
+                </a>
+                @empty
+                <div class="empty-state py-4"><i class="fa-solid fa-inbox"></i>No activity yet.</div>
+                @endforelse
             </div>
         </div>
     </div>

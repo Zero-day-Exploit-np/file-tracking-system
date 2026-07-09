@@ -7,44 +7,42 @@ use App\Models\FileRecord;
 use App\Models\FileMovement;
 
 /**
- * Shows file details + linked-list timeline for admin/super_admin.
- * Both /admin/files/{uuid} and /admin/files/{uuid}/timeline
- * use the same view (admin.files.show) with the same data.
+ * Shows file details + horizontal linked-list timeline.
+ * Both /admin/files/{uuid} and /admin/files/{uuid}/timeline share the same view.
+ * Super Admin sees all movements; Department Admin sees only their dept movements.
  */
 class FileTimelineController extends Controller
 {
-    /**
-     * GET /admin/files/{uuid}/timeline
-     * Same view as fileDetails — both show full info + journey.
-     */
+    /** GET /admin/files/{uuid}/timeline */
     public function show(string $uuid)
     {
         $file = $this->loadFile($uuid);
         $this->authorizeFile($file);
 
-        // Chronological order for the linked-list display
         $timeline = FileMovement::with(['fromUser', 'toUser', 'fromDept', 'toDept'])
             ->where('file_id', $file->id)
             ->orderBy('created_at')
             ->get();
 
-        return view('admin.files.show', compact('file', 'timeline'));
+        return view('admin.files.show', array_merge(
+            compact('file', 'timeline'),
+            $this->viewerContext()
+        ));
     }
 
-    /**
-     * GET /admin/files/{uuid}
-     * File detail page — identical layout, movements loaded via relationship.
-     */
+    /** GET /admin/files/{uuid} */
     public function fileDetails(string $uuid)
     {
         $file = $this->loadFile($uuid);
         $this->authorizeFile($file);
 
-        // No separate $timeline — view falls back to $file->movements
-        return view('admin.files.show', compact('file'));
+        return view('admin.files.show', array_merge(
+            compact('file'),
+            $this->viewerContext()
+        ));
     }
 
-    // ── helpers ──────────────────────────────────────────────
+    // ── helpers ───────────────────────────────────────────────────
 
     private function loadFile(string $uuid): FileRecord
     {
@@ -67,5 +65,15 @@ class FileTimelineController extends Controller
             (int) $file->department_id !== (int) $user->department_id) {
             abort(403, 'You do not have access to this file.');
         }
+    }
+
+    /** Returns viewer context for dept-scoped timeline rendering. */
+    private function viewerContext(): array
+    {
+        $user = auth()->user();
+        return [
+            'isSuperAdmin'  => $user->role === 'super_admin',
+            'viewerDeptId'  => $user->department_id,
+        ];
     }
 }

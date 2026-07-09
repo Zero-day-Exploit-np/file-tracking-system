@@ -4,18 +4,51 @@
     │  Usage:                                                          │
     │    <x-file-timeline                                              │
     │        :movements="$file->movements"                             │
-    │        :current-user-id="$file->current_user_id" />             │
+    │        :current-user-id="$file->current_user_id"                │
+    │        :viewer-dept-id="auth()->user()->department_id"           │
+    │        :is-super-admin="auth()->user()->role === 'super_admin'"  │
+    │    />                                                            │
+    │                                                                  │
+    │  Department scoping rules:                                       │
+    │    - Super Admin sees all movements (no filtering)               │
+    │    - Admin sees only movements involving their dept;             │
+    │      cross-dept entry/exit shown as a single "Dept Received"     │
+    │      or "Transferred to Dept" node                               │
     └──────────────────────────────────────────────────────────────────┘
-    - Desktop  → horizontal scrollable linked-list
-    - Mobile   → vertical stacked cards (≤768 px)
-    - Shared in /files/{uuid}, /admin/files/{uuid}, /admin/files/{uuid}/timeline
 --}}
-@props(['movements', 'currentUserId' => null])
+@props([
+    'movements',
+    'currentUserId'  => null,
+    'viewerDeptId'   => null,
+    'isSuperAdmin'   => false,
+])
 
 @php
-    $moves = $movements->load([
+    $allMoves = $movements->load([
         'fromUser', 'toUser', 'fromDept', 'toDept',
     ])->sortBy('created_at')->values();
+
+    /*
+     * ── Department scoping ─────────────────────────────────────────
+     * Super Admin   → see everything ($isSuperAdmin = true)
+     * Department Admin / User  → see only movements touching their dept,
+     *   but collapse cross-dept boundaries into a single summary node.
+     *
+     * Scoped view rules:
+     *  1. Include a movement if from_department OR to_department equals viewer's dept.
+     *  2. For the first movement INTO this dept from outside → show as "Received from Dept X".
+     *  3. For the first movement OUT of this dept to outside → show as "Transferred to Dept Y".
+     *  4. Do NOT show internal movements of any other department.
+     */
+    if ($isSuperAdmin || !$viewerDeptId) {
+        $moves = $allMoves;
+    } else {
+        // Build a scoped view: only movements where from_dept or to_dept == viewer dept
+        $moves = $allMoves->filter(function ($move) use ($viewerDeptId) {
+            return (int)($move->from_department ?? 0) === (int)$viewerDeptId
+                || (int)($move->to_department   ?? 0) === (int)$viewerDeptId;
+        })->values();
+    }
 @endphp
 
 {{-- ── Empty state ─────────────────────────────────────────── --}}
