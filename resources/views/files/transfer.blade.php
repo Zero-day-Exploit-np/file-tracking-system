@@ -6,134 +6,6 @@
 <li class="breadcrumb-item active">Transfer</li>
 @endsection
 
-@push('styles')
-<style>
-/* ── Transfer Receiver Dropdown ─────────────────────────── */
-.trf-select-wrap { position: relative; }
-
-.trf-dropdown {
-    width: 100%;
-    background: #fff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(15,23,42,.10);
-    overflow: hidden;
-    display: none;
-    position: absolute;
-    z-index: 1060;
-    top: calc(100% + 4px);
-    left: 0;
-    max-height: 280px;
-    overflow-y: auto;
-    animation: trfDrop .14s ease-out;
-}
-.trf-dropdown.open { display: block; }
-
-@keyframes trfDrop {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.trf-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    cursor: pointer;
-    border-bottom: 1px solid #f1f5f9;
-    transition: background .12s;
-    font-size: .88rem;
-    color: #1e293b;
-}
-.trf-option:last-child { border-bottom: none; }
-.trf-option:hover { background: #f0f7ff; }
-.trf-option.trf-opt-other {
-    color: #7c3aed;
-    font-weight: 700;
-    border-top: 1.5px solid #e2e8f0;
-    background: #faf5ff;
-}
-.trf-option.trf-opt-other:hover { background: #ede9fe; }
-
-.trf-user-avatar {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: #dbeafe; color: #2563eb;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .7rem; font-weight: 800; flex-shrink: 0;
-}
-
-.trf-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 14px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #fff;
-    transition: border-color .15s, box-shadow .15s;
-    font-size: .88rem;
-    color: #64748b;
-    user-select: none;
-    min-height: 46px;
-}
-.trf-trigger:hover, .trf-trigger.open {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99,102,241,.1);
-}
-.trf-trigger .trf-selected-preview {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    min-width: 0;
-}
-.trf-trigger .trf-chevron { transition: transform .18s; }
-.trf-trigger.open .trf-chevron { transform: rotate(180deg); }
-
-/* ── Dept search within dropdown ─────────────────────────── */
-.trf-dept-search-wrap {
-    padding: 10px 14px;
-    border-bottom: 1.5px solid #e2e8f0;
-    background: #faf5ff;
-    display: none;
-}
-.trf-dept-search-wrap.visible { display: block; }
-.trf-dept-search-input {
-    width: 100%;
-    border: 1.5px solid #d1d5db;
-    border-radius: 8px;
-    padding: 7px 12px;
-    font-size: .85rem;
-    outline: none;
-    transition: border-color .15s;
-}
-.trf-dept-search-input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
-
-.trf-dept-results { }
-.trf-dept-result-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 14px; cursor: pointer;
-    border-bottom: 1px solid #f3f4f6;
-    font-size: .85rem; color: #1e293b;
-    transition: background .12s;
-}
-.trf-dept-result-item:hover { background: #ede9fe; color: #4f46e5; }
-.trf-dept-result-item:last-child { border-bottom: none; }
-.trf-dept-result-empty { padding: 10px 14px; font-size: .82rem; color: #9ca3af; }
-
-/* ── Selected dept badge ─────────────────────────────────── */
-.trf-dept-selected-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #ede9fe; color: #5b21b6;
-    padding: 3px 10px; border-radius: 999px;
-    font-size: .78rem; font-weight: 700;
-    margin-top: 6px;
-}
-</style>
-@endpush
-
 @section('content')
 <div class="page-header">
     <div>
@@ -145,175 +17,162 @@
     </a>
 </div>
 
-<div class="row g-3">
+<div class="row g-3 justify-content-center">
 
-    {{-- File Summary Card --}}
-    <div class="col-md-4">
+    {{-- File Summary --}}
+    <div class="col-md-4 col-lg-3">
         <div class="portal-card">
             <div class="card-header">
                 <i class="fa-solid fa-file-lines me-2 text-primary"></i>File Details
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <div class="text-muted fs-sm mb-1">File Name</div>
-                    <div class="fw-700">{{ $file->file_name }}</div>
-                </div>
-                <div class="mb-3">
-                    <div class="text-muted fs-sm mb-1">File Number</div>
-                    <div class="fw-700 text-portal-primary">{{ $file->file_number }}</div>
-                </div>
-                <div class="mb-3">
-                    <div class="text-muted fs-sm mb-1">Current Department</div>
-                    <div>{{ $file->department->name ?? 'N/A' }}</div>
-                </div>
-                <div class="mb-3">
-                    <div class="text-muted fs-sm mb-1">Current Holder</div>
-                    <div class="fw-700">{{ auth()->user()->name }}</div>
-                </div>
-                <div>
-                    <div class="text-muted fs-sm mb-1">Status</div>
-                    @include('partials.status-badge', ['status' => $file->status])
-                </div>
+                <dl class="mb-0" style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:.85rem;">
+                    <dt class="text-muted fw-600">File No.</dt>
+                    <dd class="fw-700 text-portal-primary mb-0">{{ $file->file_number }}</dd>
+
+                    <dt class="text-muted fw-600">Name</dt>
+                    <dd class="fw-600 mb-0">{{ $file->file_name }}</dd>
+
+                    <dt class="text-muted fw-600">Department</dt>
+                    <dd class="mb-0">{{ $file->department->name ?? 'N/A' }}</dd>
+
+                    <dt class="text-muted fw-600">Holder</dt>
+                    <dd class="mb-0">{{ auth()->user()->name }}</dd>
+
+                    <dt class="text-muted fw-600">Status</dt>
+                    <dd class="mb-0">@include('partials.status-badge', ['status' => $file->status])</dd>
+                </dl>
             </div>
         </div>
     </div>
 
     {{-- Transfer Form --}}
-    <div class="col-md-8">
-        <div class="portal-form-card" style="max-width:100%">
-            <h5 class="fw-700 mb-1">
-                <i class="fa-solid fa-right-left me-2 text-primary"></i>Select Recipient
-            </h5>
-            <p class="text-muted fs-sm mb-4">
-                Choose a user from your department or select <strong>Other Department</strong> to transfer across departments.
-            </p>
+    <div class="col-md-8 col-lg-6">
+        <div class="portal-card">
+            <div class="card-header">
+                <i class="fa-solid fa-right-left me-2 text-primary"></i>Transfer Details
+            </div>
+            <div class="card-body">
 
-            <form action="{{ route('files.transfer.store') }}" method="POST"
-                  id="transferForm" class="portal-form">
-                @csrf
-                <input type="hidden" name="file_record_uuid"  value="{{ $file->uuid }}">
-                <input type="hidden" name="destination_type"  id="inp_dest_type"  value="">
-                <input type="hidden" name="to_user_id"         id="inp_to_user"    value="">
-                <input type="hidden" name="department_id"      id="inp_dept_id"    value="">
+                <form action="{{ route('files.transfer.store') }}"
+                      method="POST"
+                      id="transferForm"
+                      novalidate>
+                    @csrf
 
-                {{-- ── Unified Receiver Dropdown ─────────────── --}}
-                <div class="mb-4">
-                    <label class="form-label fw-600">
-                        Transfer To <span class="required-star">*</span>
-                    </label>
+                    {{-- Hidden fields sent to the controller (unchanged) --}}
+                    <input type="hidden" name="file_record_uuid" value="{{ $file->uuid }}">
+                    <input type="hidden" name="destination_type" id="destination_type" value="{{ old('destination_type') }}">
+                    <input type="hidden" name="to_user_id"       id="to_user_id"       value="{{ old('to_user_id') }}">
+                    <input type="hidden" name="department_id"    id="department_id"    value="{{ old('department_id') }}">
 
-                    <div class="trf-select-wrap" id="trfSelectWrap">
+                    {{-- ── Transfer To (select) ──────────────────── --}}
+                    <div class="mb-3">
+                        <label for="recipientSelect" class="form-label fw-600">
+                            Transfer To <span class="text-danger">*</span>
+                        </label>
 
-                        {{-- Trigger button --}}
-                        <div class="trf-trigger" id="trfTrigger" tabindex="0" role="combobox"
-                             aria-haspopup="listbox" aria-expanded="false">
-                            <span class="trf-selected-preview" id="trfPreview">
-                                <span class="text-muted">— Select recipient —</span>
-                            </span>
-                            <i class="fa-solid fa-chevron-down trf-chevron text-muted"></i>
+                        <select id="recipientSelect"
+                                class="form-select @error('destination_type') is-invalid @enderror @error('to_user_id') is-invalid @enderror"
+                                required>
+                            <option value="" disabled {{ old('to_user_id') || old('destination_type') === 'other' ? '' : 'selected' }}>
+                                — Select recipient —
+                            </option>
+
+                            {{-- Same-dept users --}}
+                            @forelse($sameDeptUsers as $u)
+                            <option value="user:{{ $u->id }}"
+                                {{ old('to_user_id') == $u->id ? 'selected' : '' }}>
+                                {{ $u->name }}{{ $u->designation && $u->designation->name !== '—' ? ' — ' . $u->designation->name : '' }}
+                            </option>
+                            @empty
+                            {{-- no users — still show Other Dept --}}
+                            @endforelse
+
+                            {{-- Separator + Other Department --}}
+                            <option value="other" {{ old('destination_type') === 'other' ? 'selected' : '' }}>
+                                ── Other Department ──
+                            </option>
+                        </select>
+
+                        @error('destination_type')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        @error('to_user_id')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- ── Department Search (disabled by default) ── --}}
+                    <div class="mb-3" id="deptSearchSection">
+                        <label for="deptSearchInput" class="form-label fw-600 text-muted" id="deptSearchLabel">
+                            <i class="fa-solid fa-building-columns me-1"></i>Department Search
+                        </label>
+
+                        <div class="position-relative">
+                            <input type="text"
+                                   id="deptSearchInput"
+                                   class="form-control @error('department_id') is-invalid @enderror"
+                                   placeholder="Type to search department…"
+                                   autocomplete="off"
+                                   disabled
+                                   value="{{ old('_dept_display', '') }}">
+
+                            {{-- AJAX results list --}}
+                            <div id="deptResultsList"
+                                 class="list-group shadow-sm"
+                                 style="display:none;position:absolute;z-index:1055;width:100%;top:calc(100% + 2px);border-radius:8px;overflow:hidden;">
+                            </div>
                         </div>
 
-                        {{-- Dropdown panel --}}
-                        <div class="trf-dropdown" id="trfDropdown" role="listbox">
+                        <div id="deptSelectedBadge"
+                             class="mt-2"
+                             style="display:{{ old('department_id') ? '' : 'none' }};">
+                            <span class="badge bg-primary bg-opacity-10 text-primary fw-600 px-3 py-2"
+                                  style="font-size:.8rem;border-radius:8px;">
+                                <i class="fa-solid fa-check me-1"></i>
+                                <span id="deptSelectedName">{{ old('_dept_display', '') }}</span>
+                                <button type="button"
+                                        id="deptClearBtn"
+                                        class="btn-close btn-close-sm ms-2"
+                                        style="font-size:.6rem;"
+                                        aria-label="Clear department"></button>
+                            </span>
+                        </div>
 
-                            {{-- Same-dept user list --}}
-                            <div id="trfUserList">
-                                @forelse($sameDeptUsers as $u)
-                                <div class="trf-option trf-opt-user"
-                                     data-user-id="{{ $u->id }}"
-                                     data-user-name="{{ $u->name }}"
-                                     data-desig="{{ $u->designation->name ?? '' }}"
-                                     role="option">
-                                    <div class="trf-user-avatar">
-                                        {{ strtoupper(substr($u->name,0,1)) }}{{ strtoupper(substr(explode(' ',$u->name)[1] ?? 'X',0,1)) }}
-                                    </div>
-                                    <div>
-                                        <div class="fw-600">{{ $u->name }}</div>
-                                        @if($u->designation && $u->designation->name !== '—')
-                                        <div class="text-muted" style="font-size:.75rem;">{{ $u->designation->name }}</div>
-                                        @endif
-                                    </div>
-                                </div>
-                                @empty
-                                <div class="trf-dept-result-empty">
-                                    <i class="fa-solid fa-users-slash me-1"></i>No other users in your department.
-                                </div>
-                                @endforelse
-                            </div>
+                        <div id="deptNoResult" class="form-text text-danger mt-1" style="display:none;">
+                            <i class="fa-solid fa-circle-xmark me-1"></i>No department found. Please select from the list.
+                        </div>
 
-                            {{-- Dept search section (shown when "Other Department" clicked) --}}
-                            <div class="trf-dept-search-wrap" id="trfDeptSearchWrap">
-                                <div class="fw-600 mb-2" style="font-size:.78rem;color:#7c3aed;letter-spacing:.04em;text-transform:uppercase;">
-                                    <i class="fa-solid fa-building-columns me-1"></i>Search Department
-                                </div>
-                                <input type="text"
-                                       id="trfDeptInput"
-                                       class="trf-dept-search-input"
-                                       placeholder="Type department name…"
-                                       autocomplete="off">
-                                <div class="trf-dept-results mt-1" id="trfDeptResults"></div>
-                            </div>
-
-                            {{-- Divider + "Other Department" option --}}
-                            <div class="trf-option trf-opt-other" id="trfOptOtherDept" role="option">
-                                <div class="trf-user-avatar" style="background:#ede9fe;color:#7c3aed;">
-                                    <i class="fa-solid fa-building-columns fa-xs"></i>
-                                </div>
-                                <div>
-                                    <div>Other Department</div>
-                                    <div style="font-size:.72rem;font-weight:400;color:#9333ea;">
-                                        Transfer to another department
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>{{-- /.trf-dropdown --}}
-                    </div>{{-- /.trf-select-wrap --}}
-
-                    {{-- Selected dept badge (shown after dept chosen) --}}
-                    <div id="trfDeptBadge" style="display:none;">
-                        <span class="trf-dept-selected-badge">
-                            <i class="fa-solid fa-building-columns"></i>
-                            <span id="trfDeptBadgeName"></span>
-                            <button type="button" onclick="clearDeptSelection()"
-                                    style="background:none;border:none;padding:0;color:#7c3aed;line-height:1;cursor:pointer;"
-                                    title="Clear">
-                                <i class="fa-solid fa-xmark fa-xs"></i>
-                            </button>
-                        </span>
+                        @error('department_id')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    @error('destination_type')
-                    <div class="text-danger fs-sm mt-1">{{ $message }}</div>
-                    @enderror
-                    @error('to_user_id')
-                    <div class="text-danger fs-sm mt-1">{{ $message }}</div>
-                    @enderror
-                    @error('department_id')
-                    <div class="text-danger fs-sm mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                {{-- Remarks --}}
-                <div class="mb-4">
-                    <label class="form-label fw-600">
-                        <i class="fa-solid fa-comment-dots me-1 text-muted"></i>Remarks
-                    </label>
-                    <textarea name="remarks" class="form-control" rows="3"
-                        placeholder="Enter notes or instructions for the recipient…">{{ old('remarks') }}</textarea>
-                    <div class="form-text text-muted">
-                        These remarks will appear in the file journey timeline.
+                    {{-- ── Remarks ────────────────────────────────── --}}
+                    <div class="mb-4">
+                        <label for="remarksInput" class="form-label fw-600">Remarks</label>
+                        <textarea id="remarksInput"
+                                  name="remarks"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Optional notes or instructions for the recipient…">{{ old('remarks') }}</textarea>
+                        <div class="form-text text-muted">
+                            Remarks are saved to the file journey timeline.
+                        </div>
                     </div>
-                </div>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn-portal-primary" id="submitBtn">
-                        <i class="fa-solid fa-paper-plane me-1"></i>Transfer Now
-                    </button>
-                    <a href="{{ route('files.index') }}" class="btn-portal-outline">Cancel</a>
-                </div>
+                    {{-- ── Submit ──────────────────────────────────── --}}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-portal-primary" id="submitBtn">
+                            <i class="fa-solid fa-paper-plane me-1"></i>Transfer File
+                        </button>
+                        <a href="{{ route('files.index') }}" class="btn-portal-outline">Cancel</a>
+                    </div>
 
-            </form>
+                </form>
+
+            </div>
         </div>
     </div>
 </div>
@@ -322,105 +181,92 @@
 @push('scripts')
 <script>
 (function () {
-    var trigger       = document.getElementById('trfTrigger');
-    var dropdown      = document.getElementById('trfDropdown');
-    var preview       = document.getElementById('trfPreview');
-    var userOpts      = document.querySelectorAll('.trf-opt-user');
-    var otherOpt      = document.getElementById('trfOptOtherDept');
-    var deptSearchWrap = document.getElementById('trfDeptSearchWrap');
-    var deptInput     = document.getElementById('trfDeptInput');
-    var deptResults   = document.getElementById('trfDeptResults');
-    var deptBadge     = document.getElementById('trfDeptBadge');
-    var deptBadgeName = document.getElementById('trfDeptBadgeName');
+    var recipientSelect  = document.getElementById('recipientSelect');
+    var deptSearchInput  = document.getElementById('deptSearchInput');
+    var deptResultsList  = document.getElementById('deptResultsList');
+    var deptSelectedBadge= document.getElementById('deptSelectedBadge');
+    var deptSelectedName = document.getElementById('deptSelectedName');
+    var deptClearBtn     = document.getElementById('deptClearBtn');
+    var deptNoResult     = document.getElementById('deptNoResult');
+    var deptSearchLabel  = document.getElementById('deptSearchLabel');
 
-    var inpDestType   = document.getElementById('inp_dest_type');
-    var inpToUser     = document.getElementById('inp_to_user');
-    var inpDeptId     = document.getElementById('inp_dept_id');
+    var inpDestType  = document.getElementById('destination_type');
+    var inpToUser    = document.getElementById('to_user_id');
+    var inpDeptId    = document.getElementById('department_id');
 
-    var deptSearchTimer = null;
-    var selectedDeptId  = null;
-    var isOpen = false;
+    var searchTimer  = null;
+    var csrf         = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
-    /* ── Open / close ──────────────────────────────────────── */
-    function openDropdown() {
-        dropdown.classList.add('open');
-        trigger.classList.add('open');
-        trigger.setAttribute('aria-expanded', 'true');
-        isOpen = true;
-    }
-    function closeDropdown() {
-        dropdown.classList.remove('open');
-        trigger.classList.remove('open');
-        trigger.setAttribute('aria-expanded', 'false');
-        isOpen = false;
-    }
+    /* ── Initialise from old() on validation failure ──────── */
+    (function init() {
+        var destType = inpDestType.value;
+        if (destType === 'other') {
+            enableDeptSearch();
+        }
+    })();
 
-    trigger.addEventListener('click', function (e) {
-        e.stopPropagation();
-        isOpen ? closeDropdown() : openDropdown();
-    });
-    trigger.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); isOpen ? closeDropdown() : openDropdown(); }
-        if (e.key === 'Escape') closeDropdown();
-    });
-    document.addEventListener('click', function (e) {
-        if (!document.getElementById('trfSelectWrap').contains(e.target)) closeDropdown();
-    });
+    /* ── Handle recipient selection ───────────────────────── */
+    recipientSelect.addEventListener('change', function () {
+        var val = recipientSelect.value;
 
-    /* ── Select a same-dept user ────────────────────────────── */
-    userOpts.forEach(function (opt) {
-        opt.addEventListener('click', function () {
-            var uid   = opt.dataset.userId;
-            var uname = opt.dataset.userName;
-            var udesig= opt.dataset.desig;
+        if (!val) return;
 
+        if (val === 'other') {
+            // Other Department selected
+            inpDestType.value = 'other';
+            inpToUser.value   = '';
+            enableDeptSearch();
+        } else if (val.startsWith('user:')) {
+            // A same-dept user selected
             inpDestType.value = 'same';
-            inpToUser.value   = uid;
+            inpToUser.value   = val.replace('user:', '');
             inpDeptId.value   = '';
-            selectedDeptId    = null;
-            deptBadge.style.display = 'none';
-            deptSearchWrap.classList.remove('visible');
-
-            preview.innerHTML =
-                '<div class="trf-user-avatar" style="width:28px;height:28px;font-size:.65rem;">' +
-                escHtml(uname.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()) +
-                '</div>' +
-                '<div><span class="fw-700">' + escHtml(uname) + '</span>' +
-                (udesig ? '<span class="text-muted ms-1" style="font-size:.75rem;">' + escHtml(udesig) + '</span>' : '') +
-                '</div>';
-
-            closeDropdown();
-        });
+            disableDeptSearch();
+        }
     });
 
-    /* ── Select "Other Department" ──────────────────────────── */
-    otherOpt.addEventListener('click', function () {
-        inpDestType.value = 'other';
-        inpToUser.value   = '';
-        inpDeptId.value   = '';
-        selectedDeptId    = null;
+    /* ── Enable dept search field ─────────────────────────── */
+    function enableDeptSearch() {
+        deptSearchInput.disabled = false;
+        deptSearchInput.classList.remove('bg-light');
+        deptSearchLabel.classList.remove('text-muted');
+        deptSearchLabel.classList.add('text-dark');
+        deptSearchInput.focus();
+    }
 
-        preview.innerHTML =
-            '<div class="trf-user-avatar" style="width:28px;height:28px;font-size:.65rem;background:#ede9fe;color:#7c3aed;">' +
-            '<i class="fa-solid fa-building-columns fa-xs"></i></div>' +
-            '<span class="fw-700" style="color:#7c3aed;">Other Department</span>';
+    /* ── Disable dept search field and clear values ────────── */
+    function disableDeptSearch() {
+        deptSearchInput.disabled = true;
+        deptSearchInput.value    = '';
+        deptSearchInput.classList.add('bg-light');
+        deptSearchLabel.classList.add('text-muted');
+        deptSearchLabel.classList.remove('text-dark');
+        inpDeptId.value = '';
+        deptSelectedBadge.style.display = 'none';
+        deptSelectedName.textContent    = '';
+        deptResultsList.style.display   = 'none';
+        deptResultsList.innerHTML       = '';
+        deptNoResult.style.display      = 'none';
+    }
 
-        deptSearchWrap.classList.add('visible');
-        deptResults.innerHTML = '';
-        deptInput.value = '';
-        deptBadge.style.display = 'none';
-        deptInput.focus();
-    });
+    /* ── AJAX dept search while typing ──────────────────────── */
+    deptSearchInput.addEventListener('input', function () {
+        var q = deptSearchInput.value.trim();
 
-    /* ── Dept AJAX search ───────────────────────────────────── */
-    deptInput.addEventListener('input', function () {
-        var q = deptInput.value.trim();
-        clearTimeout(deptSearchTimer);
-        if (q.length < 2) { deptResults.innerHTML = ''; return; }
-        deptSearchTimer = setTimeout(function () { fetchDepts(q); }, 250);
-    });
-    deptInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeDropdown();
+        // Clear selected dept when user starts retyping
+        inpDeptId.value = '';
+        deptSelectedBadge.style.display = 'none';
+        deptNoResult.style.display      = 'none';
+
+        clearTimeout(searchTimer);
+
+        if (q.length < 2) {
+            deptResultsList.style.display = 'none';
+            deptResultsList.innerHTML     = '';
+            return;
+        }
+
+        searchTimer = setTimeout(function () { fetchDepts(q); }, 260);
     });
 
     function fetchDepts(q) {
@@ -428,80 +274,109 @@
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': csrf
             },
             credentials: 'same-origin'
         })
-        .then(function(r){ return r.ok ? r.json() : []; })
-        .then(function(data){ renderDeptResults(data); })
-        .catch(function(){ deptResults.innerHTML = ''; });
-    }
-
-    function renderDeptResults(data) {
-        deptResults.innerHTML = '';
-        if (!data || !data.length) {
-            deptResults.innerHTML = '<div class="trf-dept-result-empty"><i class="fa-solid fa-circle-xmark me-1"></i>No department found.</div>';
-            return;
-        }
-        data.forEach(function (dept) {
-            var item = document.createElement('div');
-            item.className = 'trf-dept-result-item';
-            item.innerHTML =
-                '<div class="trf-user-avatar" style="background:#ede9fe;color:#7c3aed;width:28px;height:28px;font-size:.6rem;">' +
-                '<i class="fa-solid fa-building-columns fa-xs"></i></div>' +
-                '<span>' + escHtml(dept.name) + '</span>';
-            item.addEventListener('click', function () { selectDept(dept.id, dept.name); });
-            deptResults.appendChild(item);
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(renderResults)
+        .catch(function () {
+            deptResultsList.style.display = 'none';
         });
     }
 
-    function selectDept(id, name) {
-        selectedDeptId    = id;
-        inpDeptId.value   = id;
-        deptBadgeName.textContent = name;
-        deptBadge.style.display   = '';
-        deptInput.value   = name;
-        deptResults.innerHTML = '';
-        closeDropdown();
+    function renderResults(data) {
+        deptResultsList.innerHTML = '';
+
+        if (!data || !data.length) {
+            deptNoResult.style.display    = '';
+            deptResultsList.style.display = 'none';
+            return;
+        }
+
+        deptNoResult.style.display = 'none';
+
+        data.forEach(function (dept) {
+            var btn = document.createElement('button');
+            btn.type      = 'button';
+            btn.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3';
+            btn.style.fontSize = '.88rem';
+            btn.innerHTML =
+                '<i class="fa-solid fa-building-columns text-primary fa-sm"></i>' +
+                '<span>' + escHtml(dept.name) + '</span>';
+            btn.addEventListener('click', function () { selectDept(dept.id, dept.name); });
+            deptResultsList.appendChild(btn);
+        });
+
+        deptResultsList.style.display = '';
     }
 
-    window.clearDeptSelection = function () {
-        selectedDeptId  = null;
-        inpDeptId.value = '';
-        inpDestType.value = '';
-        deptBadge.style.display = 'none';
-        preview.innerHTML = '<span class="text-muted">— Select recipient —</span>';
-        deptInput.value = '';
-    };
+    /* ── Confirm dept selection ──────────────────────────────── */
+    function selectDept(id, name) {
+        inpDeptId.value             = id;
+        deptSearchInput.value       = name;
+        deptSelectedName.textContent= name;
+        deptSelectedBadge.style.display = '';
+        deptResultsList.style.display   = 'none';
+        deptResultsList.innerHTML       = '';
+        deptNoResult.style.display      = 'none';
+    }
 
+    /* ── Clear dept selection ────────────────────────────────── */
+    deptClearBtn.addEventListener('click', function () {
+        inpDeptId.value             = '';
+        deptSearchInput.value       = '';
+        deptSelectedBadge.style.display = 'none';
+        deptSelectedName.textContent    = '';
+        deptResultsList.style.display   = 'none';
+        deptResultsList.innerHTML       = '';
+        deptSearchInput.focus();
+    });
+
+    /* ── Hide results when clicking outside ─────────────────── */
+    document.addEventListener('click', function (e) {
+        if (!deptSearchInput.contains(e.target) && !deptResultsList.contains(e.target)) {
+            deptResultsList.style.display = 'none';
+        }
+    });
+
+    /* ── Form submit validation ──────────────────────────────── */
+    document.getElementById('transferForm').addEventListener('submit', function (e) {
+        var dest = inpDestType.value;
+
+        if (!dest) {
+            e.preventDefault();
+            recipientSelect.classList.add('is-invalid');
+            recipientSelect.focus();
+            return;
+        }
+
+        if (dest === 'same' && !inpToUser.value) {
+            e.preventDefault();
+            recipientSelect.classList.add('is-invalid');
+            recipientSelect.focus();
+            return;
+        }
+
+        if (dest === 'other' && !inpDeptId.value) {
+            e.preventDefault();
+            deptNoResult.style.display  = '';
+            deptNoResult.textContent    = 'Please select a department from the search results.';
+            deptSearchInput.classList.add('is-invalid');
+            deptSearchInput.focus();
+            return;
+        }
+
+        recipientSelect.classList.remove('is-invalid');
+        deptSearchInput.classList.remove('is-invalid');
+    });
+
+    /* ── Utility: safe HTML escape ───────────────────────────── */
     function escHtml(str) {
         var d = document.createElement('div');
         d.textContent = str || '';
         return d.innerHTML;
     }
-
-    /* ── Form submit validation ─────────────────────────────── */
-    document.getElementById('transferForm').addEventListener('submit', function (e) {
-        var type = inpDestType.value;
-        if (!type) {
-            e.preventDefault();
-            alert('Please select a recipient first.');
-            return;
-        }
-        if (type === 'same' && !inpToUser.value) {
-            e.preventDefault();
-            alert('Please select a user to transfer to.');
-            return;
-        }
-        if (type === 'other' && !inpDeptId.value) {
-            e.preventDefault();
-            alert('Please select a department from the search results.');
-            return;
-        }
-        if (!confirm('Confirm file transfer?')) {
-            e.preventDefault();
-        }
-    });
 
 })();
 </script>
