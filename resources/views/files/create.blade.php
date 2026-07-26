@@ -63,18 +63,20 @@
             @enderror
         </div>
 
-        {{-- Department — searchable input --}}
+        {{-- Department — searchable input with inline creation --}}
         <div class="mb-3">
             <label for="deptSearchField" class="form-label">
                 Department <span class="required-star">*</span>
             </label>
 
-            {{-- Hidden field — this is what actually gets submitted --}}
-            <input type="hidden" name="department_id" id="deptIdHidden" value="{{ old('department_id', auth()->user()->department_id) }}">
+            {{-- Hidden field submitted to the controller --}}
+            <input type="hidden"
+                   name="department_id"
+                   id="deptIdHidden"
+                   value="{{ old('department_id', auth()->user()->department_id) }}">
 
             <div class="position-relative" id="deptSearchWrap">
 
-                {{-- Text input the user types into --}}
                 <input type="text"
                        id="deptSearchField"
                        class="form-control @error('department_id') is-invalid @enderror"
@@ -96,7 +98,7 @@
                             z-index:1055;
                             width:100%;
                             top:calc(100% + 3px);
-                            max-height:220px;
+                            max-height:240px;
                             overflow-y:auto;
                             border-radius:8px;">
                 </div>
@@ -105,11 +107,13 @@
             {{-- Selected dept badge --}}
             <div id="deptSelectedBadge"
                  class="mt-2"
-                 style="display:{{ (old('department_id', auth()->user()->department_id)) ? '' : 'none' }};">
+                 style="display:{{ old('department_id', auth()->user()->department_id) ? '' : 'none' }};">
                 <span class="badge bg-primary bg-opacity-10 text-primary fw-600 py-2 px-3"
                       style="font-size:.8rem;border-radius:8px;">
                     <i class="fa-solid fa-building-columns me-1"></i>
-                    <span id="deptSelectedName">{{ $departments->firstWhere('id', old('department_id', auth()->user()->department_id))?->name ?? '' }}</span>
+                    <span id="deptSelectedName">
+                        {{ $departments->firstWhere('id', old('department_id', auth()->user()->department_id))?->name ?? '' }}
+                    </span>
                     <button type="button"
                             id="deptClearBtn"
                             class="btn-close btn-close-sm ms-2"
@@ -118,11 +122,19 @@
                 </span>
             </div>
 
-            {{-- "No department found" message --}}
-            <div id="deptNoResult"
-                 class="form-text text-danger mt-1"
-                 style="display:none;">
-                <i class="fa-solid fa-circle-xmark me-1"></i>No department found matching your search.
+            {{-- "No department found" + Create button --}}
+            <div id="deptNoResult" class="mt-2" style="display:none;">
+                <span class="text-danger" style="font-size:.85rem;">
+                    <i class="fa-solid fa-circle-xmark me-1"></i>No department found.
+                </span>
+                <button type="button"
+                        id="openCreateDeptBtn"
+                        class="btn btn-sm btn-outline-primary ms-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#createDeptModal"
+                        style="font-size:.8rem;">
+                    <i class="fa-solid fa-plus me-1"></i>Create New Department
+                </button>
             </div>
 
             <div class="form-text text-muted mt-1">
@@ -169,15 +181,77 @@
 
     </form>
 </div>
+
+{{-- ═══════════════════════════════════════════════════════════
+     CREATE DEPARTMENT MODAL  (all authenticated users)
+═══════════════════════════════════════════════════════════ --}}
+<div class="modal fade"
+     id="createDeptModal"
+     tabindex="-1"
+     aria-labelledby="createDeptModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:460px;">
+        <div class="modal-content" style="border-radius:16px;border:none;box-shadow:0 12px 40px rgba(15,23,42,.18);">
+
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-800" id="createDeptModalLabel">
+                    <i class="fa-solid fa-building-columns me-2 text-primary"></i>Create New Department
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body pt-3">
+
+                {{-- Modal-level alert (success / error) --}}
+                <div id="deptModalAlert" class="alert d-none mb-3" role="alert"></div>
+
+                <form id="createDeptForm" novalidate>
+
+                    <div class="mb-3">
+                        <label for="newDeptName" class="form-label fw-600">
+                            Department Name <span class="required-star">*</span>
+                        </label>
+                        <input type="text"
+                               id="newDeptName"
+                               class="form-control"
+                               placeholder="e.g. Human Resources"
+                               maxlength="255"
+                               autocomplete="off">
+                        <div id="newDeptNameError" class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="form-text text-muted mb-3" style="font-size:.8rem;">
+                        <i class="fa-solid fa-info-circle me-1"></i>
+                        A unique department code will be generated automatically.
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button"
+                        id="saveDeptBtn"
+                        class="btn btn-primary px-4 fw-600">
+                    <i class="fa-solid fa-floppy-disk me-1"></i>Save Department
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
 (function () {
     /*
-     * Department searchable input.
-     * Departments are embedded from server — no AJAX needed (lightweight).
-     * Hidden input #deptIdHidden holds the actual department_id for POST.
+     * Departments are embedded from the server on initial load.
+     * After inline creation, we push the new dept into this array.
      */
     var departments = @json($departments->map(fn($d) => ['id' => $d->id, 'name' => $d->name])->values());
 
@@ -188,13 +262,14 @@
     var selectedName  = document.getElementById('deptSelectedName');
     var clearBtn      = document.getElementById('deptClearBtn');
     var noResult      = document.getElementById('deptNoResult');
+    var csrf          = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
-    /* ── Render results list ───────────────────────────────── */
+    /* ── Render results ────────────────────────────────────────── */
     function renderResults(items) {
         resultsList.innerHTML = '';
 
         if (!items.length) {
-            noResult.style.display  = '';
+            noResult.style.display    = '';
             resultsList.style.display = 'none';
             return;
         }
@@ -210,8 +285,7 @@
                 '<i class="fa-solid fa-building-columns text-primary fa-sm"></i>' +
                 '<span>' + esc(dept.name) + '</span>';
             btn.addEventListener('mousedown', function (e) {
-                // mousedown fires before blur — prevent blur closing list first
-                e.preventDefault();
+                e.preventDefault(); // prevent blur closing list first
                 selectDept(dept.id, dept.name);
             });
             resultsList.appendChild(btn);
@@ -221,7 +295,7 @@
         searchField.setAttribute('aria-expanded', 'true');
     }
 
-    /* ── Filter departments by query ───────────────────────── */
+    /* ── Filter ────────────────────────────────────────────────── */
     function filterDepts(q) {
         if (!q.trim()) return departments;
         var lower = q.toLowerCase();
@@ -230,24 +304,23 @@
         });
     }
 
-    /* ── Confirm a department selection ────────────────────── */
+    /* ── Select a dept ─────────────────────────────────────────── */
     function selectDept(id, name) {
-        hiddenInput.value       = id;
-        searchField.value       = name;
-        selectedName.textContent= name;
+        hiddenInput.value        = id;
+        searchField.value        = name;
+        selectedName.textContent = name;
         selectedBadge.style.display = '';
         resultsList.style.display   = 'none';
         resultsList.innerHTML       = '';
         noResult.style.display      = 'none';
         searchField.setAttribute('aria-expanded', 'false');
-        // Remove any validation error styling
         searchField.classList.remove('is-invalid');
     }
 
-    /* ── Clear selection ────────────────────────────────────── */
+    /* ── Clear ─────────────────────────────────────────────────── */
     function clearSelection() {
-        hiddenInput.value   = '';
-        searchField.value   = '';
+        hiddenInput.value        = '';
+        searchField.value        = '';
         selectedBadge.style.display = 'none';
         selectedName.textContent    = '';
         resultsList.style.display   = 'none';
@@ -258,10 +331,9 @@
 
     clearBtn.addEventListener('click', clearSelection);
 
-    /* ── Typing in the search field ─────────────────────────── */
+    /* ── Typing ─────────────────────────────────────────────────── */
     searchField.addEventListener('input', function () {
-        // Clear the confirmed ID whenever the user modifies the text
-        hiddenInput.value = '';
+        hiddenInput.value           = '';
         selectedBadge.style.display = 'none';
         noResult.style.display      = 'none';
 
@@ -274,7 +346,7 @@
         renderResults(filterDepts(q));
     });
 
-    /* ── Show all results on focus if empty ─────────────────── */
+    /* ── Focus ─────────────────────────────────────────────────── */
     searchField.addEventListener('focus', function () {
         if (!searchField.value.trim() && !hiddenInput.value) {
             renderResults(departments);
@@ -283,21 +355,20 @@
         }
     });
 
-    /* ── Hide results when clicking outside ─────────────────── */
+    /* ── Click outside ─────────────────────────────────────────── */
     document.addEventListener('click', function (e) {
         var wrap = document.getElementById('deptSearchWrap');
-        if (!wrap.contains(e.target)) {
+        if (wrap && !wrap.contains(e.target)) {
             resultsList.style.display = 'none';
             searchField.setAttribute('aria-expanded', 'false');
-            // If user left the field without selecting, show error
             if (searchField.value.trim() && !hiddenInput.value) {
-                noResult.style.display  = '';
+                noResult.style.display = '';
                 searchField.classList.add('is-invalid');
             }
         }
     });
 
-    /* ── Keyboard navigation ─────────────────────────────────── */
+    /* ── Keyboard navigation ────────────────────────────────────── */
     searchField.addEventListener('keydown', function (e) {
         var items = resultsList.querySelectorAll('.list-group-item');
         if (!items.length) return;
@@ -307,30 +378,146 @@
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            var next = items[idx + 1] || items[0];
-            next.focus();
+            (items[idx + 1] || items[0]).focus();
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            var prev = items[idx - 1] || items[items.length - 1];
-            prev.focus();
+            (items[idx - 1] || items[items.length - 1]).focus();
         } else if (e.key === 'Escape') {
             resultsList.style.display = 'none';
             searchField.focus();
         }
     });
 
-    /* ── Form submit validation ──────────────────────────────── */
+    /* ── Form submit guard ─────────────────────────────────────── */
     document.getElementById('createFileForm').addEventListener('submit', function (e) {
         if (!hiddenInput.value) {
             e.preventDefault();
             searchField.classList.add('is-invalid');
             noResult.style.display = '';
-            noResult.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>Please select a department from the list.';
+            var span = noResult.querySelector('span');
+            if (span) span.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>Please select a department from the list.';
             searchField.focus();
         }
     });
 
-    /* ── Utility: HTML escape ────────────────────────────────── */
+    /* ═══════════════════════════════════════════════════════════
+       INLINE DEPARTMENT CREATION  (modal — all authenticated users)
+    ═══════════════════════════════════════════════════════════ */
+    var saveDeptBtn    = document.getElementById('saveDeptBtn');
+    var newDeptName    = document.getElementById('newDeptName');
+    var newDeptNameErr = document.getElementById('newDeptNameError');
+    var deptModalAlert = document.getElementById('deptModalAlert');
+
+    if (saveDeptBtn && newDeptName) {
+
+        /* Pre-fill the modal name field with what the user typed in search */
+        var createDeptModal = document.getElementById('createDeptModal');
+        if (createDeptModal) {
+            createDeptModal.addEventListener('show.bs.modal', function () {
+                newDeptName.value = searchField.value.trim();
+                newDeptName.classList.remove('is-invalid');
+                if (newDeptNameErr) newDeptNameErr.textContent = '';
+                if (deptModalAlert) deptModalAlert.className = 'alert d-none mb-3';
+            });
+            createDeptModal.addEventListener('shown.bs.modal', function () {
+                newDeptName.focus();
+                newDeptName.select();
+            });
+        }
+
+        /* ── Submit via AJAX ─────────────────────────────────── */
+        saveDeptBtn.addEventListener('click', function () {
+            var name = newDeptName.value.trim();
+
+            // Client-side required check
+            if (!name) {
+                newDeptName.classList.add('is-invalid');
+                if (newDeptNameErr) newDeptNameErr.textContent = 'Department name is required.';
+                newDeptName.focus();
+                return;
+            }
+
+            // Reset previous errors
+            newDeptName.classList.remove('is-invalid');
+            if (newDeptNameErr) newDeptNameErr.textContent = '';
+            if (deptModalAlert) deptModalAlert.className = 'alert d-none mb-3';
+
+            // Disable button to prevent double-submit
+            saveDeptBtn.disabled = true;
+            saveDeptBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+
+            fetch('{{ route("ajax.departments.create") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept':       'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ name: name }),
+            })
+            .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+            .then(function (res) {
+                saveDeptBtn.disabled = false;
+                saveDeptBtn.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Save Department';
+
+                if (res.data.success) {
+                    var dept = res.data.department;
+
+                    // Add to local list so it shows in search immediately
+                    departments.push({ id: dept.id, name: dept.name });
+
+                    // Auto-select the new department
+                    selectDept(dept.id, dept.name);
+
+                    // Close the modal
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('createDeptModal'));
+                    if (modal) modal.hide();
+
+                    // Brief success flash near the field (no page reload)
+                    var flash = document.createElement('div');
+                    flash.className = 'alert alert-success py-2 px-3 mt-2';
+                    flash.style.fontSize = '.85rem';
+                    flash.style.borderRadius = '8px';
+                    flash.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>Department "' + esc(dept.name) + '" created and selected.';
+                    var deptWrap = document.getElementById('deptSearchWrap');
+                    deptWrap.parentNode.insertBefore(flash, deptWrap.nextSibling);
+                    setTimeout(function () { flash.remove(); }, 4000);
+
+                } else if (res.status === 422 && res.data.errors && res.data.errors.name) {
+                    // Laravel validation error
+                    newDeptName.classList.add('is-invalid');
+                    if (newDeptNameErr) newDeptNameErr.textContent = res.data.errors.name[0];
+                } else {
+                    // Other error (403, 500, etc.)
+                    var msg = res.data.message || 'An error occurred. Please try again.';
+                    if (deptModalAlert) {
+                        deptModalAlert.className = 'alert alert-danger mb-3';
+                        deptModalAlert.innerHTML = '<i class="fa-solid fa-circle-xmark me-1"></i>' + esc(msg);
+                    }
+                }
+            })
+            .catch(function () {
+                saveDeptBtn.disabled = false;
+                saveDeptBtn.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Save Department';
+                if (deptModalAlert) {
+                    deptModalAlert.className = 'alert alert-danger mb-3';
+                    deptModalAlert.textContent = 'Network error. Please check your connection and try again.';
+                }
+            });
+        });
+
+        /* Allow Enter key inside the modal input to trigger save */
+        newDeptName.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveDeptBtn.click();
+            }
+        });
+    }
+
+    /* ── Utility ─────────────────────────────────────────────── */
     function esc(str) {
         var d = document.createElement('div');
         d.textContent = str || '';

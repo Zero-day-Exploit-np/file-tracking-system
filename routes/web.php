@@ -76,6 +76,9 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
     // AJAX: department search for transfer form autocomplete
     Route::get('/ajax/departments/search', [FileTransferController::class, 'searchDepartments'])->name('ajax.departments.search');
 
+    // AJAX: inline department creation from File Creation page (any authenticated user)
+    Route::post('/ajax/departments/create', [DepartmentController::class, 'storeAjax'])->name('ajax.departments.create');
+
     // Notifications
     Route::get('/notifications',            [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/poll',       [NotificationController::class, 'poll'])->name('notifications.poll');

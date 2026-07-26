@@ -94,4 +94,41 @@ class DepartmentController extends Controller
             return back()->with('error', 'Department deletion failed: ' . $e->getMessage());
         }
     }
+
+    /**
+     * AJAX: Create a department inline from the File Creation page.
+     * Any authenticated user may use this endpoint.
+     * Returns JSON: { success: true, department: { id, name } }
+     */
+    public function storeAjax(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:departments,name',
+        ], [
+            'name.unique' => 'A department with this name already exists.',
+        ]);
+
+        // Auto-generate a unique code from the name (uppercase alphanumeric, max 8 chars)
+        $baseCode = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $validated['name']));
+        $baseCode = substr($baseCode, 0, 8) ?: 'DEPT';
+        $code     = $baseCode;
+        $counter  = 1;
+        while (Department::where('code', $code)->exists()) {
+            $code = substr($baseCode, 0, 7) . $counter++;
+        }
+
+        $department = Department::create([
+            'name'      => trim($validated['name']),
+            'code'      => $code,
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'success'    => true,
+            'department' => [
+                'id'   => $department->id,
+                'name' => $department->name,
+            ],
+        ]);
+    }
 }
