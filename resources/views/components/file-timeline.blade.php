@@ -177,13 +177,15 @@
                 </span>
             </div>
 
-            {{-- Remarks --}}
-            @if($move->remarks)
-            <div class="tl-remarks" title="{{ $move->remarks }}">
+            {{-- Remarks — each card shows its own movement remark, preserved as entered --}}
+            <div class="tl-remarks">
                 <i class="fa-solid fa-comment-dots fa-xs"></i>
-                {{ Str::limit($move->remarks, 55) }}
+                @if($move->remarks)
+                    {!! nl2br(e($move->remarks)) !!}
+                @else
+                    <span class="text-muted fst-italic">No remarks</span>
+                @endif
             </div>
-            @endif
 
             {{-- Action badge --}}
             <div class="tl-action-badge tl-badge-{{ $typeKey }}">
