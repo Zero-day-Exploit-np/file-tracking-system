@@ -16,15 +16,15 @@ class AdminFileController extends Controller
         $user  = Auth::user();
         $query = FileRecord::with(['department', 'creator', 'currentHolder']);
 
-        // Department isolation — admin sees only their dept
+        // Department isolation — admin sees only their dept (current ownership, not origin)
         if ($user->role !== 'super_admin') {
-            $query->where('department_id', $user->department_id);
+            $query->where('current_department_id', $user->department_id);
         }
 
         // Super admin can filter by department UUID
         if ($request->filled('department_id') && $user->role === 'super_admin') {
             $dept = Department::where('uuid', $request->department_id)->first();
-            if ($dept) $query->where('department_id', $dept->id);
+            if ($dept) $query->where('current_department_id', $dept->id);
         }
 
         // Search
@@ -36,7 +36,7 @@ class AdminFileController extends Controller
         }
 
         if ($request->filled('status')) {
-            $allowed = ['active', 'archived', 'draft'];
+            $allowed = ['active', 'archived', 'draft', 'pending_assignment'];
             if (in_array($request->status, $allowed, true)) {
                 $query->where('status', $request->status);
             }

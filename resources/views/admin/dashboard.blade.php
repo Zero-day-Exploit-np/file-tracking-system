@@ -24,7 +24,7 @@
 
 {{-- KPI ROW --}}
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <div class="stat-kpi">
             <div class="stat-kpi-icon green"><i class="fa-solid fa-file-lines"></i></div>
             <div>
@@ -33,7 +33,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <div class="stat-kpi">
             <div class="stat-kpi-icon blue"><i class="fa-solid fa-users"></i></div>
             <div>
@@ -42,7 +42,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
         <div class="stat-kpi">
             <div class="stat-kpi-icon teal"><i class="fa-solid fa-right-left"></i></div>
             <div>
@@ -51,7 +51,67 @@
             </div>
         </div>
     </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ route('admin.files.pending') }}" style="text-decoration:none;">
+            <div class="stat-kpi {{ $pendingAssignments > 0 ? 'stat-kpi-alert' : '' }}">
+                <div class="stat-kpi-icon {{ $pendingAssignments > 0 ? 'orange' : 'grey' }}">
+                    <i class="fa-solid fa-inbox"></i>
+                </div>
+                <div>
+                    <div class="stat-kpi-label">Awaiting Assignment</div>
+                    <div class="stat-kpi-value">{{ $pendingAssignments }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
+
+{{-- INCOMING DEPARTMENT FILES (pending assignment) --}}
+@if($pendingAssignments > 0)
+<div class="portal-card mb-4" style="border-left: 4px solid #f59e0b;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+            <i class="fa-solid fa-inbox me-2 text-warning"></i>
+            <strong>Incoming Department Files</strong>
+            <span class="badge bg-warning text-dark ms-2">{{ $pendingAssignments }}</span>
+        </span>
+        <a href="{{ route('admin.files.pending') }}" class="btn btn-sm btn-warning">
+            <i class="fa-solid fa-user-plus me-1"></i>Assign All
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="portal-table">
+                <thead>
+                    <tr>
+                        <th>File Number</th>
+                        <th>File Name</th>
+                        <th>Created By</th>
+                        <th>Received</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($pendingFiles as $pf)
+                    <tr>
+                        <td class="fw-700 text-portal-primary">{{ $pf->file_number }}</td>
+                        <td>{{ $pf->file_name }}</td>
+                        <td class="text-muted fs-sm">{{ $pf->creator->name ?? '—' }}</td>
+                        <td class="text-muted fs-sm">{{ $pf->updated_at->format('d M Y') }}</td>
+                        <td>
+                            <a href="{{ route('admin.files.pending') }}"
+                               class="btn btn-sm btn-warning">
+                                <i class="fa-solid fa-user-plus me-1"></i>Assign
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
 
 <div class="row g-3 mb-4">
 
@@ -79,7 +139,15 @@
                             <tr>
                                 <td class="text-muted fs-sm">{{ $f->file_number }}</td>
                                 <td class="fw-700">{{ $f->file_name }}</td>
-                                <td class="text-muted">{{ $f->currentHolder->name ?? 'N/A' }}</td>
+                                <td class="text-muted">
+                                    @if($f->currentHolder)
+                                        {{ $f->currentHolder->name }}
+                                    @else
+                                        <span class="badge-status badge-pending" style="font-size:.7rem;">
+                                            <i class="fa-solid fa-hourglass-half me-1"></i>Awaiting Assignment
+                                        </span>
+                                    @endif
+                                </td>
                                 <td>@include('partials.status-badge', ['status' => $f->status])</td>
                                 <td>
                                     <a href="{{ route('admin.files.timeline', $f->uuid) }}"

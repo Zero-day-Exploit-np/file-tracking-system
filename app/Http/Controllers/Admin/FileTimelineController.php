@@ -48,6 +48,7 @@ class FileTimelineController extends Controller
     {
         return FileRecord::with([
             'department',
+            'currentDepartment',
             'creator',
             'currentHolder',
             'currentUser',

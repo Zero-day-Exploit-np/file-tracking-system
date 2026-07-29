@@ -36,7 +36,7 @@
                     </div>
                     <div class="col-sm-6">
                         <div class="text-muted fs-sm mb-1">Current Department</div>
-                        <div>{{ $file->department->name ?? 'N/A' }}</div>
+                        <div>{{ ($file->currentDepartment ?? $file->department)?->name ?? 'N/A' }}</div>
                     </div>
                     <div class="col-sm-6">
                         <div class="text-muted fs-sm mb-1">Status</div>
@@ -67,6 +67,16 @@
                             @endif
                             <span class="fw-600">{{ $holder->name }}</span>
                         </div>
+                        @elseif($file->status === 'pending_assignment')
+                        <span class="badge-status badge-pending">
+                            <i class="fa-solid fa-hourglass-half me-1"></i>Awaiting Assignment
+                        </span>
+                        @if($file->currentDepartment ?? $file->department)
+                        <div class="text-muted fs-sm mt-1">
+                            <i class="fa-solid fa-building-columns fa-xs me-1"></i>
+                            Held by {{ ($file->currentDepartment ?? $file->department)?->name }}
+                        </div>
+                        @endif
                         @else
                         <span class="text-muted">N/A</span>
                         @endif
@@ -117,7 +127,7 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="text-muted fs-sm">Current Dept.</span>
-                        <span class="fw-700">{{ $file->department->name ?? 'N/A' }}</span>
+                        <span class="fw-700">{{ ($file->currentDepartment ?? $file->department)?->name ?? 'N/A' }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="text-muted fs-sm">Current Holder</span>

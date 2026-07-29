@@ -59,11 +59,11 @@ class FileRecordPolicy
     /**
      * Transfer: ownership-based, not role-based.
      * Whoever currently holds the file can transfer it.
-     * Archived files cannot be transferred.
+     * Archived and pending_assignment files cannot be transferred.
      */
     public function transfer(User $user, FileRecord $file): bool
     {
-        if ($file->status === 'archived') {
+        if (in_array($file->status, ['archived', 'pending_assignment'], true)) {
             return false;
         }
         return (int) $file->current_user_id === $user->id;
@@ -89,10 +89,11 @@ class FileRecordPolicy
         if ((int) $file->created_by === $user->id) return true;
 
         // Current holder
-        if ((int) $file->current_user_id === $user->id) return true;
+        if ($file->current_user_id && (int) $file->current_user_id === $user->id) return true;
 
-        // Same-department admin (read-only view)
-        if ($user->role === 'admin' && (int) $user->department_id === (int) $file->department_id) {
+        // Same-department admin — can view any file currently in their department
+        if ($user->role === 'admin' &&
+            (int) $user->department_id === (int) ($file->current_department_id ?? $file->department_id)) {
             return true;
         }
 

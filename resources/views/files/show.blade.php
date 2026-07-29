@@ -83,6 +83,13 @@
                                 </div>
                                 @endif
                                 <span class="fw-600">{{ $file->currentHolder->name }}</span>
+                            @elseif($file->status === 'pending_assignment')
+                                <span class="badge-status badge-pending">
+                                    <i class="fa-solid fa-hourglass-half me-1"></i>Awaiting Assignment
+                                </span>
+                                @if($file->currentDepartment)
+                                <span class="text-muted fs-sm ms-1">by {{ $file->currentDepartment->name }}</span>
+                                @endif
                             @else
                             <span class="text-muted">N/A</span>
                             @endif

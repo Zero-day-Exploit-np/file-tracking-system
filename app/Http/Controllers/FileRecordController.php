@@ -28,7 +28,9 @@ class FileRecordController extends Controller
                 ->orWhere('current_user_id', $user->id)
                 ->orWhereIn('id',            $involvedFileIds));
         } elseif ($user->role === 'admin') {
-            $query->where('department_id', $user->department_id);
+            // Admin sees all files in their department (current_department_id),
+            // including unassigned (pending_assignment) files awaiting their action.
+            $query->where('current_department_id', $user->department_id);
         }
         // super_admin sees all
 
@@ -40,7 +42,7 @@ class FileRecordController extends Controller
         }
 
         if ($request->filled('status')) {
-            $allowed = ['active', 'archived', 'draft'];
+            $allowed = ['active', 'archived', 'draft', 'pending_assignment'];
             if (in_array($request->status, $allowed, true)) {
                 $query->where('status', $request->status);
             }
@@ -89,13 +91,14 @@ class FileRecordController extends Controller
         $deptId = (int) $request->department_id;
 
         $file = FileRecord::create([
-            'created_by'      => Auth::id(),
-            'current_user_id' => Auth::id(),
-            'department_id'   => $deptId,
-            'file_name'       => $request->string('file_name')->trim()->value(),
-            'file_number'     => strtoupper(trim($request->file_number)),
-            'remarks'         => $request->string('remarks')->trim()->value() ?: null,
-            'status'          => 'active',
+            'created_by'             => Auth::id(),
+            'current_user_id'        => Auth::id(),
+            'department_id'          => $deptId,
+            'current_department_id'  => $deptId,
+            'file_name'              => $request->string('file_name')->trim()->value(),
+            'file_number'            => strtoupper(trim($request->file_number)),
+            'remarks'                => $request->string('remarks')->trim()->value() ?: null,
+            'status'                 => 'active',
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -169,6 +172,7 @@ class FileRecordController extends Controller
 
         $file->load([
             'department',
+            'currentDepartment',
             'creator',
             'currentHolder',
             'movements.fromUser',

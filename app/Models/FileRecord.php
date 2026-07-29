@@ -12,6 +12,7 @@ class FileRecord extends Model
     protected $fillable = [
         'uuid',
         'department_id',
+        'current_department_id',
         'file_name',
         'file_number',
         'remarks',
@@ -60,6 +61,16 @@ class FileRecord extends Model
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    /**
+     * The department that currently holds this file.
+     * Set on creation, updated on every cross-department transfer.
+     * When current_user_id is NULL, this department is responsible for assignment.
+     */
+    public function currentDepartment()
+    {
+        return $this->belongsTo(Department::class, 'current_department_id');
     }
 
     public function movements()

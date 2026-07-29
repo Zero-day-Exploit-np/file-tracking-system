@@ -39,12 +39,14 @@ class AdminDashboardController extends Controller
         $recent = $this->dashboard->adminRecentData($deptId);
 
         return view('admin.dashboard', [
-            'deptFiles'      => $stats['dept_files'],
-            'deptUsers'      => $stats['dept_users'],
-            'totalTransfers' => $stats['total_transfers'],
-            'recentFiles'    => $recent['recentFiles'],
-            'recentActivity' => $recent['recentActivity'],
-            'recentUsers'    => $recent['recentUsers'],
+            'deptFiles'          => $stats['dept_files'],
+            'deptUsers'          => $stats['dept_users'],
+            'totalTransfers'     => $stats['total_transfers'],
+            'pendingAssignments' => $stats['pending_assignments'],
+            'recentFiles'        => $recent['recentFiles'],
+            'recentActivity'     => $recent['recentActivity'],
+            'recentUsers'        => $recent['recentUsers'],
+            'pendingFiles'       => $recent['pendingFiles'],
         ]);
     }
 }

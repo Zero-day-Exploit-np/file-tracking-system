@@ -136,6 +136,10 @@ Route::prefix('admin')
         Route::resource('designations', AdminDesignationController::class);
 
         // Files — view + timeline only
+        // NOTE: /files/pending MUST be declared before /files/{uuid} to avoid route shadowing
+        Route::get('/files/pending',                [\App\Http\Controllers\Admin\AdminFileAssignmentController::class, 'index'])->name('files.pending');
+        Route::post('/files/pending/{uuid}/assign', [\App\Http\Controllers\Admin\AdminFileAssignmentController::class, 'assign'])->name('files.pending.assign');
+
         Route::get('/files',                    [AdminFileController::class, 'index'])->name('files');
         Route::get('/files/{uuid}/timeline',    [FileTimelineController::class, 'show'])->name('files.timeline');
         Route::get('/files/{uuid}',             [FileTimelineController::class, 'fileDetails'])->name('files.show');

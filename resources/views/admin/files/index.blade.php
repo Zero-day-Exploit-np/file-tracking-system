@@ -36,8 +36,9 @@
 
         <select name="status" class="form-select" style="max-width:145px;">
             <option value="">All Statuses</option>
-            <option value="active"   {{ request('status') === 'active'   ? 'selected' : '' }}>Active</option>
-            <option value="archived" {{ request('status') === 'archived' ? 'selected' : '' }}>Archived</option>
+            <option value="active"             {{ request('status') === 'active'             ? 'selected' : '' }}>Active</option>
+            <option value="pending_assignment" {{ request('status') === 'pending_assignment' ? 'selected' : '' }}>Awaiting Assignment</option>
+            <option value="archived"           {{ request('status') === 'archived'           ? 'selected' : '' }}>Archived</option>
         </select>
 
         <input type="date" name="from_date" class="form-control" style="max-width:140px;" value="{{ request('from_date') }}">
@@ -100,6 +101,10 @@
                             @endif
                             <span class="fs-sm">{{ $holder->name }}</span>
                         </div>
+                        @elseif($file->status === 'pending_assignment')
+                        <span class="badge-status badge-pending" style="font-size:.7rem;">
+                            <i class="fa-solid fa-hourglass-half me-1"></i>Awaiting Assignment
+                        </span>
                         @else
                         <span class="text-muted fs-sm">—</span>
                         @endif

@@ -31,8 +31,9 @@
 
         <select name="status" class="form-select" style="max-width:160px;min-width:140px;">
             <option value="">All Statuses</option>
-            <option value="active"   {{ request('status') === 'active'   ? 'selected' : '' }}>Active</option>
-            <option value="archived" {{ request('status') === 'archived' ? 'selected' : '' }}>Archived</option>
+            <option value="active"             {{ request('status') === 'active'             ? 'selected' : '' }}>Active</option>
+            <option value="pending_assignment" {{ request('status') === 'pending_assignment' ? 'selected' : '' }}>Awaiting Assignment</option>
+            <option value="archived"           {{ request('status') === 'archived'           ? 'selected' : '' }}>Archived</option>
         </select>
 
         <input type="date" name="from_date" class="form-control" style="max-width:145px;"
@@ -68,7 +69,7 @@
                 <td><span class="fw-700 text-portal-primary">{{ $file->file_number }}</span></td>
                 <td>{{ $file->file_name }}</td>
                 <td class="text-muted">{{ $file->department->name ?? 'N/A' }}</td>
-                <td>{{ $file->currentHolder->name ?? 'N/A' }}</td>
+                <td>{{ $file->currentHolder->name ?? ($file->status === 'pending_assignment' ? '—' : 'N/A') }}</td>
                 <td>@include('partials.status-badge', ['status' => $file->status])</td>
                 <td class="text-muted fs-sm">{{ $file->created_at->format('d M Y') }}</td>
                 <td>
