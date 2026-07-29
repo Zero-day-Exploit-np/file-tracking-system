@@ -1,84 +1,118 @@
 # FileTrack Office Portal
 
-A Laravel 12 government file tracking system with role-based access, instant file transfers, hierarchical impersonation, and a linked-list timeline.
+FileTrack Office Portal is a Laravel 12 web application for managing government departmental files from creation to transfer, tracking, and public lookup. It supports role-based access, department ownership, file movement history, notifications, and impersonation for administrative workflows.
 
----
+## Overview
 
-## Features
+This system is designed for office environments where files must be:
+- created and assigned to a department,
+- transferred quickly between departments or users,
+- tracked through a visible movement history, and
+- reviewed by administrators with clear role-based permissions.
 
-| Feature | Description |
-|---|---|
-| **File Management** | Create, view, edit, download files with attachments |
-| **Government File Number** | Manual entry with uniqueness validation |
-| **File Transfer** | Instant same-dept or cross-dept transfer — no approval workflow |
-| **Linked-List Timeline** | Visual file journey with profile pictures, remarks, current-holder badge |
-| **Impersonation** | Super Admin → Admin or User; Admin → own dept Users |
-| **Default Password** | `Password@123` on creation; forced change on first login |
-| **Public File Search** | Search by file number — shows current holder, no auth required |
-| **Notifications** | Bell badge, dropdown auto-read on open, sound on new arrival |
-| **Role-Based Access** | `super_admin`, `admin`, `user` with ownership-based transfer |
+## Key Features
 
----
+- File creation with manual, unique file numbers and optional attachments
+- Immediate file transfer between departments or users
+- Department-scoped dashboards for admins and super admins
+- Linked timeline view for every file movement
+- Public file search without authentication
+- Real-time notifications for new file activity
+- Impersonation support for support/admin workflows
+- Forced password change on first login for newly created accounts
 
 ## Roles
 
-| Role | Can Create Files | Can Transfer | Can Impersonate |
-|---|---|---|---|
-| Super Admin | ✗ | ✗ (unless holder) | Admins + Users |
-| Admin | ✗ | ✓ (if holder) | Own dept Users |
-| User | ✓ (if permitted) | ✓ (if holder) | — |
+| Role | Purpose |
+|---|---|
+| Super Admin | Oversees the full system, manages departments/users, and views system-wide dashboards |
+| Admin | Manages users within a department and monitors department file activity |
+| User | Creates and transfers files within allowed workflows |
 
----
-
-## Prerequisites
+## Technology Stack
 
 - PHP 8.2+
+- Laravel 12
+- MySQL 8+
+- Blade + Tailwind CSS + Vite
+- Pusher for notifications
+- Pest for automated testing
+
+## System Architecture
+
+The application follows a layered Laravel architecture:
+
+```mermaid
+flowchart LR
+    U[Browser / User] --> R[Routes]
+    R --> C[Controllers]
+    C --> M[Models]
+    C --> S[Services]
+    M --> DB[(MySQL Database)]
+    S --> ST[(Storage / Attachments)]
+    C --> N[Notifications / Pusher]
+    U --> P[Public File Search]
+```
+
+### Main components
+
+- Presentation layer: Blade views, Tailwind UI, and Vite-built assets
+- Application layer: Controllers, middleware, and service classes for dashboards, transfers, and notifications
+- Data layer: MySQL tables for users, departments, files, movements, transfers, and audit data
+- Integration layer: Pusher-based notifications and file storage
+- Public access layer: unauthenticated search endpoint for file lookup
+
+## Project Structure
+
+- app/Http/Controllers: request handling for files, transfers, dashboards, notifications, and auth-related features
+- app/Models: file, user, department, transfer, movement, and notification models
+- app/Services: dashboard aggregation and reusable business logic
+- resources/views: Blade templates for dashboards, file views, and admin panels
+- routes/web.php: application routing, role-based middleware, and public endpoints
+- database/migrations: schema definitions for users, files, departments, movements, and transfers
+
+## Requirements
+
+- PHP 8.2 or newer
 - Composer
+- Node.js and npm
 - MySQL 8+
 - Git
-- XAMPP / Laragon / WAMP (or any local PHP stack)
-
----
 
 ## Local Setup
 
-### 1. Clone the repository
+1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/file-tracking-system.git
+git clone <repository-url>
 cd file-tracking-system
 ```
 
-### 2. Install dependencies
+2. Install PHP dependencies
 
 ```bash
 composer install
 ```
 
-### 3. Create environment file
+3. Install frontend dependencies
 
-**Windows:**
+```bash
+npm install
+```
+
+4. Create the environment file
+
 ```bash
 copy .env.example .env
 ```
-**Linux / Mac:**
+
+On Linux or macOS:
+
 ```bash
 cp .env.example .env
 ```
 
-### 4. Generate application key
-
-```bash
-php artisan key:generate
-```
-
-### 5. Create database
-
-```sql
-CREATE DATABASE file_tracking_system;
-```
-
-Update `.env`:
+5. Configure the database in the .env file
 
 ```env
 DB_CONNECTION=mysql
@@ -89,138 +123,31 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-### 6. Run migrations
+6. Generate the application key
+
+```bash
+php artisan key:generate
+```
+
+7. Run database migrations
 
 ```bash
 php artisan migrate
 ```
 
-With seeders (if available):
-
-```bash
-php artisan migrate --seed
-```
-
-### 7. Create storage link
+8. Create the storage link
 
 ```bash
 php artisan storage:link
 ```
 
-### 8. Clear caches
+9. Start the application
 
 ```bash
-php artisan optimize:clear
+composer run dev
 ```
 
-### 9. Start the development server
-
-```bash
-php artisan serve
-```
-
-Open: `http://127.0.0.1:8000`
-
----
-
-## Create Super Admin
-
-```bash
-php artisan tinker
-```
-
-```php
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-
-User::create([
-    'name'     => 'Super Admin',
-    'email'    => 'superadmin@example.com',
-    'password' => Hash::make('Password@123'),
-    'role'     => 'super_admin',
-    'is_active' => true,
-    'must_change_password' => false,
-]);
-exit
-```
-
----
-
-## Default Password
-
-When Super Admin creates an **Admin** or **User** account, the default password is:
-
-```
-Password@123
-```
-
-The user is forced to change this password on first login. The `must_change_password` flag is automatically cleared after a successful password change.
-
----
-
-## File Numbers
-
-File numbers must be entered **manually** by the creator. They must be unique across all records.
-
-Valid formats:
-
-```
-HR/FIN/2026/234
-FIN-12/456
-ABC-2026-001
-```
-
-Allowed characters: letters, numbers, hyphens (`-`), slashes (`/`), dots (`.`), spaces.
-
----
-
-## File Transfer Rules
-
-- **Same Department:** Select any active user in your department.
-- **Cross Department:** Search for the target department by name (AJAX autocomplete). File is assigned to the department's Admin on arrival.
-- Whoever holds the file (`current_user_id`) can transfer it — no role restriction.
-- If the target department has no active users, the transfer is blocked.
-
----
-
-## Impersonation
-
-| Impersonator | Can Impersonate |
-|---|---|
-| Super Admin | Any Admin or User (not another Super Admin) |
-| Admin | Users in their own department only |
-| User | Nobody |
-
-An amber banner appears at the top of every page during impersonation with a **Stop Impersonating** button.
-
-Notifications during impersonation belong to the impersonated user. Stopping restores the original session.
-
----
-
-## Timeline
-
-Every file has a linked-list style vertical timeline showing:
-
-- User or Department name
-- Profile picture (or initials fallback)
-- Department
-- Date and Time
-- Remarks entered during transfer
-- **Current Holder** badge (green highlight)
-
-The same `<x-file-timeline>` Blade component is used on both `/files/{uuid}` and `/admin/files/{uuid}/timeline`.
-
----
-
-## Public File Search
-
-Available at `/public/file-search` — no login required.
-
-Returns: File Number, File Name, Department, **Current Holder**, Status, Created Date.
-
-No internal data is exposed.
-
----
+The app will be available at http://127.0.0.1:8000.
 
 ## Running Tests
 
@@ -228,26 +155,11 @@ No internal data is exposed.
 php artisan test
 ```
 
-Expected: **35 tests, 103 assertions, 0 failures.**
+## Notes
 
-Test coverage includes:
-- File creation (attachment, duplicate number, cross-dept)
-- File transfer ownership chain
-- Notification mark-as-read
-- Auth flows (login, logout, password reset, registration)
-- Profile management
-- Public file search
-
----
-
-## Common Fixes
-
-| Problem | Fix |
-|---|---|
-| Missing vendor folder | `composer install` |
-| Storage files not loading | `php artisan storage:link` |
-| Route errors | `php artisan optimize:clear` |
-| DB connection error | Check `.env` credentials, restart server |
+- The system uses manual file numbering and enforces uniqueness across files.
+- Public file search is intentionally limited to metadata and current holder information.
+- The file timeline is a core part of the product and shows the full movement history for every record.
 | Too many redirects | Clear browser cookies + `php artisan optimize:clear` |
 
 ---

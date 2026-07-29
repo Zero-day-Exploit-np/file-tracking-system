@@ -1,7 +1,5 @@
 $kind: http-request
-name: Landing Page
 method: GET
-url: '{{base_url}}/'
+url: "{{base_url}}/"
 headers:
-  - key: Accept
-    value: application/json
+  Accept: application/json
