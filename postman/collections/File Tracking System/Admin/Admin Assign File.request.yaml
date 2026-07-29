@@ -1,0 +1,22 @@
+$kind: http-request
+name: Admin Assign File
+method: POST
+url: '{{base_url}}/admin/files/pending/:uuid/assign'
+headers:
+  - key: Accept
+    value: application/json
+  - key: Content-Type
+    value: application/json
+  - key: X-CSRF-TOKEN
+    value: '{{csrf_token}}'
+  - key: Authorization
+    value: 'Bearer {{auth_token}}'
+body:
+  type: json
+  content: |-
+    {
+      "user_id": 1
+    }
+pathVariables:
+  - key: uuid
+    value: FILE_UUID_HERE
