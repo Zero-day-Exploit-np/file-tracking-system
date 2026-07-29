@@ -90,6 +90,6 @@ class NotificationPresenter
 
     private static function safeColor(string $color): string
     {
-        return in_array($color, ['blue', 'green', 'red', 'yellow', 'gray'], true) ? $color : 'gray';
+        return in_array($color, ['blue', 'green', 'red', 'yellow', 'orange', 'gray'], true) ? $color : 'gray';
     }
 }
