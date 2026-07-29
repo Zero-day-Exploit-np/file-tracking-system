@@ -14,7 +14,7 @@ class AdminFileController extends Controller
 {
     public function index(Request $request)
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = FileRecord::with(['department', 'currentDepartment', 'creator', 'currentHolder']);
 
         // Department isolation — admin sees only their dept (current ownership, not origin)
@@ -34,7 +34,7 @@ class AdminFileController extends Controller
             $search = $request->string('search')->trim()->value();
             $query->where(fn ($q) => $q
                 ->where('file_number', 'like', "%{$search}%")
-                ->orWhere('file_name',  'like', "%{$search}%"));
+                ->orWhere('file_name', 'like', "%{$search}%"));
         }
 
         if ($request->filled('status')) {
@@ -51,7 +51,7 @@ class AdminFileController extends Controller
             $query->whereDate('created_at', '<=', $request->date('to_date'));
         }
 
-        $files   = $query->latest()->paginate(20)->withQueryString();
+        $files = $query->latest()->paginate(20)->withQueryString();
         $fileIds = $files->pluck('id');
 
         // Resolve previous holder per file using a single query (no N+1).

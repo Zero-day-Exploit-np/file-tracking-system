@@ -19,13 +19,14 @@ use Illuminate\Support\Facades\Storage;
  */
 class BackupDatabase extends Command
 {
-    protected $signature   = 'backup:database';
+    protected $signature = 'backup:database';
+
     protected $description = 'Create an on-demand database backup (stored in storage/app/backups/)';
 
     public function handle(): int
     {
         try {
-            $disk      = Storage::disk('local');
+            $disk = Storage::disk('local');
             $directory = 'backups';
 
             if (! $disk->exists($directory)) {
@@ -33,19 +34,19 @@ class BackupDatabase extends Command
             }
 
             $timestamp = now()->format('Y-m-d_H-i-s');
-            $filename  = "backup_db_{$timestamp}.sql";
-            $path      = "{$directory}/{$filename}";
+            $filename = "backup_db_{$timestamp}.sql";
+            $path = "{$directory}/{$filename}";
 
             $sql = $this->dumpDatabase();
             $disk->put($path, $sql);
 
             AuditLog::create([
-                'user_id'        => null,
-                'action'         => 'backup_manual',
+                'user_id' => null,
+                'action' => 'backup_manual',
                 'auditable_type' => 'system',
-                'auditable_id'   => 0,
-                'description'    => "Manual backup created: {$filename}",
-                'metadata'       => ['filename' => $filename, 'size' => strlen($sql)],
+                'auditable_id' => 0,
+                'description' => "Manual backup created: {$filename}",
+                'metadata' => ['filename' => $filename, 'size' => strlen($sql)],
             ]);
 
             Log::info("Manual backup created: {$filename}");
@@ -56,7 +57,7 @@ class BackupDatabase extends Command
 
         } catch (\Throwable $e) {
             Log::error('Manual backup failed', ['error' => $e->getMessage()]);
-            $this->error('Backup failed: ' . $e->getMessage());
+            $this->error('Backup failed: '.$e->getMessage());
 
             return self::FAILURE;
         }
@@ -64,13 +65,13 @@ class BackupDatabase extends Command
 
     private function dumpDatabase(): string
     {
-        $pdo    = DB::connection()->getPdo();
-        $config = config('database.connections.' . config('database.default'));
+        $pdo = DB::connection()->getPdo();
+        $config = config('database.connections.'.config('database.default'));
         $output = [];
 
         $output[] = '-- FileTrack Database Backup';
-        $output[] = '-- Generated: ' . now()->toDateTimeString();
-        $output[] = '-- Database: ' . ($config['database'] ?? 'unknown');
+        $output[] = '-- Generated: '.now()->toDateTimeString();
+        $output[] = '-- Database: '.($config['database'] ?? 'unknown');
         $output[] = 'SET FOREIGN_KEY_CHECKS=0;';
         $output[] = '';
 
@@ -85,23 +86,23 @@ class BackupDatabase extends Command
             $output[] = "-- Table: `{$table}`";
             $output[] = '-- --------------------------------------------------------';
             $output[] = "DROP TABLE IF EXISTS `{$table}`;";
-            $output[] = $createSql . ';';
+            $output[] = $createSql.';';
             $output[] = '';
 
             $rows = $pdo->query("SELECT * FROM `{$table}`")->fetchAll(\PDO::FETCH_ASSOC);
             if (! empty($rows)) {
-                $columns = '`' . implode('`, `', array_keys($rows[0])) . '`';
+                $columns = '`'.implode('`, `', array_keys($rows[0])).'`';
                 foreach (array_chunk($rows, 100) as $chunk) {
                     $valueGroups = [];
                     foreach ($chunk as $row) {
-                        $vals          = array_map(
+                        $vals = array_map(
                             fn ($v) => $v === null ? 'NULL' : $pdo->quote((string) $v),
                             $row
                         );
-                        $valueGroups[] = '(' . implode(', ', $vals) . ')';
+                        $valueGroups[] = '('.implode(', ', $vals).')';
                     }
                     $output[] = "INSERT INTO `{$table}` ({$columns}) VALUES";
-                    $output[] = implode(",\n", $valueGroups) . ';';
+                    $output[] = implode(",\n", $valueGroups).';';
                 }
                 $output[] = '';
             }

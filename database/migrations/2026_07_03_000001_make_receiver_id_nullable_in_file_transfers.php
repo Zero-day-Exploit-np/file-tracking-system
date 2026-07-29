@@ -56,8 +56,9 @@ return new class extends Migration
                    AND TABLE_NAME   = 'file_transfers'
                    AND COLUMN_NAME  = 'receiver_id'"
             );
+
             return $col && $col->IS_NULLABLE === 'NO';
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
     }

@@ -21,7 +21,7 @@ return new class extends Migration
 
         if ($driver === 'mysql' || $driver === 'mariadb') {
             DB::statement(
-                "ALTER TABLE file_records ADD COLUMN status ".
+                'ALTER TABLE file_records ADD COLUMN status '.
                 "ENUM('draft','active','pending_transfer','archived') ".
                 "NOT NULL DEFAULT 'active'"
             );

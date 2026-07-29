@@ -71,7 +71,7 @@ class FileTimelineController extends Controller
         // current_department_id tracks the live ownership; department_id is the origin.
         $dept = (int) $user->department_id;
         $isCurrentDept = (int) ($file->current_department_id ?? $file->department_id) === $dept;
-        $isOriginDept  = (int) $file->department_id === $dept;
+        $isOriginDept = (int) $file->department_id === $dept;
 
         if (! $isCurrentDept && ! $isOriginDept) {
             abort(403, 'You do not have access to this file.');
