@@ -98,7 +98,7 @@
                     @if($file->remarks)
                     <div class="col-12">
                         <div class="text-muted fs-sm mb-1">Remarks</div>
-                        <div>{{ $file->remarks }}</div>
+                        <div class="text-break" style="white-space: pre-line;">{{ $file->remarks }}</div>
                     </div>
                     @endif
                     <div class="col-sm-6">
@@ -110,7 +110,7 @@
                         <div class="text-muted fs-sm mb-1">Attached Document</div>
                         <div class="d-flex align-items-center gap-2">
                             <i class="fa-solid fa-paperclip text-muted"></i>
-                            <span>{{ $file->attachment_name }}</span>
+                            <span class="text-break">{{ $file->attachment_name }}</span>
                             @can('download', $file)
                             <a href="{{ route('files.download', $file->uuid) }}"
                                class="btn btn-sm btn-outline-success">

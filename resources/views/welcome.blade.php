@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Government-grade file tracking and department management system.">
+    <meta name="description" content="Government-grade file tracking and workflow management system.">
     <title>FileTrack Office Portal &mdash; Government File Tracking System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,31 +13,64 @@
     <link rel="stylesheet" href="{{ asset('css/app-custom.css') }}">
 </head>
 
-<body>
+<body class="landing-page">
+    @php
+        $featureCards = [
+            ['icon' => 'fa-file-circle-plus', 'title' => 'File Management', 'text' => 'Create, review, and track official documents with a complete audit trail.'],
+            ['icon' => 'fa-building-user', 'title' => 'Department Control', 'text' => 'Keep teams, desks, and responsibilities organized with clear ownership.'],
+            ['icon' => 'fa-user-gear', 'title' => 'User Administration', 'text' => 'Assign roles and manage access without exposing sensitive workflow data.'],
+            ['icon' => 'fa-right-left', 'title' => 'Fast Transfers', 'text' => 'Route files instantly between departments and users with status visibility.'],
+            ['icon' => 'fa-timeline', 'title' => 'Journey Tracking', 'text' => 'Inspect every movement from creation to delivery in one clean timeline.'],
+            ['icon' => 'fa-magnifying-glass', 'title' => 'Public Search', 'text' => 'Let citizens and staff verify file status using a simple file number search.'],
+        ];
+
+        $workflowSteps = [
+            ['number' => '01', 'title' => 'Register', 'text' => 'Capture the file with metadata, department ownership, and remarks.'],
+            ['number' => '02', 'title' => 'Route', 'text' => 'Transfer the file to the next responsible user or department.'],
+            ['number' => '03', 'title' => 'Assign', 'text' => 'Department admins assign incoming files to the right staff member.'],
+            ['number' => '04', 'title' => 'Audit', 'text' => 'Every action is recorded in a searchable, immutable movement history.'],
+        ];
+
+        $securityItems = [
+            'Role-based access for super admin, admin, and user workflows',
+            'Impersonation banner and password-change protections remain intact',
+            'Public search exposes only safe, non-sensitive file status information',
+            'Audit-friendly movement history for every file transfer and assignment',
+        ];
+
+        $techStack = ['Laravel', 'Bootstrap 5', 'Blade', 'Eloquent ORM', 'MySQL', 'Font Awesome', 'PHP 8.2+'];
+
+        $previewTiles = [
+            ['title' => 'Dashboard', 'text' => 'Role-aware summary cards and recent movements.', 'icon' => 'fa-chart-column'],
+            ['title' => 'File Detail', 'text' => 'Timeline, remarks, attachment, and transfer controls.', 'icon' => 'fa-folder-open'],
+            ['title' => 'Notifications', 'text' => 'Unread updates with instant badge refresh.', 'icon' => 'fa-bell'],
+        ];
+    @endphp
+
     <header class="site-header sticky-top">
-        <nav class="navbar navbar-expand-lg navbar-light">
-            <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container py-1">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('welcome') }}">
                     <span class="brand-icon"><i class="fa-solid fa-folder-tree"></i></span>
-                    <span>FileTrack Office</span>
+                    <span>
+                        <span class="brand-title">FileTrack Office</span>
+                        <span class="brand-subtitle">Government File Tracking System</span>
+                    </span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNav" aria-controls="siteNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul class="navbar-nav align-items-lg-center gap-lg-3">
-                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#about">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#features">Features</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#workflow">Workflow</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ route('welcome') }}#stats">Statistics</a></li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('public.file.search') }}">
-                                <i class="fa-solid fa-magnifying-glass me-1"></i>File Search
-                            </a>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <a href="{{ route('login') }}" class="btn btn-primary btn-sm px-3">Login</a>
-                        </li>
+                <div class="collapse navbar-collapse justify-content-end" id="siteNav">
+                    <ul class="navbar-nav align-items-lg-center gap-lg-2 mt-3 mt-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="#overview">Overview</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#workflow">Workflow</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#security">Security</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#preview">Preview</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('public.file.search') }}">Public Search</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                        <li class="nav-item ms-lg-2"><a class="btn btn-outline-light btn-sm px-3" href="{{ route('public.file.search') }}"><i class="fa-solid fa-magnifying-glass me-1"></i>Search Files</a></li>
+                        <li class="nav-item ms-lg-2"><a class="btn btn-primary btn-sm px-3" href="{{ route('login') }}"><i class="fa-solid fa-right-to-bracket me-1"></i>Login</a></li>
                     </ul>
                 </div>
             </div>
@@ -48,108 +81,135 @@
         <section class="hero-section" id="home">
             <div class="container">
                 <div class="row align-items-center g-5">
-                    <div class="col-lg-7">
-                        <span class="eyebrow">Government File Tracking</span>
-                        <h1>Track Every File.<br><span>Monitor Every Movement.</span></h1>
-                        <div class="hero-badges">
-                            <span class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Secure portal</span>
-                            <span class="hero-badge"><i class="fa-solid fa-clock-rotate-left"></i> Full audit trail</span>
+                    <div class="col-lg-7 reveal" data-reveal>
+                        <span class="eyebrow-pill"><i class="fa-solid fa-shield-halved me-2"></i>Official workflow portal</span>
+                        <h1>Track every file with clarity, security, and speed.</h1>
+                        <p class="hero-copy">FileTrack Office keeps government file movement visible from the moment a record is created until it reaches the right department, user, or public search result.</p>
+                        <div class="hero-actions">
+                            <a href="{{ route('public.file.search') }}" class="btn btn-primary btn-lg"><i class="fa-solid fa-magnifying-glass me-2"></i>Search a File</a>
+                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg"><i class="fa-solid fa-right-to-bracket me-2"></i>Open Portal</a>
                         </div>
-                        <p class="hero-text">A secure, transparent, and efficient system for managing official records, departmental transfers, approvals, and document accountability.</p>
-                        <div class="d-flex gap-3 flex-wrap">
-                            <a href="{{ route('public.file.search') }}" class="btn btn-primary btn-lg">
-                                <i class="fa-solid fa-magnifying-glass me-2"></i> Search File
-                            </a>
-                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg">
-                                <i class="fa-solid fa-right-to-bracket me-2"></i> Login
-                            </a>
-                        </div>
-                        <div class="hero-highlights mt-4">
-                            <span><i class="fa-solid fa-circle-check"></i> Department-wise records</span>
-                            <span><i class="fa-solid fa-circle-check"></i> Real-time tracking</span>
-                            <span><i class="fa-solid fa-circle-check"></i> Audit-ready workflow</span>
+                        <div class="hero-stats row g-3 mt-4">
+                            <div class="col-6 col-lg-3">
+                                <div class="hero-stat">
+                                    <small>Departments</small>
+                                    <strong>{{ $stats['departments'] }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="hero-stat">
+                                    <small>Users</small>
+                                    <strong>{{ $stats['users'] }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="hero-stat">
+                                    <small>Files</small>
+                                    <strong>{{ $stats['files'] }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <div class="hero-stat">
+                                    <small>Transfers</small>
+                                    <strong>{{ $stats['transfers'] }}</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-lg-5">
-                        <div class="hero-card">
-                            <div class="hero-card-head">
-                                <span>Today's Overview</span>
-                                <span class="badge bg-success-subtle text-success">Live</span>
+                    <div class="col-lg-5 reveal" data-reveal>
+                        <div class="glass-card hero-panel">
+                            <div class="panel-header">
+                                <div>
+                                    <span class="panel-kicker">Live command center</span>
+                                    <h2>Fast, accountable, audit-ready</h2>
+                                </div>
+                                <span class="status-pill"><i class="fa-solid fa-circle text-success me-1"></i>Online</span>
                             </div>
-                            <div class="hero-card-body">
-                                <div class="mini-stat">
-                                    <small>Pending Transfers</small>
-                                    <h3>{{ $stats['transfers'] }}</h3>
+                            <div class="panel-grid">
+                                <div class="panel-metric">
+                                    <small>Pending assignments</small>
+                                    <strong>{{ max($stats['transfers'] - 1, 0) }}</strong>
                                 </div>
-                                <div class="mini-stat">
-                                    <small>Active Files</small>
-                                    <h3>{{ $stats['files'] }}</h3>
+                                <div class="panel-metric">
+                                    <small>Public search</small>
+                                    <strong>Instant</strong>
                                 </div>
-                                <div class="mini-stat">
-                                    <small>Registered Users</small>
-                                    <h3>{{ $stats['users'] }}</h3>
+                                <div class="panel-metric">
+                                    <small>Audit trail</small>
+                                    <strong>Always on</strong>
                                 </div>
                             </div>
-                            <p class="hero-card-note">Daily records, approvals, and transfers monitored from a single dashboard.</p>
+                            <div class="mini-timeline mt-4">
+                                <div class="mini-timeline-item">
+                                    <span class="mini-dot created"></span>
+                                    <div>
+                                        <strong>Register file</strong>
+                                        <small>Create a new record with number, title, and remarks.</small>
+                                    </div>
+                                </div>
+                                <div class="mini-timeline-item">
+                                    <span class="mini-dot transferred"></span>
+                                    <div>
+                                        <strong>Transfer or assign</strong>
+                                        <small>Move ownership to the next department or user.</small>
+                                    </div>
+                                </div>
+                                <div class="mini-timeline-item">
+                                    <span class="mini-dot delivered"></span>
+                                    <div>
+                                        <strong>Track delivery</strong>
+                                        <small>Inspect the entire file journey from one timeline.</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="section-padding" id="about">
+        <section class="section-block" id="overview">
             <div class="container">
-                <div class="row align-items-center g-5">
-                    <div class="col-lg-6">
-                        <span class="eyebrow">About the System</span>
-                        <h2 class="section-title">Designed for smooth office operations</h2>
-                        <p class="section-text">The platform enables departments to manage incoming and outgoing files, track movement history, route approvals, and ensure accountability across every workflow stage.</p>
-                        <ul class="feature-list">
-                            <li><i class="fa-solid fa-square-check"></i> Department Management</li>
-                            <li><i class="fa-solid fa-square-check"></i> User Management</li>
-                            <li><i class="fa-solid fa-square-check"></i> File Tracking</li>
-                            <li><i class="fa-solid fa-square-check"></i> Transfer Management</li>
-                        </ul>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="info-panel">
-                            <div class="row g-3">
-                                <div class="col-sm-6">
-                                    <div class="info-box"><i class="fa-solid fa-building-columns"></i><span>Departments</span></div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="info-box"><i class="fa-solid fa-users"></i><span>Users</span></div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="info-box"><i class="fa-solid fa-file-lines"></i><span>Files</span></div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="info-box"><i class="fa-solid fa-right-left"></i><span>Transfers</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section-padding bg-soft" id="features">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <span class="eyebrow">System Features</span>
-                    <h2 class="section-title">Everything needed for file lifecycle control</h2>
+                <div class="section-head reveal" data-reveal>
+                    <span class="eyebrow">Project Introduction</span>
+                    <h2>Designed for formal office operations</h2>
+                    <p>FileTrack Office centralizes government file handling into a clean, role-aware workflow that is easier to follow, faster to operate, and simpler to audit.</p>
                 </div>
                 <div class="row g-4">
-                    @php($featureCards = [
-                    ['icon' => 'fa-file-circle-plus', 'title' => 'File Management', 'text' => 'Create, edit, review, and archive official documents with clear ownership.'],
-                    ['icon' => 'fa-building-user', 'title' => 'Department Management', 'text' => 'Organize team structure, departments, and office responsibilities with ease.'],
-                    ['icon' => 'fa-user-gear', 'title' => 'User Management', 'text' => 'Assign roles, maintain records, and control access levels securely.'],
-                    ['icon' => 'fa-right-left', 'title' => 'Instant File Transfer', 'text' => 'Transfer files instantly to any user or department — no approval waiting.'],
-                    ['icon' => 'fa-timeline', 'title' => 'Timeline Tracking', 'text' => 'See every event in the file lifecycle from creation to delivery.'],
-                    ['icon' => 'fa-magnifying-glass', 'title' => 'Public File Search', 'text' => 'Anyone can search for a file using its File Number — no login required.']
-                    ])
+                    <div class="col-md-4 reveal" data-reveal>
+                        <div class="feature-card intro-card h-100">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                            <h5>Controlled Process</h5>
+                            <p>Keep every file in a defined path from creation to completion.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 reveal" data-reveal>
+                        <div class="feature-card intro-card h-100">
+                            <i class="fa-solid fa-circle-user"></i>
+                            <h5>Role Awareness</h5>
+                            <p>Super admins, admins, and users each get the right tools and views.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 reveal" data-reveal>
+                        <div class="feature-card intro-card h-100">
+                            <i class="fa-solid fa-lock"></i>
+                            <h5>Public Safety</h5>
+                            <p>Public search reveals only the minimum data needed to verify a file.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block section-alt" id="features">
+            <div class="container">
+                <div class="section-head text-center reveal" data-reveal>
+                    <span class="eyebrow">Features</span>
+                    <h2>Everything needed for file lifecycle control</h2>
+                </div>
+                <div class="row g-4">
                     @foreach($featureCards as $card)
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-md-6 col-lg-4 reveal" data-reveal>
                         <div class="feature-card h-100">
                             <div class="feature-icon"><i class="fa-solid {{ $card['icon'] }}"></i></div>
                             <h5>{{ $card['title'] }}</h5>
@@ -161,184 +221,155 @@
             </div>
         </section>
 
-        <section class="section-padding" id="workflow">
+        <section class="section-block" id="workflow">
             <div class="container">
-                <div class="text-center mb-5">
-                    <span class="eyebrow">Workflow</span>
-                    <h2 class="section-title">How the process works</h2>
+                <div class="section-head text-center reveal" data-reveal>
+                    <span class="eyebrow">Workflow Illustration</span>
+                    <h2>How the process works</h2>
                 </div>
-                <div class="workflow-row">
+                <div class="workflow-rail reveal" data-reveal>
+                    @foreach($workflowSteps as $step)
                     <div class="workflow-step">
-                        <span>1</span>
-                        <h6>Create File</h6>
+                        <span>{{ $step['number'] }}</span>
+                        <h5>{{ $step['title'] }}</h5>
+                        <p>{{ $step['text'] }}</p>
                     </div>
-                    <div class="workflow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                    <div class="workflow-step">
-                        <span>2</span>
-                        <h6>Transfer File</h6>
+                    @if(! $loop->last)
+                    <div class="workflow-connector">
+                        <i class="fa-solid fa-arrow-right"></i>
                     </div>
-                    <div class="workflow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                    <div class="workflow-step">
-                        <span>3</span>
-                        <h6>Instantly Delivered</h6>
-                    </div>
-                    <div class="workflow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                    <div class="workflow-step">
-                        <span>4</span>
-                        <h6>Timeline Updated</h6>
-                    </div>
+                    @endif
+                    @endforeach
                 </div>
             </div>
         </section>
 
-        <section class="section-padding bg-soft" id="roles">
+        <section class="section-block section-alt" id="journey">
             <div class="container">
-                <div class="text-center mb-5">
-                    <span class="eyebrow">Role Based Access</span>
-                    <h2 class="section-title">Designed for every office role</h2>
-                </div>
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="role-card">
-                            <h5>Super Admin</h5>
-                            <p>Full system oversight, department control, and creates/manages Admin accounts.</p>
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-5 reveal" data-reveal>
+                        <span class="eyebrow">File Journey Preview</span>
+                        <h2>Follow each movement without losing context</h2>
+                        <p class="section-copy">The timeline preview mirrors the production file journey so teams can see creation, transfer, assignment, and delivery in a single view.</p>
+                        <div class="journey-summary">
+                            <div>
+                                <small>Live records</small>
+                                <strong>{{ $stats['files'] }}</strong>
+                            </div>
+                            <div>
+                                <small>Transfers logged</small>
+                                <strong>{{ $stats['transfers'] }}</strong>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="role-card">
-                            <h5>Admin</h5>
-                            <p>Views department files and movements, manages users within their department.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="role-card">
-                            <h5>User</h5>
-                            <p>Creates, reviews, and transfers files within assigned departments.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section-padding" id="timeline-showcase">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <span class="eyebrow">Timeline Showcase</span>
-                    <h2 class="section-title">Sample file movement history</h2>
-                </div>
-                <div class="timeline-panel">
-                    <div class="timeline-item">
-                        <span class="badge badge-created">Created</span>
-                        <p>File #FILE-1001 received and registered in the system.</p>
-                    </div>
-                    <div class="timeline-item">
-                        <span class="badge badge-requested">Requested</span>
-                        <p>Transfer request sent to the concerned department.</p>
-                    </div>
-                    <div class="timeline-item">
-                        <span class="badge badge-approved">Approved</span>
-                        <p>Admin approved the transfer and updated the workflow.</p>
-                    </div>
-                    <div class="timeline-item">
-                        <span class="badge badge-transferred">Transferred</span>
-                        <p>Document moved to the next department for action.</p>
-                    </div>
-                    <div class="timeline-item">
-                        <span class="badge badge-delivered">Delivered</span>
-                        <p>Final delivery completed and acknowledgement recorded.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        {{-- PUBLIC FILE SEARCH SECTION --}}
-        <section class="section-padding bg-soft" id="file-search">
-            <div class="container">
-                <div class="row g-5 align-items-center">
-                    <div class="col-lg-6">
-                        <span class="eyebrow">Public File Search</span>
-                        <h2 class="section-title">Check your file status instantly</h2>
-                        <p class="section-text">Search for any registered file using its File Number. No login required. Only safe, public information is displayed.</p>
-                        <ul class="feature-list">
-                            <li><i class="fa-solid fa-square-check"></i> Search by File Number</li>
-                            <li><i class="fa-solid fa-square-check"></i> View current status</li>
-                            <li><i class="fa-solid fa-square-check"></i> No account required</li>
-                        </ul>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="upload-card">
-                            <form action="{{ route('public.file.search.result') }}" method="GET">
-                                <h5 class="fw-700 mb-3"><i class="fa-solid fa-magnifying-glass me-2 text-primary"></i>Public File Search</h5>
-                                <div class="mb-3">
-                                    <label class="form-label fw-600">File Number</label>
-                                    <input type="text" name="file_number" class="form-control" placeholder="Enter File Number (e.g. FILE-ABCD1234XY)" required autocomplete="off">
+                    <div class="col-lg-7 reveal" data-reveal>
+                        <div class="glass-card journey-card">
+                            <div class="journey-card-head">
+                                <div>
+                                    <span class="panel-kicker">Sample file journey</span>
+                                    <h3>FILE-1001 / Finance Requisition</h3>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fa-solid fa-search me-1"></i> Search
-                                </button>
-                                <p class="text-muted mt-2 mb-0" style="font-size:.82rem;">
-                                    <i class="fa-solid fa-shield-halved me-1"></i>
-                                    Only public information is shown. No internal data is exposed.
-                                </p>
-                            </form>
+                                <span class="badge-soft">Updated moments ago</span>
+                            </div>
+                            <div class="journey-track">
+                                <div class="journey-node created">
+                                    <span>Created</span>
+                                    <p>Registered by the originating department.</p>
+                                </div>
+                                <div class="journey-node transferred">
+                                    <span>Transferred</span>
+                                    <p>Routed to the next responsible office.</p>
+                                </div>
+                                <div class="journey-node assigned">
+                                    <span>Assigned</span>
+                                    <p>Department admin assigned the file to a user.</p>
+                                </div>
+                                <div class="journey-node delivered">
+                                    <span>Delivered</span>
+                                    <p>Receipt and audit history are recorded automatically.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="section-padding" id="stats">
+        <section class="section-block" id="security">
             <div class="container">
-                <div class="text-center mb-5">
-                    <span class="eyebrow">Statistics</span>
-                    <h2 class="section-title">Live system overview</h2>
+                <div class="row g-4 align-items-stretch">
+                    <div class="col-lg-6 reveal" data-reveal>
+                        <div class="glass-card security-card h-100">
+                            <span class="eyebrow">Security</span>
+                            <h2>Government-friendly controls that protect the workflow</h2>
+                            <ul class="checklist mt-4 mb-0">
+                                @foreach($securityItems as $item)
+                                <li><i class="fa-solid fa-circle-check"></i><span>{{ $item }}</span></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 reveal" data-reveal>
+                        <div class="security-grid h-100">
+                            <div class="security-tile"><i class="fa-solid fa-shield-halved"></i><strong>Protected Access</strong><span>Authenticated routes remain gated.</span></div>
+                            <div class="security-tile"><i class="fa-solid fa-user-secret"></i><strong>Impersonation Safety</strong><span>Banner and stop action stay visible.</span></div>
+                            <div class="security-tile"><i class="fa-solid fa-bell"></i><strong>Notification Hygiene</strong><span>Unread state is updated immediately.</span></div>
+                            <div class="security-tile"><i class="fa-solid fa-file-shield"></i><strong>Audit Trails</strong><span>File movements remain fully traceable.</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block section-alt" id="stack">
+            <div class="container">
+                <div class="section-head text-center reveal" data-reveal>
+                    <span class="eyebrow">Technology Stack</span>
+                    <h2>Built on a reliable, maintainable stack</h2>
+                </div>
+                <div class="stack-wrap reveal" data-reveal>
+                    @foreach($techStack as $tech)
+                    <span class="stack-chip">{{ $tech }}</span>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block" id="preview">
+            <div class="container">
+                <div class="section-head text-center reveal" data-reveal>
+                    <span class="eyebrow">Screenshots / Preview</span>
+                    <h2>Interface preview</h2>
                 </div>
                 <div class="row g-4">
-                    <div class="col-md-6 col-xl-3">
-                        <div class="stat-card">
-                            <div><small>Total Departments</small>
-                                <h3>{{ $stats['departments'] }}</h3>
-                            </div>
-                            <i class="fa-solid fa-building-columns"></i>
+                    @foreach($previewTiles as $tile)
+                    <div class="col-md-4 reveal" data-reveal>
+                        <div class="preview-card h-100">
+                            <div class="preview-icon"><i class="fa-solid {{ $tile['icon'] }}"></i></div>
+                            <h5>{{ $tile['title'] }}</h5>
+                            <p>{{ $tile['text'] }}</p>
                         </div>
                     </div>
-                    <div class="col-md-6 col-xl-3">
-                        <div class="stat-card">
-                            <div><small>Total Users</small>
-                                <h3>{{ $stats['users'] }}</h3>
-                            </div>
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-xl-3">
-                        <div class="stat-card">
-                            <div><small>Total Files</small>
-                                <h3>{{ $stats['files'] }}</h3>
-                            </div>
-                            <i class="fa-solid fa-file-lines"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-xl-3">
-                        <div class="stat-card">
-                            <div><small>Total Transfers</small>
-                                <h3>{{ $stats['transfers'] }}</h3>
-                            </div>
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </section>
 
-        <section class="section-padding bg-dark-section">
-            <div class="container text-center">
-                <h2 class="section-title text-white">Ready to manage your records securely?</h2>
-                <p class="text-white-50 mb-4">Access the complete dashboard to handle files, approvals, and departmental workflows.</p>
-                <div class="d-flex gap-3 justify-content-center flex-wrap">
-                    <a href="{{ route('login') }}" class="btn btn-primary btn-lg">Login to Continue</a>
-                    <a href="{{ route('public.file.search') }}" class="btn btn-outline-light btn-lg">
-                        <i class="fa-solid fa-magnifying-glass me-2"></i>Search a File
-                    </a>
+        <section class="section-block section-contact" id="contact">
+            <div class="container">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-7 reveal" data-reveal>
+                        <span class="eyebrow">Contact</span>
+                        <h2>Need help getting started?</h2>
+                        <p class="section-copy mb-0">Use the public search page for file verification, or open the portal to continue with authenticated file management and assignments.</p>
+                    </div>
+                    <div class="col-lg-5 reveal" data-reveal>
+                        <div class="contact-card">
+                            <a href="{{ route('help') }}" class="btn btn-light w-100 mb-3"><i class="fa-solid fa-circle-question me-2"></i>Help Center</a>
+                            <a href="{{ route('public.file.search') }}" class="btn btn-outline-light w-100 mb-3"><i class="fa-solid fa-magnifying-glass me-2"></i>Public File Search</a>
+                            <a href="{{ route('login') }}" class="btn btn-primary w-100"><i class="fa-solid fa-right-to-bracket me-2"></i>Login to Portal</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -358,16 +389,38 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="footer-links">
-                        <a href="{{ route('welcome') }}#about">About</a>
-                        <a href="{{ route('welcome') }}#features">Features</a>
-                        <a href="{{ route('welcome') }}#upload">Public Upload</a>
+                        <a href="#overview">Overview</a>
+                        <a href="#features">Features</a>
+                        <a href="#security">Security</a>
+                        <a href="{{ route('public.file.search') }}">Public Search</a>
                     </div>
                 </div>
             </div>
+            <div class="footer-note">&copy; {{ date('Y') }} FileTrack Office Portal. Built for secure public-sector workflows.</div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            const revealItems = document.querySelectorAll('[data-reveal]');
+
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries, io) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            io.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.18 });
+
+                revealItems.forEach((item) => observer.observe(item));
+            } else {
+                revealItems.forEach((item) => item.classList.add('is-visible'));
+            }
+        })();
+    </script>
 </body>
 
 </html>

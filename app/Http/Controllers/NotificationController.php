@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Support\NotificationPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,7 +11,10 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $notifications = Auth::user()
+        /** @var User $user */
+        $user = Auth::user();
+
+        $notifications = $user
             ->notifications()
             ->latest()
             ->paginate(15);
@@ -24,8 +28,12 @@ class NotificationController extends Controller
      */
     public function poll()
     {
+        /** @var User $user */
         $user = Auth::user();
-        $latest = $user->notifications()->latest()->limit(15)->get();
+        $latest = $user->notifications()
+            ->latest()
+            ->limit(15)
+            ->get(['id', 'type', 'data', 'read_at', 'created_at']);
 
         // Count unread from the already-fetched collection first,
         // then fall back to a DB count only if there could be more unread
@@ -53,6 +61,7 @@ class NotificationController extends Controller
             'ids.*' => ['required', 'uuid'],
         ]);
 
+        /** @var User $user */
         $user = Auth::user();
 
         $user->notifications()

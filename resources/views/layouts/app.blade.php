@@ -324,11 +324,7 @@
 
     @endauth
 
-    <!-- ================================================================
-     NOTIFICATION SOUND (hidden audio element)
-================================================================ -->
-    <audio id="notif-sound" src="{{ asset('sounds/notification.mp3') }}" preload="auto"></audio>
-
+    <script type="application/json" id="latest-notifications-data">{{ $latestNotifications->values()->toJson() }}</script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ── Sidebar toggle ────────────────────────────────────────────────
@@ -398,6 +394,7 @@
             const sbCount     = document.getElementById('sb-notif-count');
             const bellBtn     = document.getElementById('topbar-bell-btn');
             const dropdownBody = document.getElementById('notif-dropdown-body');
+            const latestSeed   = document.getElementById('latest-notifications-data');
 
             const POLL_MS  = 10000; // poll every 10 s
             const FIRST_MS = 1500;  // first poll 1.5 s after load
@@ -406,17 +403,26 @@
             // Seed lastCount from server-rendered badge so we don't play sound on page load
             let lastCount = parseInt(topBadge ? (topBadge.textContent || '0') : '0', 10) || 0;
             let pollTimer = null;
-            let latestNotifications = @json($latestNotifications->values());
+            let pollInFlight = false;
+            let latestNotifications = [];
+            if (latestSeed) {
+                try {
+                    latestNotifications = JSON.parse(latestSeed.textContent || '[]');
+                } catch (e) {
+                    latestNotifications = [];
+                }
+            }
 
             // ── Sound ─────────────────────────────────────────────────────
             // Use Audio() object — not the hidden <audio> element.
             // Browser autoplay policy: we must wait for a user gesture before playing.
             var notifSound = null;
             var soundReady = false;
+            const notifSoundUrl = "{{ asset('sounds/notification.mp3') }}";
 
             function initSound() {
                 if (notifSound) return; // already created
-                notifSound = new Audio('{{ asset('sounds/notification.mp3') }}');
+                notifSound = new Audio(notifSoundUrl);
                 notifSound.preload = 'auto';
                 soundReady = true;
             }
@@ -534,8 +540,15 @@
             }
 
             // ── Poll for new notifications ────────────────────────────────
+            function scheduleNextPoll() {
+                if (pollTimer) clearTimeout(pollTimer);
+                pollTimer = setTimeout(poll, POLL_MS);
+            }
+
             function poll() {
-                if (document.hidden) return;
+                if (document.hidden || pollInFlight) return;
+
+                pollInFlight = true;
 
                 fetch('{{ route("notifications.poll") }}', {
                     headers: {
@@ -566,15 +579,17 @@
                         markVisibleAsRead();
                     }
                 })
-                .catch(function() {});
-            }
-
-            function startPolling() {
-                if (!pollTimer) pollTimer = setInterval(poll, POLL_MS);
+                .catch(function() {})
+                .finally(function() {
+                    pollInFlight = false;
+                    if (!document.hidden) {
+                        scheduleNextPoll();
+                    }
+                });
             }
 
             function stopPolling() {
-                clearInterval(pollTimer);
+                clearTimeout(pollTimer);
                 pollTimer = null;
             }
 
@@ -584,7 +599,6 @@
                     stopPolling();
                 } else {
                     poll();
-                    startPolling();
                 }
             });
 
@@ -645,7 +659,6 @@
             // ── Initial poll after short delay ────────────────────────────
             setTimeout(function() {
                 poll();
-                startPolling();
             }, FIRST_MS);
 
         })();

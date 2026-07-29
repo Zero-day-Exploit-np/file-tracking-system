@@ -15,6 +15,18 @@ class DashboardService
     // Cache TTL in seconds (5 minutes)
     private const TTL = 300;
 
+    private static function hasDeptOwnershipColumns(): bool
+    {
+        static $hasColumns = null;
+
+        if ($hasColumns === null) {
+            $hasColumns = Schema::hasColumn('file_records', 'current_department_id')
+                && Schema::hasColumn('file_records', 'current_user_id');
+        }
+
+        return $hasColumns;
+    }
+
     /* ──────────────────────────────────────────────────────────────
      *  SUPER ADMIN — system-wide cached stats
      * ──────────────────────────────────────────────────────────── */
@@ -32,11 +44,16 @@ class DashboardService
     public function superAdminMovementStats(): array
     {
         return Cache::remember('sa_movement_stats', self::TTL, function () {
-            $result = [];
-            foreach (['created', 'transferred'] as $action) {
-                $result[$action] = FileMovement::where('action', $action)->count();
-            }
-            return $result;
+            $counts = FileMovement::query()
+                ->selectRaw('action, COUNT(*) as aggregate')
+                ->whereIn('action', ['created', 'transferred'])
+                ->groupBy('action')
+                ->pluck('aggregate', 'action');
+
+            return [
+                'created' => (int) ($counts['created'] ?? 0),
+                'transferred' => (int) ($counts['transferred'] ?? 0),
+            ];
         });
     }
 
@@ -68,8 +85,7 @@ class DashboardService
             // current_department_id and current_user_id are added by the
             // 2026_07_29 department-ownership migration. Guard against the
             // columns not yet existing so the dashboard never throws a 500.
-            $hasDeptOwnershipColumns = Schema::hasColumn('file_records', 'current_department_id')
-                                    && Schema::hasColumn('file_records', 'current_user_id');
+            $hasDeptOwnershipColumns = self::hasDeptOwnershipColumns();
 
             $deptFiles = $hasDeptOwnershipColumns
                 ? FileRecord::where('current_department_id', $deptId)->count()
@@ -96,13 +112,12 @@ class DashboardService
 
     public function adminRecentData(int $deptId): array
     {
-        $hasDeptOwnershipColumns = Schema::hasColumn('file_records', 'current_department_id')
-                                && Schema::hasColumn('file_records', 'current_user_id');
+        $hasDeptOwnershipColumns = self::hasDeptOwnershipColumns();
 
         $recentFiles = $hasDeptOwnershipColumns
-            ? FileRecord::with(['currentHolder', 'creator'])
+            ? FileRecord::with(['currentHolder'])
                 ->where('current_department_id', $deptId)->latest()->take(7)->get()
-            : FileRecord::with(['currentHolder', 'creator'])
+            : FileRecord::with(['currentHolder'])
                 ->where('department_id', $deptId)->latest()->take(7)->get();
 
         $pendingFiles = $hasDeptOwnershipColumns

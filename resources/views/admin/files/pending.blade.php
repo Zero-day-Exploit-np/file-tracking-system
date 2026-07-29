@@ -76,8 +76,7 @@
             <tbody>
                 @foreach($pendingFiles as $file)
                 @php
-                    {{-- Last movement = the cross-dept transfer that brought this file here --}}
-                    $lastMove = $file->movements->sortBy('created_at')->last();
+                    $lastMove = $file->movements->first();
                     $fromUser = $lastMove?->fromUser;
                     $fromDept = $lastMove?->fromDept;
                 @endphp
@@ -110,15 +109,14 @@
                         <span class="text-muted" style="font-size:.75rem;">{{ $file->updated_at->format('h:i A') }}</span>
                     </td>
                     <td>
-                        {{-- Inline assignment form --}}
                         <form action="{{ route('admin.files.pending.assign', $file->uuid) }}"
                               method="POST"
-                              class="d-flex gap-2 align-items-center"
+                            class="d-grid gap-2 d-sm-flex align-items-sm-center"
                               id="assign-form-{{ $file->id }}">
                             @csrf
                             <select name="user_id"
                                     class="form-select form-select-sm"
-                                    style="min-width:150px;"
+                                    style="min-width:160px;"
                                     required
                                     aria-label="Select user to assign {{ $file->file_number }}">
                                 <option value="" disabled selected>— Select user —</option>
@@ -132,9 +130,6 @@
                                 <i class="fa-solid fa-user-plus me-1"></i>Assign
                             </button>
                         </form>
-                        @error('user_id')
-                        <div class="text-danger fs-sm mt-1">{{ $message }}</div>
-                        @enderror
                     </td>
                     <td>
                         <a href="{{ route('admin.files.timeline', $file->uuid) }}"

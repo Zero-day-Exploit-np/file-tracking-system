@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Shows file details + horizontal linked-list timeline.
@@ -52,16 +54,16 @@ class FileTimelineController extends Controller
             'creator',
             'currentHolder',
             'currentUser',
-            'movements.fromUser',
-            'movements.toUser',
-            'movements.fromDept',
-            'movements.toDept',
+            'movements' => fn ($query) => $query
+                ->orderBy('created_at')
+                ->with(['fromUser', 'toUser', 'fromDept', 'toDept']),
         ])->where('uuid', $uuid)->firstOrFail();
     }
 
     private function authorizeFile(FileRecord $file): void
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
         if ($user->role === 'super_admin') {
             return;
         }
@@ -81,7 +83,8 @@ class FileTimelineController extends Controller
     /** Returns viewer context for dept-scoped timeline rendering. */
     private function viewerContext(): array
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         return [
             'isSuperAdmin' => $user->role === 'super_admin',
