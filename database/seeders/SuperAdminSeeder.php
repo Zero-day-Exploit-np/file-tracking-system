@@ -14,12 +14,12 @@ class SuperAdminSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'superadmin@filetrack.local'],
             [
-                'name'            => 'Super Admin',
-                'password'        => Hash::make('Admin@1234'),
-                'role'            => 'super_admin',
-                'department_id'   => null,    // intentionally null — system-wide
-                'designation_id'  => null,
-                'is_active'       => true,
+                'name' => 'Super Admin',
+                'password' => Hash::make('Admin@1234'),
+                'role' => 'super_admin',
+                'department_id' => null,    // intentionally null — system-wide
+                'designation_id' => null,
+                'is_active' => true,
                 'can_create_file' => false,   // super admin cannot create files (per SRS)
                 'email_verified_at' => now(),
             ]

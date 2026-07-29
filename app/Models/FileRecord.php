@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\DashboardService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -33,8 +34,8 @@ class FileRecord extends Model
             }
         });
         // Invalidate dashboard caches after writes
-        static::created(fn()  => \App\Services\DashboardService::clearSuperAdminCache());
-        static::deleted(fn()  => \App\Services\DashboardService::clearSuperAdminCache());
+        static::created(fn () => DashboardService::clearSuperAdminCache());
+        static::deleted(fn () => DashboardService::clearSuperAdminCache());
     }
 
     public function getRouteKeyName(): string

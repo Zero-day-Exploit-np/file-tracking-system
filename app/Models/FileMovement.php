@@ -3,9 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\Department;
-use App\Models\FileRecord;
 
 class FileMovement extends Model
 {
@@ -16,15 +13,13 @@ class FileMovement extends Model
         'from_department',
         'to_department',
         'action',
-        'remarks'
+        'remarks',
     ];
 
     public function file()
     {
         return $this->belongsTo(FileRecord::class, 'file_id');
     }
-
-
 
     public function fromUser()
     {

@@ -260,5 +260,3 @@
 </div>
 
 @endsection
-
-@endsection

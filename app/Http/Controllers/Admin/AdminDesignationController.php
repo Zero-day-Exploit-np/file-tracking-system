@@ -18,7 +18,7 @@ class AdminDesignationController extends Controller
      */
     private function resolveDesignation(string $uuid): Designation
     {
-        $user  = auth()->user();
+        $user = auth()->user();
         $query = Designation::where('uuid', $uuid);
 
         if ($user->role !== 'super_admin') {
@@ -30,7 +30,7 @@ class AdminDesignationController extends Controller
 
     public function index()
     {
-        $user  = auth()->user();
+        $user = auth()->user();
         $query = Designation::with('department')->latest();
 
         // Super admin sees all; admin sees only their department
@@ -57,13 +57,13 @@ class AdminDesignationController extends Controller
 
     public function store(Request $request)
     {
-        $user    = auth()->user();
+        $user = auth()->user();
         $isSuper = $user->role === 'super_admin';
 
         // Validation: super admin must provide department_id
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'status'        => 'required|boolean',
+            'name' => 'required|string|max:255',
+            'status' => 'required|boolean',
             'department_id' => $isSuper ? 'required|exists:departments,id' : 'nullable',
         ]);
 
@@ -71,7 +71,7 @@ class AdminDesignationController extends Controller
             ? (int) $request->department_id
             : $user->department_id;
 
-        if (!$departmentId) {
+        if (! $departmentId) {
             return back()
                 ->withInput()
                 ->with('error', 'No department assigned. Please select a department.');
@@ -81,8 +81,8 @@ class AdminDesignationController extends Controller
             DB::transaction(function () use ($request, $departmentId) {
                 Designation::create([
                     'department_id' => $departmentId,
-                    'name'          => $request->string('name')->trim()->value(),
-                    'is_active'     => (bool) $request->status,
+                    'name' => $request->string('name')->trim()->value(),
+                    'is_active' => (bool) $request->status,
                 ]);
             });
 
@@ -90,10 +90,10 @@ class AdminDesignationController extends Controller
                 ->with('success', 'Designation created successfully.');
         } catch (\Throwable $e) {
             Log::error('Designation creation failed', [
-                'user_id'       => auth()->id(),
+                'user_id' => auth()->id(),
                 'department_id' => $departmentId,
-                'name'          => $request->name,
-                'error'         => $e->getMessage(),
+                'name' => $request->name,
+                'error' => $e->getMessage(),
             ]);
 
             return back()
@@ -109,8 +109,8 @@ class AdminDesignationController extends Controller
 
     public function edit(string $designation)
     {
-        $model       = $this->resolveDesignation($designation);
-        $user        = auth()->user();
+        $model = $this->resolveDesignation($designation);
+        $user = auth()->user();
         $departments = $user->role === 'super_admin'
             ? Department::orderBy('name')->get()
             : collect();
@@ -123,19 +123,19 @@ class AdminDesignationController extends Controller
 
     public function update(Request $request, string $designation)
     {
-        $model   = $this->resolveDesignation($designation);
-        $user    = auth()->user();
+        $model = $this->resolveDesignation($designation);
+        $user = auth()->user();
         $isSuper = $user->role === 'super_admin';
 
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'status'        => 'required|boolean',
+            'name' => 'required|string|max:255',
+            'status' => 'required|boolean',
             'department_id' => $isSuper ? 'required|exists:departments,id' : 'nullable',
         ]);
 
         try {
             $data = [
-                'name'      => $request->string('name')->trim()->value(),
+                'name' => $request->string('name')->trim()->value(),
                 'is_active' => (bool) $request->status,
             ];
 
@@ -148,8 +148,9 @@ class AdminDesignationController extends Controller
             return redirect()->route('admin.designations.index')
                 ->with('success', 'Designation updated successfully.');
         } catch (\Throwable $e) {
-            Log::error('Designation update failed: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Update failed: ' . $e->getMessage());
+            Log::error('Designation update failed: '.$e->getMessage());
+
+            return back()->withInput()->with('error', 'Update failed: '.$e->getMessage());
         }
     }
 

@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         foreach (['transfer_requests', 'public_files'] as $table) {
-            if (!Schema::hasColumn($table, 'uuid')) {
+            if (! Schema::hasColumn($table, 'uuid')) {
                 Schema::table($table, function (Blueprint $t) {
                     $t->string('uuid', 36)->nullable()->after('id');
                 });

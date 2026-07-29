@@ -23,7 +23,7 @@ class FileTransferredNotification extends Notification
 
     public function toDatabase(object $notifiable): array
     {
-        $file   = $this->transfer->file;
+        $file = $this->transfer->file;
         $sender = $this->transfer->sender;
         $receiver = $this->transfer->receiver;
         $isDepartmentTransfer = $sender
@@ -35,18 +35,18 @@ class FileTransferredNotification extends Notification
             : route('files.show', $file->uuid, false);
 
         return [
-            'type'        => 'file_received',
-            'title'       => 'File Transferred',
-            'message'     => ($sender->name ?? 'System') . ' transferred ' . ($file->file_number ?? 'a file'),
-            'icon'        => 'exchange-alt',
-            'color'       => 'blue',
-            'url'         => $url,
-            'file_id'     => $this->transfer->file_id,
-            'file_uuid'   => $file->uuid ?? null,
-            'file_title'  => $file->file_name   ?? 'Unknown File',
+            'type' => 'file_received',
+            'title' => 'File Transferred',
+            'message' => ($sender->name ?? 'System').' transferred '.($file->file_number ?? 'a file'),
+            'icon' => 'exchange-alt',
+            'color' => 'blue',
+            'url' => $url,
+            'file_id' => $this->transfer->file_id,
+            'file_uuid' => $file->uuid ?? null,
+            'file_title' => $file->file_name ?? 'Unknown File',
             'file_number' => $file->file_number ?? '',
-            'sender'      => $sender->name       ?? 'System',
-            'remarks'     => $this->transfer->remarks,
+            'sender' => $sender->name ?? 'System',
+            'remarks' => $this->transfer->remarks,
         ];
     }
 }

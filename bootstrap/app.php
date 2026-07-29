@@ -1,31 +1,37 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ForcePasswordChangeMiddleware;
+use App\Http\Middleware\NoCacheMiddleware;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeadersMiddleware;
+use App\Http\Middleware\SuperAdminMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
         // ── Named middleware aliases ─────────────────────────────
         $middleware->alias([
-            'super_admin'         => \App\Http\Middleware\SuperAdminMiddleware::class,
-            'admin'               => \App\Http\Middleware\AdminMiddleware::class,
-            'role'                => \App\Http\Middleware\RoleMiddleware::class,
-            'no.cache'            => \App\Http\Middleware\NoCacheMiddleware::class,
-            'security.headers'    => \App\Http\Middleware\SecurityHeadersMiddleware::class,
-            'force.pwd.change'    => \App\Http\Middleware\ForcePasswordChangeMiddleware::class,
+            'super_admin' => SuperAdminMiddleware::class,
+            'admin' => AdminMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'no.cache' => NoCacheMiddleware::class,
+            'security.headers' => SecurityHeadersMiddleware::class,
+            'force.pwd.change' => ForcePasswordChangeMiddleware::class,
         ]);
 
         // ── Append security headers + force-password-change to every auth web response ─
         $middleware->web(append: [
-            \App\Http\Middleware\SecurityHeadersMiddleware::class,
-            \App\Http\Middleware\ForcePasswordChangeMiddleware::class,
+            SecurityHeadersMiddleware::class,
+            ForcePasswordChangeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

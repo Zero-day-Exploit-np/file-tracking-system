@@ -26,9 +26,9 @@ class ForcePasswordChangeMiddleware
                 route('profile.edit', [], false),
             ];
 
-            $currentPath = '/' . ltrim($request->path(), '/');
+            $currentPath = '/'.ltrim($request->path(), '/');
 
-            if (!in_array($currentPath, $allowed, true)) {
+            if (! in_array($currentPath, $allowed, true)) {
                 return redirect()->route('profile.edit')
                     ->with('warning', 'You must change your password before continuing.');
             }

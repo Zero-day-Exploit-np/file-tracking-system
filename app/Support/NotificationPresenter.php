@@ -27,7 +27,7 @@ class NotificationPresenter
 
     public static function relativeTime($date): string
     {
-        if (!$date) {
+        if (! $date) {
             return '';
         }
 
@@ -40,12 +40,12 @@ class NotificationPresenter
 
         $minutes = $date->diffInMinutes($now);
         if ($minutes < 60) {
-            return $minutes . ' min ago';
+            return $minutes.' min ago';
         }
 
         $hours = $date->diffInHours($now);
         if ($hours < 24) {
-            return $hours . ' ' . str('hour')->plural($hours) . ' ago';
+            return $hours.' '.str('hour')->plural($hours).' ago';
         }
 
         if ($date->isYesterday()) {
@@ -53,7 +53,8 @@ class NotificationPresenter
         }
 
         $days = $date->diffInDays($now);
-        return $days . ' ' . str('day')->plural($days) . ' ago';
+
+        return $days.' '.str('day')->plural($days).' ago';
     }
 
     private static function defaultTitle(string $type): string

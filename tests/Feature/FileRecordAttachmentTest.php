@@ -16,17 +16,17 @@ it('stores a file record with an attachment', function () {
     $department = Department::factory()->create();
 
     $user = User::factory()->create([
-        'role'            => 'user',
-        'department_id'   => $department->id,
+        'role' => 'user',
+        'department_id' => $department->id,
         'can_create_file' => true,
     ]);
 
     $response = $this->actingAs($user)->post(route('files.store'), [
-        'file_number'   => 'TEST/2026/001',
-        'file_name'     => 'Contract Document',
+        'file_number' => 'TEST/2026/001',
+        'file_name' => 'Contract Document',
         'department_id' => $department->id,
-        'remarks'       => 'Initial upload',
-        'attachment'    => UploadedFile::fake()->create(
+        'remarks' => 'Initial upload',
+        'attachment' => UploadedFile::fake()->create(
             'contract.docx', 100,
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ),
@@ -35,9 +35,9 @@ it('stores a file record with an attachment', function () {
     $response->assertRedirect(route('files.index'));
 
     $this->assertDatabaseHas('file_records', [
-        'file_name'     => 'Contract Document',
-        'file_number'   => 'TEST/2026/001',
-        'remarks'       => 'Initial upload',
+        'file_name' => 'Contract Document',
+        'file_number' => 'TEST/2026/001',
+        'remarks' => 'Initial upload',
         'department_id' => $department->id,
     ]);
 
@@ -52,19 +52,19 @@ it('downloads a file record attachment', function () {
     $department = Department::factory()->create();
 
     $user = User::factory()->create([
-        'role'            => 'user',
-        'department_id'   => $department->id,
+        'role' => 'user',
+        'department_id' => $department->id,
         'can_create_file' => true,
     ]);
 
     $attachment = UploadedFile::fake()->create('report.pdf', 120, 'application/pdf');
 
     $this->actingAs($user)->post(route('files.store'), [
-        'file_number'   => 'RPT/2026/001',
-        'file_name'     => 'Report',
+        'file_number' => 'RPT/2026/001',
+        'file_name' => 'Report',
         'department_id' => $department->id,
-        'remarks'       => 'Upload for download',
-        'attachment'    => $attachment,
+        'remarks' => 'Upload for download',
+        'attachment' => $attachment,
     ]);
 
     $file = FileRecord::where('file_number', 'RPT/2026/001')->first();
@@ -79,22 +79,22 @@ it('blocks duplicate file numbers', function () {
     $department = Department::factory()->create();
 
     $user = User::factory()->create([
-        'role'            => 'user',
-        'department_id'   => $department->id,
+        'role' => 'user',
+        'department_id' => $department->id,
         'can_create_file' => true,
     ]);
 
     // Create first file
     $this->actingAs($user)->post(route('files.store'), [
-        'file_number'   => 'DUPTEST/2026/001',
-        'file_name'     => 'Original',
+        'file_number' => 'DUPTEST/2026/001',
+        'file_name' => 'Original',
         'department_id' => $department->id,
     ]);
 
     // Attempt duplicate file number — must fail validation
     $response = $this->actingAs($user)->post(route('files.store'), [
-        'file_number'   => 'DUPTEST/2026/001',
-        'file_name'     => 'Duplicate',
+        'file_number' => 'DUPTEST/2026/001',
+        'file_name' => 'Duplicate',
         'department_id' => $department->id,
     ]);
 
@@ -108,20 +108,20 @@ it('allows creating a file for any department', function () {
 
     // User is in deptA but creates a file for deptB
     $user = User::factory()->create([
-        'role'            => 'user',
-        'department_id'   => $deptA->id,
+        'role' => 'user',
+        'department_id' => $deptA->id,
         'can_create_file' => true,
     ]);
 
     $response = $this->actingAs($user)->post(route('files.store'), [
-        'file_number'   => 'CROSS/DEPT/001',
-        'file_name'     => 'Cross-Dept File',
+        'file_number' => 'CROSS/DEPT/001',
+        'file_name' => 'Cross-Dept File',
         'department_id' => $deptB->id,
     ]);
 
     $response->assertRedirect(route('files.index'));
     $this->assertDatabaseHas('file_records', [
-        'file_name'     => 'Cross-Dept File',
+        'file_name' => 'Cross-Dept File',
         'department_id' => $deptB->id,
     ]);
 });

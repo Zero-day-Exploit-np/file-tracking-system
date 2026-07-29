@@ -12,13 +12,14 @@ class SampleUsersSeeder extends Seeder
 {
     public function run(): void
     {
-        $adminDept   = Department::where('code', 'ADMIN')->first();
-        $itDept      = Department::where('code', 'IT')->first();
-        $adminDesig  = Designation::where('name', 'Department Head')->first();
-        $userDesig   = Designation::where('name', 'Officer')->first();
+        $adminDept = Department::where('code', 'ADMIN')->first();
+        $itDept = Department::where('code', 'IT')->first();
+        $adminDesig = Designation::where('name', 'Department Head')->first();
+        $userDesig = Designation::where('name', 'Officer')->first();
 
-        if (!$adminDept || !$itDept) {
+        if (! $adminDept || ! $itDept) {
             $this->command->warn('Departments missing — run DepartmentSeeder first.');
+
             return;
         }
 
@@ -26,13 +27,13 @@ class SampleUsersSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@filetrack.local'],
             [
-                'name'              => 'Department Admin',
-                'password'          => Hash::make('Admin@1234'),
-                'role'              => 'admin',
-                'department_id'     => $adminDept->id,
-                'designation_id'    => $adminDesig?->id,
-                'is_active'         => true,
-                'can_create_file'   => true,
+                'name' => 'Department Admin',
+                'password' => Hash::make('Admin@1234'),
+                'role' => 'admin',
+                'department_id' => $adminDept->id,
+                'designation_id' => $adminDesig?->id,
+                'is_active' => true,
+                'can_create_file' => true,
                 'email_verified_at' => now(),
             ]
         );
@@ -41,13 +42,13 @@ class SampleUsersSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'user1@filetrack.local'],
             [
-                'name'              => 'Alice Sample',
-                'password'          => Hash::make('User@1234'),
-                'role'              => 'user',
-                'department_id'     => $adminDept->id,
-                'designation_id'    => $userDesig?->id,
-                'is_active'         => true,
-                'can_create_file'   => true,
+                'name' => 'Alice Sample',
+                'password' => Hash::make('User@1234'),
+                'role' => 'user',
+                'department_id' => $adminDept->id,
+                'designation_id' => $userDesig?->id,
+                'is_active' => true,
+                'can_create_file' => true,
                 'email_verified_at' => now(),
             ]
         );
@@ -56,13 +57,13 @@ class SampleUsersSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'user2@filetrack.local'],
             [
-                'name'              => 'Bob Sample',
-                'password'          => Hash::make('User@1234'),
-                'role'              => 'user',
-                'department_id'     => $itDept->id,
-                'designation_id'    => null,
-                'is_active'         => true,
-                'can_create_file'   => true,
+                'name' => 'Bob Sample',
+                'password' => Hash::make('User@1234'),
+                'role' => 'user',
+                'department_id' => $itDept->id,
+                'designation_id' => null,
+                'is_active' => true,
+                'can_create_file' => true,
                 'email_verified_at' => now(),
             ]
         );

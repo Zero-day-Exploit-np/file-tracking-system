@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\FileRecord;
 use App\Models\FileMovement;
+use App\Models\FileRecord;
 
 /**
  * Shows file details + horizontal linked-list timeline.
@@ -62,8 +62,18 @@ class FileTimelineController extends Controller
     private function authorizeFile(FileRecord $file): void
     {
         $user = auth()->user();
-        if ($user->role !== 'super_admin' &&
-            (int) $file->department_id !== (int) $user->department_id) {
+        if ($user->role === 'super_admin') {
+            return;
+        }
+
+        // Allow access if the admin's department currently holds the file
+        // OR if the file originated from their department.
+        // current_department_id tracks the live ownership; department_id is the origin.
+        $dept = (int) $user->department_id;
+        $isCurrentDept = (int) ($file->current_department_id ?? $file->department_id) === $dept;
+        $isOriginDept  = (int) $file->department_id === $dept;
+
+        if (! $isCurrentDept && ! $isOriginDept) {
             abort(403, 'You do not have access to this file.');
         }
     }
@@ -72,9 +82,10 @@ class FileTimelineController extends Controller
     private function viewerContext(): array
     {
         $user = auth()->user();
+
         return [
-            'isSuperAdmin'  => $user->role === 'super_admin',
-            'viewerDeptId'  => $user->department_id,
+            'isSuperAdmin' => $user->role === 'super_admin',
+            'viewerDeptId' => $user->department_id,
         ];
     }
 }

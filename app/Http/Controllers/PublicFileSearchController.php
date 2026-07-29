@@ -30,27 +30,27 @@ class PublicFileSearchController extends Controller
             ->with([
                 'department',
                 'currentHolder',
-                'movements' => fn($q) => $q->with(['fromDept', 'toDept'])->orderBy('created_at'),
+                'movements' => fn ($q) => $q->with(['fromDept', 'toDept'])->orderBy('created_at'),
             ])
             ->first();
 
-        if (!$file) {
+        if (! $file) {
             return back()
                 ->withInput()
                 ->with('search_error', 'No file found with this File Number.');
         }
 
-        $holder     = $file->currentHolder;
+        $holder = $file->currentHolder;
         $holderName = $holder ? $holder->name : 'N/A';
 
         // ── Safe public file summary ─────────────────────────────────────
         $result = [
-            'file_number'    => $file->file_number,
-            'file_name'      => $file->file_name,
-            'department'     => $file->department->name ?? 'N/A',
+            'file_number' => $file->file_number,
+            'file_name' => $file->file_name,
+            'department' => $file->department->name ?? 'N/A',
             'current_holder' => $holderName,
-            'status'         => ucwords(str_replace('_', ' ', $file->status)),
-            'created_date'   => $file->created_at->format('d M Y'),
+            'status' => ucwords(str_replace('_', ' ', $file->status)),
+            'created_date' => $file->created_at->format('d M Y'),
         ];
 
         // ── Build public department-level journey ────────────────────────
@@ -78,37 +78,37 @@ class PublicFileSearchController extends Controller
      */
     private function buildPublicJourney($movements): array
     {
-        $journey      = [];
-        $currentDept  = null;
-        $currentDate  = null;
-        $currentTime  = null;
-        $lastRemark   = null;
+        $journey = [];
+        $currentDept = null;
+        $currentDate = null;
+        $currentTime = null;
+        $lastRemark = null;
 
         foreach ($movements as $move) {
             // Determine the relevant department for this movement
             if ($move->action === 'created') {
                 $deptName = $move->fromDept?->name ?? 'Unknown Department';
-                $date     = $move->created_at->format('d M Y');
-                $time     = $move->created_at->format('h:i A');
-                $action   = 'Created';
-                $remark   = $move->remarks;
+                $date = $move->created_at->format('d M Y');
+                $time = $move->created_at->format('h:i A');
+                $action = 'Created';
+                $remark = $move->remarks;
             } else {
                 $deptName = $move->toDept?->name ?? 'Unknown Department';
-                $date     = $move->created_at->format('d M Y');
-                $time     = $move->created_at->format('h:i A');
-                $action   = 'Received';
-                $remark   = $move->remarks;
+                $date = $move->created_at->format('d M Y');
+                $time = $move->created_at->format('h:i A');
+                $action = 'Received';
+                $remark = $move->remarks;
             }
 
             if ($deptName !== $currentDept) {
                 // Department changed — push previous node if any
                 if ($currentDept !== null) {
                     $journey[] = [
-                        'dept_name'  => $currentDept,
-                        'date'       => $currentDate,
-                        'time'       => $currentTime,
-                        'action'     => count($journey) === 0 ? 'Created' : 'Received',
-                        'remark'     => $lastRemark,
+                        'dept_name' => $currentDept,
+                        'date' => $currentDate,
+                        'time' => $currentTime,
+                        'action' => count($journey) === 0 ? 'Created' : 'Received',
+                        'remark' => $lastRemark,
                         'is_current' => false,
                     ];
                 }
@@ -116,7 +116,7 @@ class PublicFileSearchController extends Controller
                 $currentDept = $deptName;
                 $currentDate = $date;
                 $currentTime = $time;
-                $lastRemark  = $remark ?: null;
+                $lastRemark = $remark ?: null;
             } else {
                 // Still in same dept — update remark if this one is more informative
                 if ($remark) {
@@ -128,11 +128,11 @@ class PublicFileSearchController extends Controller
         // Push the final (current) dept node
         if ($currentDept !== null) {
             $journey[] = [
-                'dept_name'  => $currentDept,
-                'date'       => $currentDate,
-                'time'       => $currentTime,
-                'action'     => count($journey) === 0 ? 'Created' : 'Current',
-                'remark'     => $lastRemark,
+                'dept_name' => $currentDept,
+                'date' => $currentDate,
+                'time' => $currentTime,
+                'action' => count($journey) === 0 ? 'Created' : 'Current',
+                'remark' => $lastRemark,
                 'is_current' => true,
             ];
         }

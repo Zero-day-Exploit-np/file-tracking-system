@@ -71,8 +71,8 @@
             <tbody>
                 @forelse($files as $i => $file)
                 @php
-                    $prevUserId = $previousHolders[$file->id] ?? null;
-                    $prevHolder = $prevUserId ? \App\Models\User::find($prevUserId) : null;
+                    $prevUserId = $previousHolderIds[$file->id] ?? null;
+                    $prevHolder = $prevUserId ? ($prevHolderCache[$prevUserId] ?? null) : null;
                 @endphp
                 <tr>
                     <td class="text-muted">{{ $files->firstItem() + $i }}</td>

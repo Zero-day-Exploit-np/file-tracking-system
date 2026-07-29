@@ -22,11 +22,11 @@ class FileTransferred implements ShouldBroadcast
     public function broadcastOn(): array
     {
         // Only broadcast when there is a real receiver
-        if (!$this->transfer->receiver_id) {
+        if (! $this->transfer->receiver_id) {
             return [];
         }
 
-        return [new PrivateChannel('user.' . $this->transfer->receiver_id)];
+        return [new PrivateChannel('user.'.$this->transfer->receiver_id)];
     }
 
     public function broadcastAs(): string

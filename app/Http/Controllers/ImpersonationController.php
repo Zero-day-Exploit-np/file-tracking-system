@@ -28,7 +28,7 @@ class ImpersonationController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route('dashboard')
-            ->with('success', 'You are now impersonating ' . $user->name . '.');
+            ->with('success', 'You are now impersonating '.$user->name.'.');
     }
 
     public function stop(Request $request): RedirectResponse

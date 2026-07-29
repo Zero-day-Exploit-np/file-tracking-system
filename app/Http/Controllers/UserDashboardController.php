@@ -14,7 +14,7 @@ class UserDashboardController extends Controller
 
     public function index()
     {
-        $user   = Auth::user();
+        $user = Auth::user();
         $userId = $user->id;
 
         // Cached KPIs
@@ -22,7 +22,7 @@ class UserDashboardController extends Controller
 
         // Files the user currently holds or created
         $myFiles = FileRecord::with(['department', 'currentHolder'])
-            ->where(fn($q) => $q->where('created_by', $userId)->orWhere('current_user_id', $userId))
+            ->where(fn ($q) => $q->where('created_by', $userId)->orWhere('current_user_id', $userId))
             ->latest()->take(10)->get();
 
         // Files received by this user
@@ -36,7 +36,7 @@ class UserDashboardController extends Controller
             ->latest()->take(8)->get();
 
         $recentActivity = FileMovement::with(['file', 'fromUser', 'toUser', 'fromDept', 'toDept'])
-            ->where(fn($q) => $q->where('from_user', $userId)->orWhere('to_user', $userId))
+            ->where(fn ($q) => $q->where('from_user', $userId)->orWhere('to_user', $userId))
             ->latest()->take(8)->get();
 
         $unreadNotifications = $user->notifications()
@@ -46,13 +46,13 @@ class UserDashboardController extends Controller
             ->get();
 
         return view('user.dashboard', [
-            'myFiles'             => $myFiles,
-            'receivedFiles'       => $receivedFiles,
-            'sentFiles'           => $sentFiles,
-            'totalMyFiles'        => $stats['total_my_files'],
-            'totalSentFiles'      => $stats['sent_files'],
-            'totalReceivedFiles'  => $stats['received_files'],
-            'recentActivity'      => $recentActivity,
+            'myFiles' => $myFiles,
+            'receivedFiles' => $receivedFiles,
+            'sentFiles' => $sentFiles,
+            'totalMyFiles' => $stats['total_my_files'],
+            'totalSentFiles' => $stats['sent_files'],
+            'totalReceivedFiles' => $stats['received_files'],
+            'recentActivity' => $recentActivity,
             'unreadNotifications' => $unreadNotifications,
         ]);
     }

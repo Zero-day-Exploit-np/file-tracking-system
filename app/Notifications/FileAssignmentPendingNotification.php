@@ -17,7 +17,7 @@ class FileAssignmentPendingNotification extends Notification
 
     public function __construct(
         public readonly FileTransfer $transfer,
-        public readonly Department   $targetDept,
+        public readonly Department $targetDept,
     ) {}
 
     public function via(object $notifiable): array
@@ -27,24 +27,24 @@ class FileAssignmentPendingNotification extends Notification
 
     public function toDatabase(object $notifiable): array
     {
-        $file   = $this->transfer->file;
+        $file = $this->transfer->file;
         $sender = $this->transfer->sender;
 
         return [
-            'type'        => 'file_pending_assignment',
-            'title'       => 'File Needs Assignment',
-            'message'     => ($sender->name ?? 'System') . ' transferred ' .
-                             ($file->file_number ?? 'a file') .
-                             ' to ' . $this->targetDept->name . '. Please assign it to a user.',
-            'icon'        => 'user-plus',
-            'color'       => 'orange',
-            'url'         => route('admin.files.pending', [], false),
-            'file_id'     => $this->transfer->file_id,
-            'file_uuid'   => $file->uuid ?? null,
-            'file_title'  => $file->file_name   ?? 'Unknown File',
+            'type' => 'file_pending_assignment',
+            'title' => 'File Needs Assignment',
+            'message' => ($sender->name ?? 'System').' transferred '.
+                             ($file->file_number ?? 'a file').
+                             ' to '.$this->targetDept->name.'. Please assign it to a user.',
+            'icon' => 'user-plus',
+            'color' => 'orange',
+            'url' => route('admin.files.pending', [], false),
+            'file_id' => $this->transfer->file_id,
+            'file_uuid' => $file->uuid ?? null,
+            'file_title' => $file->file_name ?? 'Unknown File',
             'file_number' => $file->file_number ?? '',
-            'sender'      => $sender->name       ?? 'System',
-            'dept'        => $this->targetDept->name,
+            'sender' => $sender->name ?? 'System',
+            'dept' => $this->targetDept->name,
         ];
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Designation;
 use App\Models\Department;
+use App\Models\Designation;
 use Illuminate\Http\Request;
 
 class DesignationController extends Controller
@@ -11,12 +11,14 @@ class DesignationController extends Controller
     public function index()
     {
         $designations = Designation::with('department')->latest()->paginate(15);
+
         return view('designations.index', compact('designations'));
     }
 
     public function create()
     {
         $departments = Department::orderBy('name')->get();
+
         return view('designations.create', compact('departments'));
     }
 
@@ -24,14 +26,14 @@ class DesignationController extends Controller
     {
         $request->validate([
             'department_id' => 'required|exists:departments,id',
-            'name'          => 'required|string|max:255',
-            'status'        => 'required|boolean',
+            'name' => 'required|string|max:255',
+            'status' => 'required|boolean',
         ]);
 
         Designation::create([
             'department_id' => (int) $request->department_id,
-            'name'          => $request->string('name')->trim()->value(),
-            'is_active'     => (bool) $request->status,
+            'name' => $request->string('name')->trim()->value(),
+            'is_active' => (bool) $request->status,
         ]);
 
         return redirect()->route('designations.index')
@@ -44,6 +46,7 @@ class DesignationController extends Controller
     public function edit(Designation $designation)
     {
         $departments = Department::orderBy('name')->get();
+
         return view('designations.edit', compact('designation', 'departments'));
     }
 
@@ -51,14 +54,14 @@ class DesignationController extends Controller
     {
         $request->validate([
             'department_id' => 'required|exists:departments,id',
-            'name'          => 'required|string|max:255',
-            'status'        => 'required|boolean',
+            'name' => 'required|string|max:255',
+            'status' => 'required|boolean',
         ]);
 
         $designation->update([
             'department_id' => (int) $request->department_id,
-            'name'          => $request->string('name')->trim()->value(),
-            'is_active'     => (bool) $request->status,
+            'name' => $request->string('name')->trim()->value(),
+            'is_active' => (bool) $request->status,
         ]);
 
         return redirect()->route('designations.index')

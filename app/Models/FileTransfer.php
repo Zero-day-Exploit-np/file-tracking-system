@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\FileRecord;
-use App\Models\User;
 
 class FileTransfer extends Model
 {

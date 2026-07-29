@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
+use App\Models\Designation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Models\User;
-use App\Models\Department;
-use App\Models\Designation;
 
 /**
  * UserController — Super Admin only.
@@ -45,28 +45,29 @@ class UserController extends Controller
 
     public function create()
     {
-        $departments  = Department::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
         $designations = Designation::with('department')->orderBy('name')->get();
+
         return view('users.create', compact('departments', 'designations'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'email'          => 'required|email:rfc,dns|max:255|unique:users,email',
-            'department_id'  => 'nullable|exists:departments,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email:rfc,dns|max:255|unique:users,email',
+            'department_id' => 'nullable|exists:departments,id',
             'designation_id' => 'nullable|exists:designations,id',
             'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
-            'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'photo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         // Super Admin can ONLY create Admin accounts — no privilege escalation.
         // Default password is Password@123, user must change on first login.
         $data = $request->only(['name', 'email', 'department_id', 'designation_id', 'contact_number']);
-        $data['password']             = Hash::make('Password@123');
-        $data['role']                 = 'admin';
-        $data['can_create_file']      = false;
+        $data['password'] = Hash::make('Password@123');
+        $data['role'] = 'admin';
+        $data['can_create_file'] = false;
         $data['must_change_password'] = true;
 
         if ($request->hasFile('photo')) {
@@ -85,6 +86,7 @@ class UserController extends Controller
             abort(403, 'Access denied.');
         }
         $user->load(['department', 'designation']);
+
         return view('users.show', compact('user'));
     }
 
@@ -94,8 +96,9 @@ class UserController extends Controller
         if ($user->role !== 'admin') {
             abort(403, 'Access denied.');
         }
-        $departments  = Department::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
         $designations = Designation::with('department')->orderBy('name')->get();
+
         return view('users.edit', compact('user', 'departments', 'designations'));
     }
 
@@ -107,13 +110,13 @@ class UserController extends Controller
         }
 
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'email'          => 'required|email:rfc,dns|max:255|unique:users,email,' . $user->id,
-            'department_id'  => 'nullable|exists:departments,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email:rfc,dns|max:255|unique:users,email,'.$user->id,
+            'department_id' => 'nullable|exists:departments,id',
             'designation_id' => 'nullable|exists:designations,id',
             'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
-            'password'       => 'nullable|min:8|confirmed',
-            'photo'          => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'password' => 'nullable|min:8|confirmed',
+            'photo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         // role stays 'admin' — cannot be changed via this form
@@ -153,9 +156,9 @@ class UserController extends Controller
 
     private function storePhoto(Request $request): string
     {
-        $file      = $request->file('photo');
+        $file = $request->file('photo');
         $extension = $file->getClientOriginalExtension();
-        $filename  = Str::uuid() . '.' . strtolower($extension);
+        $filename = Str::uuid().'.'.strtolower($extension);
 
         return $file->storeAs('uploads/users', $filename, 'public');
     }

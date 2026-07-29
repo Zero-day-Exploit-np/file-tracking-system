@@ -21,13 +21,13 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'superadmin@example.com'],
             [
-                'name'              => 'Super Admin',
-                'password'          => Hash::make('Password@123'),
-                'role'              => 'super_admin',
-                'department_id'     => null,
-                'designation_id'    => null,
-                'is_active'         => true,
-                'can_create_file'   => false,
+                'name' => 'Super Admin',
+                'password' => Hash::make('Password@123'),
+                'role' => 'super_admin',
+                'department_id' => null,
+                'designation_id' => null,
+                'is_active' => true,
+                'can_create_file' => false,
                 'must_change_password' => false,
                 'email_verified_at' => now(),
             ]

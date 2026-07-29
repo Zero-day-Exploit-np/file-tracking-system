@@ -17,7 +17,7 @@ class DepartmentFactory extends Factory
     {
         return [
             'uuid' => Str::uuid()->toString(),
-            'name' => $this->faker->company . ' Department',
+            'name' => $this->faker->company.' Department',
             'code' => strtoupper($this->faker->lexify('???')),
             'is_active' => true,
         ];

@@ -36,7 +36,9 @@ class PublicFile extends Model
      */
     public function getAttachmentExistsAttribute(): bool
     {
-        if (!$this->attachment_path) return false;
+        if (! $this->attachment_path) {
+            return false;
+        }
 
         return Storage::disk('private')->exists($this->attachment_path)
             || Storage::disk('public')->exists($this->attachment_path);
@@ -47,7 +49,7 @@ class PublicFile extends Model
      */
     public function getSignedDownloadUrl(): string
     {
-        if (!$this->uuid) {
+        if (! $this->uuid) {
             return '#';
         }
 

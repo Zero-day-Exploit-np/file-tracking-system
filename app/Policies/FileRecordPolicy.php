@@ -27,6 +27,7 @@ class FileRecordPolicy
             if (in_array($ability, ['create', 'store'], true)) {
                 return false;
             }
+
             return true;
         }
 
@@ -66,6 +67,7 @@ class FileRecordPolicy
         if (in_array($file->status, ['archived', 'pending_assignment'], true)) {
             return false;
         }
+
         return (int) $file->current_user_id === $user->id;
     }
 
@@ -86,10 +88,14 @@ class FileRecordPolicy
     private function hasFileAccess(User $user, FileRecord $file): bool
     {
         // Creator
-        if ((int) $file->created_by === $user->id) return true;
+        if ((int) $file->created_by === $user->id) {
+            return true;
+        }
 
         // Current holder
-        if ($file->current_user_id && (int) $file->current_user_id === $user->id) return true;
+        if ($file->current_user_id && (int) $file->current_user_id === $user->id) {
+            return true;
+        }
 
         // Same-department admin — can view any file currently in their department
         if ($user->role === 'admin' &&
@@ -99,8 +105,8 @@ class FileRecordPolicy
 
         // Was involved in a transfer for this file
         return FileTransfer::where('file_id', $file->id)
-            ->where(fn($q) => $q
-                ->where('sender_id',   $user->id)
+            ->where(fn ($q) => $q
+                ->where('sender_id', $user->id)
                 ->orWhere('receiver_id', $user->id))
             ->exists();
     }

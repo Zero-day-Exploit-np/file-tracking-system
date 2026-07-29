@@ -41,11 +41,11 @@ return [
         // Private disk — files not accessible via public URL
         // Used for uploaded documents (public file submissions, etc.)
         'private' => [
-            'driver'     => 'local',
-            'root'       => storage_path('app/private'),
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
             'visibility' => 'private',
-            'throw'      => false,
-            'report'     => false,
+            'throw' => false,
+            'report' => false,
         ],
 
         'public' => [

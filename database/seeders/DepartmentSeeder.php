@@ -26,6 +26,6 @@ class DepartmentSeeder extends Seeder
             );
         }
 
-        $this->command->info('Departments seeded: ' . Department::count() . ' total.');
+        $this->command->info('Departments seeded: '.Department::count().' total.');
     }
 }

@@ -17,7 +17,7 @@ class AdminTransferController extends Controller
 {
     public function index(Request $request)
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = FileMovement::with([
             'file',
             'fromUser',
@@ -30,7 +30,7 @@ class AdminTransferController extends Controller
         if ($user->role !== 'super_admin') {
             $query->where(function ($q) use ($user) {
                 $q->where('from_department', $user->department_id)
-                  ->orWhere('to_department',  $user->department_id);
+                    ->orWhere('to_department', $user->department_id);
             });
         }
 
@@ -40,7 +40,7 @@ class AdminTransferController extends Controller
             if ($dept) {
                 $query->where(function ($q) use ($dept) {
                     $q->where('from_department', $dept->id)
-                      ->orWhere('to_department',  $dept->id);
+                        ->orWhere('to_department', $dept->id);
                 });
             }
         }
@@ -48,9 +48,9 @@ class AdminTransferController extends Controller
         // Search by file number or name
         if ($request->filled('search')) {
             $s = $request->string('search')->trim()->value();
-            $query->whereHas('file', fn($q) => $q
+            $query->whereHas('file', fn ($q) => $q
                 ->where('file_number', 'like', "%{$s}%")
-                ->orWhere('file_name',  'like', "%{$s}%"));
+                ->orWhere('file_name', 'like', "%{$s}%"));
         }
 
         // Date range
@@ -61,7 +61,7 @@ class AdminTransferController extends Controller
             $query->whereDate('created_at', '<=', $request->date('to_date'));
         }
 
-        $transfers   = $query->latest()->paginate(25)->withQueryString();
+        $transfers = $query->latest()->paginate(25)->withQueryString();
         $departments = $user->role === 'super_admin'
             ? Department::orderBy('name')->get()
             : collect();

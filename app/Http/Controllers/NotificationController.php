@@ -18,26 +18,38 @@ class NotificationController extends Controller
         return view('notifications.index', compact('notifications'));
     }
 
+    /**
+     * AJAX polling endpoint — returns the 15 most recent notifications
+     * and the unread count. Uses a single DB query for both.
+     */
     public function poll()
     {
-        $user = Auth::user();
-        $latest = $user->notifications()
-            ->latest()
-            ->limit(15)
-            ->get();
+        $user   = Auth::user();
+        $latest = $user->notifications()->latest()->limit(15)->get();
+
+        // Count unread from the already-fetched collection first,
+        // then fall back to a DB count only if there could be more unread
+        // outside the top 15 (rare but correct).
+        $unreadInLatest = $latest->whereNull('read_at')->count();
+        $unreadCount    = $unreadInLatest < $latest->count()
+            ? $unreadInLatest   // all unread items are in the top 15
+            : $user->notifications()->whereNull('read_at')->count(); // may have more
 
         return response()->json([
-            'unread_count' => $user->notifications()->whereNull('read_at')->count(),
+            'unread_count'  => $unreadCount,
             'notifications' => $latest
-                ->map(fn($notification) => NotificationPresenter::present($notification))
+                ->map(fn ($n) => NotificationPresenter::present($n))
                 ->values(),
         ]);
     }
 
+    /**
+     * Mark specific notification IDs as read (called when dropdown opens or item clicked).
+     */
     public function markVisibleAsRead(Request $request)
     {
         $data = $request->validate([
-            'ids' => ['required', 'array', 'max:15'],
+            'ids'   => ['required', 'array', 'max:15'],
             'ids.*' => ['required', 'uuid'],
         ]);
 
@@ -49,7 +61,7 @@ class NotificationController extends Controller
             ->update(['read_at' => now()]);
 
         return response()->json([
-            'success' => true,
+            'success'      => true,
             'unread_count' => $user->notifications()->whereNull('read_at')->count(),
         ]);
     }

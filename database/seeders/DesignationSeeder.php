@@ -13,17 +13,18 @@ class DesignationSeeder extends Seeder
         // Map of department code → designations
         $map = [
             'ADMIN' => ['Department Head', 'Senior Officer', 'Officer', 'Clerk'],
-            'HR'    => ['HR Manager', 'HR Officer', 'Recruitment Officer', 'HR Clerk'],
-            'FIN'   => ['Finance Manager', 'Accounts Officer', 'Finance Clerk', 'Auditor'],
-            'IT'    => ['IT Manager', 'Systems Analyst', 'Developer', 'IT Support'],
-            'OPS'   => ['Operations Manager', 'Operations Officer', 'Field Officer', 'Operations Clerk'],
+            'HR' => ['HR Manager', 'HR Officer', 'Recruitment Officer', 'HR Clerk'],
+            'FIN' => ['Finance Manager', 'Accounts Officer', 'Finance Clerk', 'Auditor'],
+            'IT' => ['IT Manager', 'Systems Analyst', 'Developer', 'IT Support'],
+            'OPS' => ['Operations Manager', 'Operations Officer', 'Field Officer', 'Operations Clerk'],
         ];
 
         foreach ($map as $code => $names) {
             $dept = Department::where('code', $code)->first();
 
-            if (!$dept) {
+            if (! $dept) {
                 $this->command->warn("Department [{$code}] not found — skipping its designations.");
+
                 continue;
             }
 
@@ -36,6 +37,6 @@ class DesignationSeeder extends Seeder
             }
         }
 
-        $this->command->info('Designations seeded: ' . Designation::count() . ' total.');
+        $this->command->info('Designations seeded: '.Designation::count().' total.');
     }
 }

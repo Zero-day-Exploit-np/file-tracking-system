@@ -13,12 +13,12 @@ class RoleMiddleware
         $user = auth()->user();
 
         // Not logged in → redirect to login (not 403 — avoids leaking route existence)
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
         // Wrong role → 403
-        if (!in_array($user->role, $roles, true)) {
+        if (! in_array($user->role, $roles, true)) {
             abort(403, 'Access denied. Insufficient permissions.');
         }
 

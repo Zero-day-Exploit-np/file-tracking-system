@@ -45,7 +45,7 @@ return new class extends Migration
             $table->dropColumn([
                 'employee_code',
                 'phone',
-                'is_active'
+                'is_active',
             ]);
         });
     }

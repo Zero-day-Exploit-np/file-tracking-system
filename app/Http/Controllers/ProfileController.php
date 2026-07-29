@@ -22,16 +22,16 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'name'           => 'required|string|max:255',
-            'email'          => 'required|email:rfc|max:255|unique:users,email,' . $user->id,
-            'phone'          => 'nullable|string|max:20',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email:rfc|max:255|unique:users,email,'.$user->id,
+            'phone' => 'nullable|string|max:20',
             'contact_number' => ['nullable', 'regex:/^[0-9]{10}$/'],
         ]);
 
         $user->fill([
-            'name'           => $request->string('name')->trim()->value(),
-            'email'          => $request->string('email')->trim()->lower()->value(),
-            'phone'          => $request->string('phone')->trim()->value() ?: null,
+            'name' => $request->string('name')->trim()->value(),
+            'email' => $request->string('email')->trim()->lower()->value(),
+            'phone' => $request->string('phone')->trim()->value() ?: null,
             'contact_number' => $request->string('contact_number')->trim()->value() ?: null,
         ]);
 
@@ -56,8 +56,8 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($user->photo);
         }
 
-        $ext      = strtolower($request->file('photo')->getClientOriginalExtension());
-        $filename = 'avatars/' . Str::uuid() . '.' . $ext;
+        $ext = strtolower($request->file('photo')->getClientOriginalExtension());
+        $filename = 'avatars/'.Str::uuid().'.'.$ext;
         $request->file('photo')->storeAs('avatars', basename($filename), 'public');
 
         $user->update(['photo' => $filename]);
@@ -83,8 +83,8 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $request->validateWithBag('updatePassword', [
-            'current_password'      => 'required|current_password',
-            'password'              => 'required|min:8|confirmed|different:current_password',
+            'current_password' => 'required|current_password',
+            'password' => 'required|min:8|confirmed|different:current_password',
             'password_confirmation' => 'required',
         ]);
 

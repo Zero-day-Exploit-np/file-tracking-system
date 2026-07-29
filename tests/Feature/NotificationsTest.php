@@ -1,10 +1,10 @@
 <?php
 
-use App\Notifications\FileTransferredNotification;
 use App\Models\Department;
 use App\Models\FileRecord;
 use App\Models\FileTransfer;
 use App\Models\User;
+use App\Notifications\FileTransferredNotification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -13,20 +13,20 @@ beforeEach(function () {
 });
 
 it('shows the notifications page for an authenticated user', function () {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     $department = Department::create([
         'name' => 'Operations',
         'code' => 'OPS',
         'is_active' => true,
     ]);
 
-    /** @var \App\Models\User $sender */
+    /** @var User $sender */
     $sender = User::factory()->create([
         'role' => 'admin',
         'department_id' => $department->id,
     ]);
 
-    /** @var \App\Models\User $recipient */
+    /** @var User $recipient */
     $recipient = User::factory()->create([
         'role' => 'user',
         'department_id' => $department->id,
@@ -59,20 +59,20 @@ it('shows the notifications page for an authenticated user', function () {
 });
 
 it('marks visible notifications as read when the dropdown opens', function () {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     $department = Department::create([
         'name' => 'Operations',
         'code' => 'OPS',
         'is_active' => true,
     ]);
 
-    /** @var \App\Models\User $sender */
+    /** @var User $sender */
     $sender = User::factory()->create([
         'role' => 'admin',
         'department_id' => $department->id,
     ]);
 
-    /** @var \App\Models\User $recipient */
+    /** @var User $recipient */
     $recipient = User::factory()->create([
         'role' => 'user',
         'department_id' => $department->id,

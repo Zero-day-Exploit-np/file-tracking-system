@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\FileTransferred;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\FileMovement;
 use App\Models\FileRecord;
+use App\Models\FileTransfer;
 use App\Models\User;
 use App\Notifications\FileTransferredNotification;
-use App\Models\FileTransfer;
 use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,11 +33,11 @@ class AdminFileAssignmentController extends Controller
      */
     public function index()
     {
-        $admin  = Auth::user();
+        $admin = Auth::user();
         $deptId = $admin->department_id;
 
         $pendingFiles = FileRecord::with(['department', 'currentDepartment', 'creator',
-                                         'movements.fromUser', 'movements.fromDept'])
+            'movements.fromUser', 'movements.fromDept'])
             ->where('current_department_id', $deptId)
             ->whereNull('current_user_id')
             ->where('status', 'pending_assignment')
@@ -57,7 +58,7 @@ class AdminFileAssignmentController extends Controller
      */
     public function assign(Request $request, string $uuid)
     {
-        $admin  = Auth::user();
+        $admin = Auth::user();
         $deptId = $admin->department_id;
 
         $request->validate([
@@ -80,34 +81,34 @@ class AdminFileAssignmentController extends Controller
         DB::transaction(function () use ($file, $admin, $targetUser, &$transfer) {
             // Record as an assignment movement (not a transfer)
             FileMovement::create([
-                'file_id'         => $file->id,
-                'from_user'       => $admin->id,
-                'to_user'         => $targetUser->id,
+                'file_id' => $file->id,
+                'from_user' => $admin->id,
+                'to_user' => $targetUser->id,
                 'from_department' => $admin->department_id,
-                'to_department'   => $targetUser->department_id,
-                'action'          => 'transferred',
-                'remarks'         => 'Assigned to ' . $targetUser->name . ' by department admin ' . $admin->name,
+                'to_department' => $targetUser->department_id,
+                'action' => 'transferred',
+                'remarks' => 'Assigned to '.$targetUser->name.' by department admin '.$admin->name,
             ]);
 
             // Create a FileTransfer log so the user sees it in their "Received" tab
             $transfer = FileTransfer::create([
-                'file_id'        => $file->id,
-                'sender_id'      => $admin->id,
-                'receiver_id'    => $targetUser->id,
-                'remarks'        => 'Department assignment by ' . $admin->name,
+                'file_id' => $file->id,
+                'sender_id' => $admin->id,
+                'receiver_id' => $targetUser->id,
+                'remarks' => 'Department assignment by '.$admin->name,
                 'transferred_at' => now(),
             ]);
 
             $file->update([
-                'current_user_id'       => $targetUser->id,
+                'current_user_id' => $targetUser->id,
                 'current_department_id' => $targetUser->department_id,
-                'status'                => 'active',
+                'status' => 'active',
             ]);
         });
 
         if ($transfer) {
             $targetUser->notify(new FileTransferredNotification($transfer));
-            event(new \App\Events\FileTransferred($transfer));
+            event(new FileTransferred($transfer));
         }
 
         DashboardService::clearUserCache($admin->id);
@@ -116,6 +117,6 @@ class AdminFileAssignmentController extends Controller
         DashboardService::clearSuperAdminCache();
 
         return redirect()->route('admin.files.pending')
-            ->with('success', 'File "' . $file->file_number . '" assigned to ' . $targetUser->name . '.');
+            ->with('success', 'File "'.$file->file_number.'" assigned to '.$targetUser->name.'.');
     }
 }

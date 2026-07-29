@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Department;
 
 class DepartmentController extends Controller
 {
@@ -33,14 +33,14 @@ class DepartmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'      => 'required|string|max:255|unique:departments,name',
-            'code'      => 'required|string|max:50|unique:departments,code|alpha_num',
+            'name' => 'required|string|max:255|unique:departments,name',
+            'code' => 'required|string|max:50|unique:departments,code|alpha_num',
             'is_active' => 'required|boolean',
         ]);
 
         Department::create([
-            'name'      => $request->string('name')->trim()->value(),
-            'code'      => strtoupper($request->string('code')->trim()->value()),
+            'name' => $request->string('name')->trim()->value(),
+            'code' => strtoupper($request->string('code')->trim()->value()),
             'is_active' => (bool) $request->is_active,
         ]);
 
@@ -61,14 +61,14 @@ class DepartmentController extends Controller
     public function update(Request $request, Department $department)
     {
         $request->validate([
-            'name'      => 'required|string|max:255|unique:departments,name,' . $department->id,
-            'code'      => 'required|string|max:50|unique:departments,code,' . $department->id . '|alpha_num',
+            'name' => 'required|string|max:255|unique:departments,name,'.$department->id,
+            'code' => 'required|string|max:50|unique:departments,code,'.$department->id.'|alpha_num',
             'is_active' => 'required|boolean',
         ]);
 
         $department->update([
-            'name'      => $request->string('name')->trim()->value(),
-            'code'      => strtoupper($request->string('code')->trim()->value()),
+            'name' => $request->string('name')->trim()->value(),
+            'code' => strtoupper($request->string('code')->trim()->value()),
             'is_active' => (bool) $request->is_active,
         ]);
 
@@ -91,7 +91,8 @@ class DepartmentController extends Controller
                 ->with('success', 'Department and related users/designations deleted successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Department deletion failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Department deletion failed: '.$e->getMessage());
         }
     }
 
@@ -111,22 +112,22 @@ class DepartmentController extends Controller
         // Auto-generate a unique code from the name (uppercase alphanumeric, max 8 chars)
         $baseCode = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $validated['name']));
         $baseCode = substr($baseCode, 0, 8) ?: 'DEPT';
-        $code     = $baseCode;
-        $counter  = 1;
+        $code = $baseCode;
+        $counter = 1;
         while (Department::where('code', $code)->exists()) {
-            $code = substr($baseCode, 0, 7) . $counter++;
+            $code = substr($baseCode, 0, 7).$counter++;
         }
 
         $department = Department::create([
-            'name'      => trim($validated['name']),
-            'code'      => $code,
+            'name' => trim($validated['name']),
+            'code' => $code,
             'is_active' => true,
         ]);
 
         return response()->json([
-            'success'    => true,
+            'success' => true,
             'department' => [
-                'id'   => $department->id,
+                'id' => $department->id,
                 'name' => $department->name,
             ],
         ]);

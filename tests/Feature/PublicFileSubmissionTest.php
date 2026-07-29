@@ -7,7 +7,6 @@
  * @see PublicFileSearchController
  * @see /public/file-search
  */
-
 it('public file search page loads successfully', function () {
     $response = $this->get(route('public.file.search'));
     $response->assertStatus(200);

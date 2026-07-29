@@ -3,11 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -38,10 +37,10 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $casts = [
-        'email_verified_at'    => 'datetime',
-        'password'             => 'hashed',
-        'can_create_file'      => 'boolean',
-        'is_active'            => 'boolean',
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'can_create_file' => 'boolean',
+        'is_active' => 'boolean',
         'must_change_password' => 'boolean',
     ];
 
@@ -68,6 +67,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($this->photo && Storage::disk('public')->exists($this->photo)) {
             return Storage::disk('public')->url($this->photo);
         }
+
         return null;
     }
 
@@ -78,8 +78,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $parts = explode(' ', trim($this->name));
         if (count($parts) >= 2) {
-            return strtoupper(substr($parts[0], 0, 1) . substr($parts[1], 0, 1));
+            return strtoupper(substr($parts[0], 0, 1).substr($parts[1], 0, 1));
         }
+
         return strtoupper(substr($this->name, 0, 2));
     }
 
