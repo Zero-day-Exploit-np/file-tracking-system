@@ -42,7 +42,7 @@ Route::get('/public/file-search/result', [PublicFileSearchController::class, 'se
 | ALL AUTH ROUTES
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
+Route::middleware(['auth', 'verified', 'no.cache', 'force.pwd.change'])->group(function () {
 
     Route::get('/dashboard', function () {
         return match (auth()->user()->role) {
@@ -51,13 +51,6 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
             default => redirect()->route('user.dashboard'),
         };
     })->name('dashboard');
-
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/photo', [ProfileController::class, 'uploadPhoto'])->name('profile.photo.upload');
-    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
-    Route::put('/profile/password', [ProfileController::class, 'changePassword'])->name('profile.password.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Files (UUID-based route model binding)
     Route::get('/files', [FileRecordController::class, 'index'])->name('files.index');
@@ -89,10 +82,28 @@ Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| PROFILE ROUTES — auth + verified required, but ForcePasswordChange is
+| intentionally NOT applied here. An unverified user with
+| must_change_password = true must be able to reach /profile to change
+| their password after verifying their email. Adding 'verified' here is
+| correct: password change should only be allowed once email is confirmed.
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified', 'no.cache'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo', [ProfileController::class, 'uploadPhoto'])->name('profile.photo.upload');
+    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+    Route::put('/profile/password', [ProfileController::class, 'changePassword'])->name('profile.password.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
 | USER DASHBOARD — role:user only
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified', 'no.cache', 'role:user'])->group(function () {
+Route::middleware(['auth', 'verified', 'no.cache', 'force.pwd.change', 'role:user'])->group(function () {
     Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 });
 
@@ -101,7 +112,7 @@ Route::middleware(['auth', 'verified', 'no.cache', 'role:user'])->group(function
 | SUPER ADMIN — departments, admin management
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:super_admin', 'no.cache'])->group(function () {
+Route::middleware(['auth', 'role:super_admin', 'no.cache', 'force.pwd.change'])->group(function () {
     Route::resource('departments', DepartmentController::class);
     Route::resource('users', UserController::class);
 
@@ -114,7 +125,7 @@ Route::middleware(['auth', 'role:super_admin', 'no.cache'])->group(function () {
 | SUPER ADMIN + ADMIN SHARED
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:super_admin,admin', 'no.cache'])->group(function () {
+Route::middleware(['auth', 'role:super_admin,admin', 'no.cache', 'force.pwd.change'])->group(function () {
     Route::resource('designations', DesignationController::class);
 });
 
@@ -125,7 +136,7 @@ Route::middleware(['auth', 'role:super_admin,admin', 'no.cache'])->group(functio
 */
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'role:super_admin,admin', 'no.cache'])
+    ->middleware(['auth', 'role:super_admin,admin', 'no.cache', 'force.pwd.change'])
     ->group(function () {
 
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');

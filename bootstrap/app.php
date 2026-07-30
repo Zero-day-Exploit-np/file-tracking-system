@@ -28,10 +28,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'force.pwd.change' => ForcePasswordChangeMiddleware::class,
         ]);
 
-        // ── Append security headers + force-password-change to every auth web response ─
+        // ── Append security headers to every web response ─────────
+        // ForcePasswordChangeMiddleware is intentionally NOT here.
+        // Applying it globally would run it on /verify-email, causing
+        // an infinite redirect loop for users who are both unverified
+        // AND have must_change_password = true. It is applied explicitly
+        // only on route groups that require a verified, authenticated user.
         $middleware->web(append: [
             SecurityHeadersMiddleware::class,
-            ForcePasswordChangeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
