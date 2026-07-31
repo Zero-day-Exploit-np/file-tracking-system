@@ -30,6 +30,12 @@ return new class extends Migration
                   ->after('current_department_id')
                   ->constrained('users')
                   ->nullOnDelete();
+
+            // Add performance index here — this is the migration that owns
+            // the column, so the index is guaranteed to be created after
+            // the column exists. (add_uuids_and_indexes runs earlier and
+            // guards against the column being absent.)
+            $table->index('current_user_id', 'file_records_current_user_id_index');
         });
     }
 
@@ -41,6 +47,7 @@ return new class extends Migration
 
         Schema::table('file_records', function (Blueprint $table) {
             $table->dropForeign(['current_user_id']);
+            $table->dropIndex('file_records_current_user_id_index');
             $table->dropColumn('current_user_id');
         });
     }

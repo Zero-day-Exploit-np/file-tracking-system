@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class FileRecordController extends Controller
 {
@@ -74,20 +75,24 @@ class FileRecordController extends Controller
     {
         $this->authorize('create', FileRecord::class);
 
+        $normalizedFileNumber = strtoupper(trim((string) $request->input('file_number', '')));
+        $request->merge(['file_number' => $normalizedFileNumber]);
+
         $request->validate([
             'file_number' => [
                 'required',
                 'string',
                 'max:100',
                 'regex:/^[A-Za-z0-9\-\/\._ ]+$/',
-                'unique:file_records,file_number',
+                Rule::unique('file_records', 'file_number')
+                    ->where(fn ($query) => $query->where('department_id', (int) $request->input('department_id'))),
             ],
             'file_name' => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
             'remarks' => 'nullable|string|max:1000',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
         ], [
-            'file_number.unique' => 'This File Number already exists. Please use a different government file number.',
+            'file_number.unique' => 'This File Number already exists in this department. Use a different file number or select a different department.',
             'file_number.regex' => 'File number may only contain letters, numbers, hyphens, slashes, dots and spaces.',
         ]);
 
@@ -99,7 +104,7 @@ class FileRecordController extends Controller
             'department_id' => $deptId,
             'current_department_id' => $deptId,
             'file_name' => $request->string('file_name')->trim()->value(),
-            'file_number' => strtoupper(trim($request->file_number)),
+            'file_number' => $normalizedFileNumber,
             'remarks' => $request->string('remarks')->trim()->value() ?: null,
             'status' => 'active',
         ]);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\FileRecord;
 use Illuminate\Http\Request;
 
@@ -10,7 +11,11 @@ class PublicFileSearchController extends Controller
     /** Show the public file search page. */
     public function index()
     {
-        return view('public.file-search');
+        $departments = Department::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'uuid', 'name']);
+
+        return view('public.file-search', compact('departments'));
     }
 
     /**
@@ -22,23 +27,50 @@ class PublicFileSearchController extends Controller
     {
         $request->validate([
             'file_number' => 'required|string|max:100',
+            'department_uuid' => 'nullable|string|exists:departments,uuid',
         ]);
 
-        $fileNumber = trim($request->string('file_number')->value());
+        $fileNumber = strtoupper(trim($request->string('file_number')->value()));
+        $departmentUuid = $request->string('department_uuid')->trim()->value();
 
-        $file = FileRecord::where('file_number', $fileNumber)
+        $query = FileRecord::where('file_number', $fileNumber);
+
+        if ($departmentUuid !== '') {
+            $query->whereHas('department', fn ($q) => $q->where('uuid', $departmentUuid));
+        }
+
+        $matches = $query
             ->with([
                 'department',
+                'currentDepartment',
                 'currentHolder',
                 'movements' => fn ($q) => $q->with(['fromDept', 'toDept'])->orderBy('created_at'),
             ])
-            ->first();
+            ->orderBy('id')
+            ->get();
 
-        if (! $file) {
+        if ($matches->isEmpty()) {
             return back()
                 ->withInput()
-                ->with('search_error', 'No file found with this File Number.');
+                ->with('search_error', 'No file found with this File Number for the selected department.');
         }
+
+        if ($matches->count() > 1) {
+            $departmentChoices = $matches
+                ->map(fn (FileRecord $record) => [
+                    'uuid' => $record->department?->uuid,
+                    'name' => $record->department?->name ?? 'Unknown Department',
+                ])
+                ->unique('uuid')
+                ->values();
+
+            return back()
+                ->withInput()
+                ->with('search_error', 'Multiple files were found with this File Number. Select a department to view the correct file.')
+                ->with('department_choices', $departmentChoices);
+        }
+
+        $file = $matches->first();
 
         $holder = $file->currentHolder;
         $holderName = $holder ? $holder->name : 'N/A';
@@ -47,7 +79,8 @@ class PublicFileSearchController extends Controller
         $result = [
             'file_number' => $file->file_number,
             'file_name' => $file->file_name,
-            'department' => $file->department->name ?? 'N/A',
+            'origin_department' => $file->department->name ?? 'N/A',
+            'current_department' => $file->currentDepartment->name ?? ($file->department->name ?? 'N/A'),
             'current_holder' => $holderName,
             'status' => ucwords(str_replace('_', ' ', $file->status)),
             'created_date' => $file->created_at->format('d M Y'),
@@ -62,7 +95,11 @@ class PublicFileSearchController extends Controller
         //     We use the last remark recorded while the file was in that department.
         $journey = $this->buildPublicJourney($file->movements);
 
-        return view('public.file-search', compact('result', 'journey'))->with('searched', true);
+        $departments = Department::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'uuid', 'name']);
+
+        return view('public.file-search', compact('result', 'journey', 'departments'))->with('searched', true);
     }
 
     /**

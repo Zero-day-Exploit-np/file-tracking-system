@@ -327,6 +327,20 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+                <div class="mb-3">
+                    <label class="form-label fw-600 mb-1">Origin Department (Optional)</label>
+                    <select name="department_uuid" class="form-select @error('department_uuid') is-invalid @enderror">
+                        <option value="">All Departments</option>
+                        @foreach(($departments ?? collect()) as $dept)
+                        <option value="{{ $dept->uuid }}" @selected(old('department_uuid', request('department_uuid')) === $dept->uuid)>
+                            {{ $dept->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('department_uuid')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
                 <div class="text-muted" style="font-size:.8rem;">
                     <i class="fa-solid fa-shield-halved me-1 text-primary"></i>
                     Only publicly available information is shown. No internal data is exposed.
@@ -337,6 +351,11 @@
             @if(session('search_error'))
             <div class="not-found-box mt-4">
                 <i class="fa-solid fa-circle-xmark me-2"></i>{{ session('search_error') }}
+                @if(session('department_choices'))
+                <div class="mt-2" style="font-size:.82rem;color:#7f1d1d;">
+                    Matching departments: {{ collect(session('department_choices'))->pluck('name')->implode(', ') }}
+                </div>
+                @endif
             </div>
             @endif
 
@@ -361,8 +380,12 @@
                         <span class="result-value">{{ $result['file_name'] }}</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label"><i class="fa-solid fa-building-columns me-2 text-primary"></i>Department</span>
-                        <span class="result-value">{{ $result['department'] }}</span>
+                        <span class="result-label"><i class="fa-solid fa-building-columns me-2 text-primary"></i>Origin Department</span>
+                        <span class="result-value">{{ $result['origin_department'] }}</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label"><i class="fa-solid fa-location-dot me-2 text-primary"></i>Current Department</span>
+                        <span class="result-value">{{ $result['current_department'] }}</span>
                     </div>
                     <div class="result-row">
                         <span class="result-label"><i class="fa-solid fa-user-check me-2 text-primary"></i>Current Holder</span>

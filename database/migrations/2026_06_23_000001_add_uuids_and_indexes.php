@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
  *    foreign-key constraints or unique constraints in the base migrations.
  *
  * Indexes NOT added here (already exist from base migrations):
- *  - file_records_file_number_*     → covered by ->unique() in create_file_records
+ *  - file_records_department_id_file_number_* → covered by ->unique(['department_id','file_number']) in create_file_records
  *  - file_records_department_id_*   → covered by ->foreignId() FK index
  *  - file_records_created_by_*      → covered by ->foreignId() FK index
  *  - file_movements_file_id_*       → covered by ->foreignId() FK index
@@ -64,9 +64,13 @@ return new class extends Migration
 
         // file_records — status, current_user_id, created_at
         // (file_number, department_id already indexed by unique/FK)
-        $this->addIndexIfMissing('file_records', 'status',          'file_records_status_index');
-        $this->addIndexIfMissing('file_records', 'current_user_id', 'file_records_current_user_id_index');
-        $this->addIndexIfMissing('file_records', 'created_at',      'file_records_created_at_index');
+        $this->addIndexIfMissing('file_records', 'status',      'file_records_status_index');
+        $this->addIndexIfMissing('file_records', 'created_at',  'file_records_created_at_index');
+
+        // current_user_id is added in a later migration — only index it if the column exists
+        if (Schema::hasColumn('file_records', 'current_user_id')) {
+            $this->addIndexIfMissing('file_records', 'current_user_id', 'file_records_current_user_id_index');
+        }
 
         // file_movements — action, created_at
         // (file_id, from_user, to_user already indexed by FK constraints)

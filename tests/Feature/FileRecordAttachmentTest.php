@@ -41,7 +41,9 @@ it('stores a file record with an attachment', function () {
         'department_id' => $department->id,
     ]);
 
-    $file = FileRecord::where('file_number', 'TEST/2026/001')->first();
+    $file = FileRecord::where('department_id', $department->id)
+        ->where('file_number', 'TEST/2026/001')
+        ->first();
     expect($file)->not->toBeNull();
     Storage::disk('private')->assertExists($file->attachment_path);
 });
@@ -67,7 +69,9 @@ it('downloads a file record attachment', function () {
         'attachment' => $attachment,
     ]);
 
-    $file = FileRecord::where('file_number', 'RPT/2026/001')->first();
+    $file = FileRecord::where('department_id', $department->id)
+        ->where('file_number', 'RPT/2026/001')
+        ->first();
     expect($file)->not->toBeNull();
 
     $download = $this->actingAs($user)->get(route('files.download', $file->uuid));
@@ -75,7 +79,7 @@ it('downloads a file record attachment', function () {
     $download->assertHeader('content-disposition');
 });
 
-it('blocks duplicate file numbers', function () {
+it('blocks duplicate file numbers in the same department', function () {
     $department = Department::factory()->create();
 
     $user = User::factory()->create([
@@ -100,6 +104,31 @@ it('blocks duplicate file numbers', function () {
 
     $response->assertSessionHasErrors('file_number');
     expect(FileRecord::where('file_name', 'Duplicate')->count())->toBe(0);
+});
+
+it('allows the same file number in different departments', function () {
+    $deptA = Department::factory()->create(['name' => 'Department A']);
+    $deptB = Department::factory()->create(['name' => 'Department B']);
+
+    $user = User::factory()->create([
+        'role' => 'user',
+        'department_id' => $deptA->id,
+        'can_create_file' => true,
+    ]);
+
+    $this->actingAs($user)->post(route('files.store'), [
+        'file_number' => '1001',
+        'file_name' => 'File A',
+        'department_id' => $deptA->id,
+    ])->assertRedirect(route('files.index'));
+
+    $this->actingAs($user)->post(route('files.store'), [
+        'file_number' => '1001',
+        'file_name' => 'File B',
+        'department_id' => $deptB->id,
+    ])->assertRedirect(route('files.index'));
+
+    expect(FileRecord::where('file_number', '1001')->count())->toBe(2);
 });
 
 it('allows creating a file for any department', function () {

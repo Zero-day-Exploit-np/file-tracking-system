@@ -29,6 +29,7 @@ it('allows only the current owner to transfer through direct and department owne
 
     $file = FileRecord::create([
         'department_id' => $sourceDepartment->id,
+        'current_department_id' => $sourceDepartment->id,
         'created_by' => $userA->id,
         'current_user_id' => $userA->id,
         'file_name' => 'Ownership Test',
@@ -55,8 +56,16 @@ it('allows only the current owner to transfer through direct and department owne
     ])->assertRedirect(route('files.index'));
 
     $file->refresh();
-    expect($file->current_user_id)->toBe($financeAdmin->id)
-        ->and($file->department_id)->toBe($financeDepartment->id);
+    // Cross-department transfer: current_user_id becomes null (pending_assignment)
+    // and current_department_id updates to the destination.
+    // department_id ALWAYS retains the ORIGIN department — it never changes.
+    expect($file->current_user_id)->toBeNull()
+        ->and($file->current_department_id)->toBe($financeDepartment->id)
+        ->and($file->department_id)->toBe($sourceDepartment->id)
+        ->and($file->status)->toBe('pending_assignment');
+
+    // Simulate the finance admin being assigned the file by their admin
+    $file->update(['current_user_id' => $financeAdmin->id, 'status' => 'active']);
 
     $this->actingAs($financeAdmin)->post(route('files.transfer.store'), [
         'file_record_uuid' => $file->uuid,
@@ -77,8 +86,14 @@ it('allows only the current owner to transfer through direct and department owne
     ])->assertRedirect(route('files.index'));
 
     $file->refresh();
-    expect($file->current_user_id)->toBe($accountsAdmin->id)
-        ->and($file->department_id)->toBe($accountsDepartment->id);
+    // Same pattern: cross-dept sets current_user_id=null, current_department_id=destination
+    expect($file->current_user_id)->toBeNull()
+        ->and($file->current_department_id)->toBe($accountsDepartment->id)
+        ->and($file->department_id)->toBe($sourceDepartment->id)
+        ->and($file->status)->toBe('pending_assignment');
+
+    // Simulate accounts admin being assigned
+    $file->update(['current_user_id' => $accountsAdmin->id, 'status' => 'active']);
 
     $this->actingAs($accountsAdmin)
         ->get(route('files.transfer.create', $file->uuid))
@@ -93,6 +108,7 @@ it('does not let a super admin transfer a file they do not own', function () {
 
     $file = FileRecord::create([
         'department_id' => $department->id,
+        'current_department_id' => $department->id,
         'created_by' => $owner->id,
         'current_user_id' => $owner->id,
         'file_name' => 'Super Admin Ownership Test',

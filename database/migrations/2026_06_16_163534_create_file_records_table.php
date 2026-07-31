@@ -23,8 +23,11 @@ return new class extends Migration
 
             // 📄 File Info
             $table->string('file_name');
-            $table->string('file_number')->unique();
+            $table->string('file_number');
             $table->text('remarks')->nullable();
+
+            // File number is unique only within the originating department.
+            $table->unique(['department_id', 'file_number']);
 
             $table->timestamps();
         });

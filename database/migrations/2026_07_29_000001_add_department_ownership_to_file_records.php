@@ -29,6 +29,9 @@ return new class extends Migration
                   ->references('id')
                   ->on('departments')
                   ->nullOnDelete();
+
+            // Supports lookups by (current department + file number).
+            $table->index(['current_department_id', 'file_number'], 'file_records_current_department_id_file_number_index');
         });
 
         // 2. Backfill: every existing file's current dept = its registered dept
@@ -63,6 +66,7 @@ return new class extends Migration
         }
 
         Schema::table('file_records', function (Blueprint $table) {
+            $table->dropIndex('file_records_current_department_id_file_number_index');
             $table->dropForeign(['current_department_id']);
             $table->dropColumn('current_department_id');
         });
