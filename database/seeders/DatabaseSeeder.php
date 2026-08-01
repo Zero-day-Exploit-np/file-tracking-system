@@ -53,32 +53,32 @@ class DatabaseSeeder extends Seeder
             FILTER_VALIDATE_BOOLEAN
         );
 
-        if ($seedSample) {
-            $this->command->info('');
-            $this->command->info('Seeding sample data...');
+        // if ($seedSample) {
+        //     $this->command->info('');
+        //     $this->command->info('Seeding sample data...');
 
-            $this->call([
-                DepartmentSeeder::class,
-                DesignationSeeder::class,
-                SampleUsersSeeder::class,
-                FileRecordSeeder::class,
-            ]);
-        }
+        //     $this->call([
+        //         // DepartmentSeeder::class,
+        //         // DesignationSeeder::class,
+        //         // SampleUsersSeeder::class,
+        //         // FileRecordSeeder::class,
+        //     ]);
+        // }
 
         $this->command->info('');
         $this->command->info('=== Seeding complete ===');
         $this->command->line('  Super Admin: superadmin@example.com / Password@123');
 
-        if ($seedSample) {
-            $this->command->line('  Admin:  admin@filetrack.local  / Admin@1234');
-            $this->command->line('  User1:  user1@filetrack.local  / User@1234  (Administration dept)');
-            $this->command->line('  User2:  user2@filetrack.local  / User@1234  (IT dept)');
-            $this->command->line('');
-            $this->command->line('  Sample files seeded (department-scoped uniqueness demo):');
-            $this->command->line('  FILE-1001 in Administration   ← same number...');
-            $this->command->line('  FILE-1001 in Finance          ← ...different dept, both valid');
-            $this->command->line('  FILE-2001 in Admin (→ IT)     ← transferred, no conflict');
-            $this->command->line('  FILE-2001 in IT (native)      ← IT-origin, coexists');
-        }
+        // if ($seedSample) {
+        //     $this->command->line('  Admin:  admin@filetrack.local  / Admin@1234');
+        //     $this->command->line('  User1:  user1@filetrack.local  / User@1234  (Administration dept)');
+        //     $this->command->line('  User2:  user2@filetrack.local  / User@1234  (IT dept)');
+        //     $this->command->line('');
+        //     $this->command->line('  Sample files seeded (department-scoped uniqueness demo):');
+        //     $this->command->line('  FILE-1001 in Administration   ← same number...');
+        //     $this->command->line('  FILE-1001 in Finance          ← ...different dept, both valid');
+        //     $this->command->line('  FILE-2001 in Admin (→ IT)     ← transferred, no conflict');
+        //     $this->command->line('  FILE-2001 in IT (native)      ← IT-origin, coexists');
+        // }
     }
 }
